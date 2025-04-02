@@ -1,0 +1,121 @@
+---
+title: "Animated_Plots"
+author: "Callum Gapes"
+date: "2023-11-08"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r Testing Transition by Date}
+# Choose tag to plot
+ currentTagID <- 60471
+
+# Graphical options
+plotTidalCurve <- 0
+plotSun <- 0
+plotTide <- 0
+pointSize <- 1.5
+completeTimeRange <- 0
+
+# Set start and end time for plot
+if (completeTimeRange) {
+  # Get time interval from first and last detections
+  timeStart <- min(filter(df.alltags,motusTagID == currentTagID)$ts)
+  timeEnd <- max(filter(df.alltags,motusTagID == currentTagID)$ts)
+} else{
+  # Set time interval manually
+   timeStart <- as.POSIXct("2023-10-25 00:00:00",tz = "Australia/Sydney")
+   timeEnd <- as.POSIXct("2023-11-01 24:00:00",tz = "Australia/Sydney")
+   
+   # Avocets - after banding
+  #timeStart <- ymd_hms("2023-10-25 05:00:00",tz = "Australia/Sydney")
+  #timeEnd <- ymd_hms("2023-10-27 24:00:00",tz = "Australia/Sydney")s
+}
+
+# Filter by tag and time interval
+tmp <- filter(df.alltags, motusTagID == currentTagID, ts >= timeStart, ts <= timeEnd)
+
+# Create plot
+p <- tmp %>% 
+  ggplot(aes(ts, sigPositive)) + # x-axis = signal strength, y-axis = time
+  
+  # Plot points
+  geom_point(aes(colour = recvDeployName), 
+             size = pointSize, 
+             shape = pointShape) + 
+  
+  ## Automatic legend
+  labs(colour = "Receiver") + # Legend title
+  
+  ## Manually labelled legend
+  #scale_colour_discrete(name = "Receiver",
+                        #labels = c("Receiver 1", "Receiver 2")) +
+  
+  guides(colour = guide_legend(order = 1)) + # Make this legend appear first
+  
+  # Axis titles
+  ylab("Signal Strength") + 
+  xlab("Date-Time") + 
+  
+  #scale_x_continuous(labels = function(x) {as.POSIXct(x, tz = "Australia/Sydney")}, n.breaks = 4, breaks = waiver()) +
+  scale_x_continuous(breaks = tmp$dateAus %>% unique() %>% as.POSIXct() %>% as.numeric(), labels = tmp$dateAus %>% unique()) +
+  
+  ## Automatic plot title
+ ggtitle(paste("Detections for Tag",currentTagID,"(",tagInfo %>% filter(motusTagID==currentTagID) %>% select(species),")")) +
+  theme_gray(base_size = 18) +
+theme(plot.title = element_text(hjust = 0.5))
+  
+  ## Custom plot title
+  #ggtitle("Tag 60472 - Eastern Curlew") + theme(plot.title = element_text(hjust = 0.5)) 
+
+# Add sunset and sunrise
+  p <- plot.addSunriseSet(p)
+
+# Add tidal curve
+  p <- plot.addTidalCurve(p)
+
+  ## Add animation
+  rangePerFrame <- days(2)
+  
+  
+  #p <- p + transition_time(dateAus)
+  p <- p + view_zoom_manual(ease = "linear", pause_length = 1, step_length = 1, xmin = as.numeric(seq(min(tmp$timeAus),(max(tmp$timeAus)-rangePerFrame),length.out = 2)), xmax = as.numeric(seq(min(tmp$timeAus)+rangePerFrame,(max(tmp$timeAus)),length.out = 2)), ymin = min(tmp$sigPositive), ymax = max(tmp$sigPositive), wrap = FALSE, pan_zoom = 10)
+startTime <- Sys.time()
+animate(p, width = 1200, height = 500, renderer = gifski_renderer(file = paste(sep = "","out",i,".gif")), rewind = FALSE, fps = 20, detail = 10, start_pause = 1, end_pause = 1)
+
+endTime <- Sys.time()
+i <- i + 1  
+print(endTime - startTime)
+```
+
+```{r Shiny Package Test}
+
+
+```
+
+```{r Economics test}
+p <- ggplot(economics) +
+  aes(as.numeric(date), unemploy) +
+  geom_line() + 
+  scale_x_continuous(labels = function(x) {as.Date(x)}) +
+  view_zoom_manual(pause_length = 1, step_length = 1, wrap = FALSE, xmin = as.numeric(economics$date[1:500]), xmax = as.numeric(economics$date[75:574]), ymin = 0, ymax = 15000)
+  #view_zoom(nsteps = 50)
+
+anim_save("test.gif",p)
+```
+
+
+```{r Simple Test}
+x = 1:10 
+y = seq(1, 1, length.out = 10) 
+data <- cbind(x,y) %>% as.data.frame()
+p <- ggplot(data, aes(x = x, y = y)) + geom_line() +
+  transition_reveal(along = x) +
+  view_step(pause_length = 3, step_length = 3, nsteps = 5)
+  #iew_zoom(pause_length = 1, step_length = 1, nsteps = 10, delay = 0, include = TRUE, pan_zoom = 0, ease = "linear", wrap = FALSE, look_ahead = 3)
+p
+```
+

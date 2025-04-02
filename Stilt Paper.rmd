@@ -1,0 +1,301 @@
+---
+title: "Stilt Paper not notebook"
+author: "Callum Gapes"
+date: "2025-02-26"
+output: html_document
+---
+poopy
+
+```{r Set Time Bin Width}
+## We are interested in detections within 3 hours of a high / low tide.
+## Set maximum time from the most recent high or low tide. Value is in hours.
+## Note that this is either side of the tide, so bin width will be double.
+tideTimeCutoff <- 3
+
+# FILTER OUT ANY DETECTIONS FURTHER THAN 3 HOURS FROM HIGH / LOW TIDE
+## Note that this prevents analysis of those other detections.
+## They will need to be considered separately or the tidal classification
+## code / data will have to be re-structured.
+df.detections <- df.alltags %>% 
+  filter(tideTimeDiff <= tideTimeCutoff)
+```
+
+```{r Calculate Detection Duration}
+df.detections <- df.detections %>% 
+  # Count the number of detections for each combination of unique tidal period,
+  # receiver, and tag.
+  group_by(motusTagID, recvDeployName, tideID) %>% 
+  summarise(detectionCount = n(), .groups = "drop") %>% 
+  # Add variables of interest from original data frame to the summarised result
+  left_join(df.alltags %>% 
+              select(motusTagID, recvDeployName, tideID, speciesEN, tideCategory, tagBI) %>%
+              distinct(), 
+            by = c("motusTagID", "recvDeployName", "tideID")) %>%
+  # Calculate detection duration by multiplying the number of detections and
+  # the burst interval. detectionDuration is in seconds.
+  mutate(detectionDuration = detectionCount*tagBI,
+         detectionDurationMin = detectionDuration/60) %>%
+  mutate(tideCategory = fct_relevel(tideCategory, "Diurnal_Low", "Nocturnal_Low", "Diurnal_High", "Nocturnal_High"))
+
+## Calculate detection duration in seconds
+df.detections <- df.detections %>% 
+  mutate(detectionDuration = detectionCount*tagBI,
+         detectionDurationMin = detectionDuration/60)
+
+
+## Reorder factor levels for tideCategory to choose order in plot
+df.detections <- df.detections %>%
+  mutate(tideCategory = fct_relevel(tideCategory, "Diurnal_Low", "Nocturnal_Low", "Diurnal_High", "Nocturnal_High"))
+
+
+```
+
+```{r Individual Tag - Mean, SE, and Bar Plot}
+# Filter data for the specific tag
+tag.tmp <- 81121
+
+sum.singletag <- df.detections %>%
+  filter(motusTagID == tag.tmp)
+
+sum.singletag <- sum.singletag %>% 
+  group_by(recvDeployName, tideCategory) %>% 
+  summarise(meanDuration = mean(detectionDuration),
+            sd = sd(detectionDuration, na.rm = TRUE),
+            periodCount = n(),
+            se = sd/sqrt(periodCount)) %>% 
+  ungroup()
+
+# Create the bar plot with error bars
+ggplot(sum.singletag, aes(x = recvDeployName, y = meanDuration, fill = tideCategory)) +
+  geom_bar(stat = "identity", position = position_dodge(width = 0.9), colour = "black") + 
+  geom_errorbar(aes(ymin = meanDuration - se, ymax = meanDuration + se),
+                position = position_dodge(width = 0.9), width = 0.2) +
+  theme_minimal() +
+  labs(
+    title = paste(sep =" ", "Mean Detection Duration for Tag",tag.tmp,"(", tag.species(tag.tmp),")"),
+    x = "Site",
+    y = "Mean Detection Duration (± SE)",
+    fill = "Tide Category"
+  ) +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
+  easy_center_title()
+
+```
+
+```{r Produce Plots for All Individual Tags TO DO}
+# Filter detections by species of interest
+tmp.species <- c("Red-necked Avocet", "Pacific Golden-Plover", "Masked Lapwing")
+
+df.detections_individual <- df.detections %>% 
+  filter(speciesEN %in% tmp.species)
+
+
+```
+
+```{r Summarise by Species)}
+# Select species of interest
+tmp.species <- c("Red-necked Avocet", "Pacific Golden-Plover", "Pied Stilt")
+
+# Filter by species of interest
+sum.alltags <- df.detections %>% 
+  filter(speciesEN %in% tmp.species)
+  
+# Group by tag, receiver, and tidal category, then
+# calculate the mean detection duration, SD, and SE
+sum.alltags <- sum.alltags %>%  
+  group_by(recvDeployName, tideCategory, motusTagID, speciesEN) %>% 
+    summarise(meanDuration = mean(detectionDuration),
+              sd = sd(detectionDuration, na.rm = TRUE),
+              periodCount = n(),
+              se = sd/sqrt(periodCount),
+              .groups = "drop") 
+
+# Remove values with very low period count
+#sum.alltags <- sum.alltags %>% filter(
+#  periodCount >3
+#)
+
+# Group by species, receiver, and tidal category, then
+# calculate the mean detection duration, ## not sure how to do error ##
+sum.species <- sum.alltags %>% 
+  group_by(speciesEN,recvDeployName, tideCategory) %>% 
+  summarise(meanDurationSpecies = mean(meanDuration),
+            sd = sd(meanDuration),
+            individualCount = n(),
+            se = sd/sqrt(individualCount),
+            .groups = "drop")
+
+```
+
+```{r Plot for Single Species}
+# Select species of interest
+#tmp.species <- "Pacific Golden-Plover"
+#tmp.species <- "Red-necked Avocet"
+#tmp.species <- "Pied Stilt"
+
+sum.species_individual <- sum.species %>% 
+  filter(speciesEN == tmp.species)
+
+# Create the bar plot with error bars
+ggplot(sum.species_individual, aes(x = recvDeployName, y = meanDurationSpecies, fill = tideCategory)) +
+  geom_bar(stat = "identity", position = position_dodge(width = 0.9), colour = "black") + 
+  geom_errorbar(aes(ymin = meanDurationSpecies - se, ymax = meanDurationSpecies + se),
+                position = position_dodge(width = 0.9), width = 0.2) +
+  theme_minimal() +
+  labs(
+    title = paste(sep =" ", "Mean Detection Duration for Species",tmp.species),
+    x = "Site",
+    y = "Mean Detection Duration (± SE)",
+    fill = "Tide Category"
+  ) +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
+  easy_center_title()
+```
+
+```{r Three-way Repeated Measures ANOVA}
+# Get statistical summary
+sum.species <- sum.alltags %>% 
+  group_by(speciesEN, tideCategory, recvDeployName) %>% 
+  get_summary_stats(meanDuration, type = "mean_se")
+
+## Filter out rows with detection during a single period (SE = NA) or 2 periods
+sum.anova <- sum.alltags %>% 
+  filter(#is.na(se)==FALSE)
+    periodCount > 2)
+
+# Check for outliers
+outliers <- sum.anova %>% 
+  group_by(speciesEN, tideCategory, recvDeployName) %>% 
+  identify_outliers(meanDuration)
+
+#### Have not implemented code to remove outliers ####
+### After removing the single period rows (NA se), none of the outliers
+### are extreme###
+
+# Get summary statistics for each species
+summary_stats <- sum.anova %>% 
+  group_by(speciesEN, recvDeployName, tideCategory) %>% 
+  get_summary_stats(meanDuration, type = "mean_se")
+
+# Filter out combinations of species / category / receiver with n < 3
+valid_groups <- sum.anova %>%
+  group_by(speciesEN, recvDeployName, tideCategory) %>%
+  summarise(n = n(), .groups = 'drop') %>%
+  filter(n >= 3)
+
+# Join valid groups back to the original dataset to filter only valid motusTagID
+final_data <- sum.anova %>%
+  semi_join(valid_groups, by = c("speciesEN", "recvDeployName", "tideCategory"))
+
+# Check normality assumption
+not_normal <- final_data %>% 
+  group_by(speciesEN, tideCategory, recvDeployName) %>% 
+  shapiro_test(meanDuration) %>% 
+  filter(p < 0.05)
+
+## Remove rows that are not normal
+# Step 1: Extract the non-normal combinations
+non_normal_combinations <- not_normal %>%
+  select(speciesEN, tideCategory, recvDeployName)
+
+# Step 2: Filter out non-normal combinations from final_data
+cleaned_final_data <- final_data %>%
+  anti_join(non_normal_combinations, by = c("speciesEN", "tideCategory", "recvDeployName"))
+
+## To add: qq plot for normality assessment ##
+
+# Coerce grouping variables to factor
+cleaned_final_data <- cleaned_final_data %>% 
+  mutate(recvDeployName = as.factor(recvDeployName),
+         speciesEN = as.factor(speciesEN))
+
+# ANOVA
+res.aov <- anova_test(
+  data = cleaned_final_data, dv = meanDuration, wid = motusTagID,
+  within = c(speciesEN, recvDeployName, tideCategory)
+)
+
+```
+
+```{r Attempt to Perform for a Single Species}
+#tmp.species <- "Pacific Golden-Plover"
+#tmp.species <- "Red-necked Avocet"
+tmp.species <- "Pied Stilt"
+
+cleaned_final_data_species <- cleaned_final_data %>% 
+  filter(speciesEN == tmp.species)
+
+table(cleaned_final_data_species$recvDeployName, cleaned_final_data_species$tideCategory)
+
+# ANOVA
+res.aov <- anova_test(
+  data = cleaned_final_data_species, dv = meanDuration, wid = motusTagID,
+  within = c(recvDeployName, tideCategory)
+)
+
+```
+
+
+
+```{r Chat GPT Test}
+# Step 1: Compute the average detection duration per tag for each site × tide category
+df.avg_tag <- df.detections %>%
+  group_by(motusTagID, recvDeployName, tideCategory) %>%
+  summarise(avg_detection_duration = mean(detectionDuration), .groups = "drop")
+
+# Step 2: Compute the average detection duration per species for each site × tide category
+df.avg_species <- df.avg_tag %>%
+  left_join(df.detections %>% select(motusTagID, speciesEN) %>% distinct(), by = "motusTagID") %>%
+  group_by(speciesEN, recvDeployName, tideCategory) %>%
+  summarise(
+    avg_species_detection = mean(avg_detection_duration),
+    se = sd(avg_detection_duration) / sqrt(n()),  # Standard error for error bars
+    .groups = "drop"
+  )
+
+# Step 3: Plot the results
+ggplot(df.avg_species, aes(x = tideCategory, y = avg_species_detection, fill = speciesEN)) +
+  geom_bar(stat = "identity", position = position_dodge(), colour = "black") +
+  geom_errorbar(aes(ymin = avg_species_detection - se, ymax = avg_species_detection + se),
+                position = position_dodge(width = 0.9), width = 0.2) +
+  facet_wrap(~recvDeployName) +  # Facet by site
+  theme_minimal() +
+  labs(
+    title = "Average Detection Duration by Species, Site, and Tide Category",
+    x = "Tide Category",
+    y = "Average Detection Duration",
+    fill = "Species"
+  ) +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+
+```
+
+```{r Single Species - Two-way repeated measures ANOVA}
+# Select species of interest
+tmp.species <- "Red-necked Avocet"
+df.single_species <- df.detections %>% 
+  filter(speciesEN == tmp.species) %>% 
+  group_by()
+
+
+```
+
+
+```{r Old Code}
+# ================================================================================
+# Categorising each detection, where "other" is included. This was written 
+# before the categorisation was moved into "importTide.R"
+# ================================================================================
+# # Classify into either one of the four categories, or "Other".
+# df.alltags <- df.alltags %>% 
+#   mutate(
+#     tideCategory = case_when(
+#       tideTimeDiff > tideTimeCutoff ~ "Other",
+#       tideHighLow == "Low" & tideDiel == "Diurnal" ~ "Diurnal_Low",
+#       tideHighLow == "Low" & tideDiel == "Nocturnal" ~ "Nocturnal_Low",
+#       tideHighLow == "High" & tideDiel == "Diurnal" ~ "Diurnal_High",
+#       tideHighLow == "High" & tideDiel == "Nocturnal" ~ "Nocturnal_High"
+#     ) %>% as_factor()
+#   )
+```
+
