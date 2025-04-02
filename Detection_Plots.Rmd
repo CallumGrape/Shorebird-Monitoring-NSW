@@ -1,0 +1,1988 @@
+---
+title: "Detection_Plots"
+author: "Callum Gapes"
+date: "2023-10-10"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, eval = FALSE)
+```
+
+```{r Plot Detections for Single Tag - Long Time Period}
+# Choose tag to plot
+currentTagID <- 60472
+
+## Choose time range to plot
+# Set completeTimeRange to 1 to plot all detections for the tag
+completeTimeRange <- 1
+# User-defined start and end time - in AEST
+# Curlew Plot 1
+#timeStart <- "2023-03-27 00:00:00"
+#timeEnd <- "2023-03-29 24:00:00"
+#sunReceiver <- "Milham's Pond"
+# Curlew Plot 2
+#timeStart <- "2023-04-10 00:00:00"
+#timeEnd <- "2023-04-14 24:00:00"
+#sunReceiver <- "Milham's Pond"
+# Curlew Plot 3
+#timeStart <- "2023-04-20 00:00:00"
+#timeEnd <- "2023-04-23 24:00:00"
+sunReceiver <- "Fullerton Entrance"
+
+# Graphical Options - General
+pointSize <- 1.5
+showPlotTitle <- 0
+
+# Sunrise and Sunset Graphical Options
+plotSun <- 0 # Sunrise and sunset vertical lines
+sunriseColour = "#ff9933"
+sunsetColour = "#530066"
+sunLineAlpha = 1
+sunLineWidth = 1
+sunFillAlpha = 0.06
+sunLineType = "longdash"
+
+# Receiver for sunrise/set
+#sunReceiver <- "Milham's Pond"
+#sunReceiver <- "Fullerton Entrance"
+
+# Graphical Options - Tide
+plotTidalCurve <- 0 # Interpolated tidal curve
+plotTide <- 0 # High and low tide vertical lines
+tideColour = "#61caff"
+tideLineWidth = 2
+tideAlpha = 0.6
+
+# Graphical Options - Font
+fontSizeAxisTitle = 16
+fontSizeAxisTicks = 13
+fontSizeLegendTitle = 14 
+fontSizeLegendLabels = 13
+
+paddingAxisTitle = 10
+
+#### End of User Input ####
+
+# Set start and end time for plot
+if (completeTimeRange) {
+  # Get time interval from first and last detections
+  timeStart <- min(filter(df.alltags,motusTagID == currentTagID)$timeAus)
+  timeEnd <- max(filter(df.alltags,motusTagID == currentTagID)$timeAus)
+} else{
+  timeStart <- ymd_hms(timeStart ,tz = "Australia/Sydney")
+  timeEnd <- ymd_hms(timeEnd ,tz = "Australia/Sydney")
+}
+
+# Filter by tag and time interval
+tmp <- filter(df.alltags, motusTagID == currentTagID, timeAus >= timeStart, timeAus <= timeEnd)
+
+# Get sunrise and sunset times during time interval
+plot.sunrise <- (tmp %>% filter(recvDeployName==sunReceiver) %>% dplyr::select(sunrise) %>% unique())$sunrise
+plot.sunset <- (tmp %>% filter(recvDeployName==sunReceiver) %>% dplyr::select(sunset) %>% unique())$sunset
+
+# Create plot
+p <- tmp %>%  
+  ggplot(aes(timeAus, sigPositive)) # x-axis = signal strength, y-axis = time
+  
+  # Add tidal curve
+if (plotTidalCurve) {
+  p <- plot.addTidalCurve(p)
+}
+  
+  ## Gridlines and background
+  p <- p + theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank()) +
+  theme(panel.background = element_blank()) +
+  
+  # Plot points
+  geom_point(aes(colour = recvDeployName, shape = recvDeployName), 
+             size = pointSize)
+             #size = pointSize, 
+             #shape = pointShape) 
+    
+  # Legend colours
+  #receiver_colours <- c(
+  #  "Fullerton Entrance" = "#f8766d",
+  #  "Milham's Pond" = "#00bfc4"
+  #) 
+  
+  ## Automatic legend
+  p <- p + labs(colour = "Receiver", shape = "Receiver") + # Legend title
+  theme(legend.text = element_text(size = fontSizeLegendLabels),
+        legend.title = element_text(size = fontSizeLegendTitle))+# +  
+    #scale_colour_manual(values = receiver_colours) +
+  
+  ## Manually labelled legend
+  #scale_colour_discrete(name = "Receiver",
+                        #labels = c("Receiver 1", "Receiver 2")) +
+  
+  #guides(colour = guide_legend(order = 1), shape = guide_legend(order = 1)) + # Make this legend appear first
+  
+  ## Axes
+  ylab("Signal Strength") + 
+  xlab("Date (AEST)") +
+    theme(axis.line.x = element_line(linewidth = 1, colour = "black"), 
+        axis.title.x = element_text(size = fontSizeAxisTitle, margin = margin(t = paddingAxisTitle)),
+        axis.text.x = element_text(size = fontSizeAxisTicks),
+        
+        axis.line.y.left = element_line(linewidth = 1, colour = "black"),
+        axis.line.y.right = element_line(linewidth = 1, colour = tideColour),
+        axis.title.y = element_text(size = fontSizeAxisTitle, margin = margin(r = paddingAxisTitle)),
+        axis.text.y = element_text(size = fontSizeAxisTicks)) +
+    scale_x_datetime(breaks = "3 days",expand = c(0,0), date_labels = "%e %b", limits = c(timeStart - hours(0),timeEnd + hours(12))) 
+    #xlim(timeStart,timeEnd)
+  
+  
+  if(showPlotTitle){
+  
+## Automatic plot title
+ p <- p + ggtitle(paste("Detections for Tag",currentTagID,"(",tagInfo %>% filter(motusTagID==currentTagID) %>% dplyr::select(species),")")) +
+theme(plot.title = element_text(hjust = 0.5))
+}
+
+  
+  ## Custom plot title
+  #ggtitle("Tag 60472 - Eastern Curlew") + theme(plot.title = element_text(hjust = 0.5)) 
+
+# Add sunset and sunrise
+if (plotSun) {
+  p <- plot.addSunriseSet(p)
+}
+
+# Add high and low tides
+if (plotTide) {
+  p <- plot.addTideHighLow(p)
+}
+  
+p
+  
+```
+
+```{r Plot Detections for Single Tag - Short Time Period}
+# Choose tag to plot
+currentTagID <- 81133
+
+## Choose time range to plot
+# Set completeTimeRange to 1 to plot all detections for the tag
+completeTimeRange <- 1
+# User-defined start and end time - in AEST
+# Curlew Plot 1
+#timeStart <- "2023-03-27 00:00:00"
+#timeEnd <- "2023-03-29 24:00:00"
+#sunReceiver <- "Milham's Pond"
+# Curlew Plot 2
+#timeStart <- "2023-04-10 00:00:00"
+#timeEnd <- "2023-04-14 24:00:00"
+#sunReceiver <- "Milham's Pond"
+# Curlew Plot 3
+#timeStart <- "2023-04-20 00:00:00"
+#timeEnd <- "2023-04-23 24:00:00"
+sunReceiver <- "Curlew"
+
+# Graphical Options - General
+pointSize <- 1.5
+showPlotTitle <- 0
+
+# Sunrise and Sunset Graphical Options
+plotSun <- 1 # Sunrise and sunset vertical lines
+sunriseColour = "#ff9933"
+sunsetColour = "#530066"
+sunLineAlpha = 1
+sunLineWidth = 1
+sunFillAlpha = 0.06
+sunLineType = "longdash"
+
+# Receiver for sunrise/set
+#sunReceiver <- "Milham's Pond"
+#sunReceiver <- "Fullerton Entrance"
+
+# Graphical Options - Tide
+plotTidalCurve <- 1 # Interpolated tidal curve
+plotTide <- 0 # High and low tide vertical lines
+tideColour = "#61caff"
+tideLineWidth = 2
+tideAlpha = 0.6
+
+# Graphical Options - Font
+fontSizeAxisTitle = 14
+fontSizeAxisTicks = 12
+fontSizeLegendTitle = 13 
+fontSizeLegendLabels = 12
+
+paddingAxisTitle = 10
+
+#### End of User Input ####
+
+# Set start and end time for plot
+if (completeTimeRange) {
+  # Get time interval from first and last detections
+  timeStart <- min(filter(df.alltags,motusTagID == currentTagID)$timeAus)
+  timeEnd <- max(filter(df.alltags,motusTagID == currentTagID)$timeAus)
+} else{
+  timeStart <- ymd_hms(timeStart ,tz = "Australia/Sydney")
+  timeEnd <- ymd_hms(timeEnd ,tz = "Australia/Sydney")
+}
+
+# Filter by tag and time interval
+tmp <- filter(df.alltags, motusTagID == currentTagID, timeAus >= timeStart, timeAus <= timeEnd)
+
+# Get sunrise and sunset times during time interval
+plot.sunrise <- (tmp %>% filter(recvDeployName==sunReceiver) %>% dplyr::select(sunrise) %>% unique())$sunrise
+plot.sunset <- (tmp %>% filter(recvDeployName==sunReceiver) %>% dplyr::select(sunset) %>% unique())$sunset
+
+# Create plot
+p <- tmp %>%  
+  ggplot(aes(timeAus, sigPositive)) # x-axis = signal strength, y-axis = time
+  
+  # Add tidal curve
+if (plotTidalCurve) {
+  p <- plot.addTidalCurve(p)
+}
+  
+  ## Gridlines and background
+  p <- p + theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank()) +
+  theme(panel.background = element_blank()) +
+  
+  # Plot points
+  geom_point(aes(colour = recvDeployName, shape = recvDeployName), 
+             size = pointSize) +
+             #size = pointSize, 
+             #shape = pointShape) + 
+  
+  ## Automatic legend
+  labs(colour = "Receiver", shape = "Receiver") + # Legend title
+  theme(legend.text = element_text(size = fontSizeLegendLabels),
+        legend.title = element_text(size = fontSizeLegendTitle)) +  
+  
+  ## Manually labelled legend
+  #scale_colour_discrete(name = "Receiver",
+   #                     labels = c("Fullerton Entrance", "Milham's Pond")) +
+  #  scale_shape_discrete(name = "Receiver",
+   #                     labels = c("Fullerton Entrance", "Milham's Pond")) +
+  
+  guides(colour = guide_legend(order = 1, byrow = TRUE), shape = guide_legend(order = 1, byrow = TRUE)) + # Make this legend appear first
+  
+  ## Axes
+  ylab("Signal Strength") + 
+  xlab("Date (AEST)") +
+  xlim(timeStart,timeEnd) +
+  theme(axis.line.x = element_line(linewidth = 1, colour = "black"), 
+        axis.title.x = element_text(size = fontSizeAxisTitle, margin = margin(t = paddingAxisTitle)),
+        axis.text.x = element_text(size = fontSizeAxisTicks),
+        
+        axis.line.y.left = element_line(linewidth = 1, colour = "black"),
+        axis.line.y.right = element_line(linewidth = 1, colour = tideColour),
+        axis.title.y = element_text(size = fontSizeAxisTitle, margin = margin(r = paddingAxisTitle)),
+        axis.text.y = element_text(size = fontSizeAxisTicks),
+        legend.spacing.y = unit(8,'pt')) +
+    scale_x_datetime(breaks = "12 hours",expand = c(0,0), date_labels = "%e %b\n%H:%M")
+  
+  
+  if(showPlotTitle){
+  
+## Automatic plot title
+ p <- p + ggtitle(paste("Detections for Tag",currentTagID,"(",tagInfo %>% filter(motusTagID==currentTagID) %>% select(species),")")) +
+theme(plot.title = element_text(hjust = 0.5))
+}
+
+  
+  ## Custom plot title
+  #ggtitle("Tag 60472 - Eastern Curlew") + theme(plot.title = element_text(hjust = 0.5)) 
+
+# Add sunset and sunrise
+if (plotSun) {
+  p <- plot.addSunriseSet(p)
+}
+
+# Add high and low tides
+if (plotTide) {
+  p <- plot.addTideHighLow(p)
+}
+
+
+# Add sunrise shading  
+#p <- p + annotate(geom = "rect", xmin = tmp$sunrise %>% unique(), xmax = tmp$sunset %>% unique(), ymin = -Inf, ymax = Inf, fill = sunriseColour, alpha = 0.5)
+  
+# Fill days
+#  p <- p + annotate(geom = "rect", xmin = sunrise$sunrise, xmax = sunset$sunset, ymin = -Inf, ymax = Inf, fill = sunriseColour, alpha = 0.5)
+  
+# Fill nights
+#p <- p + annotate(geom = "rect", xmin = sunset$sunset, xmax = sunrise$sunrise, ymin = -Inf, ymax = Inf, fill = sunsetColour, alpha = 0.5)
+
+
+if (plot.sunrise[1]<plot.sunset[1]){
+  # Lower xlim to first sunrise
+  p <- p + annotate(geom = "rect", xmin = timeStart, xmax = plot.sunrise[1], ymin = -Inf, ymax = Inf, fill = sunsetColour, alpha = sunFillAlpha)
+  
+  # Check if equal number of sunrises and sunsets
+  if (length(plot.sunrise) == length(plot.sunset)){
+    
+    # All sunrise -> sunset
+    p <- p + annotate(geom = "rect", xmin = plot.sunrise, xmax = plot.sunset, ymin = -Inf, ymax = Inf, fill = sunriseColour, alpha = sunFillAlpha)
+    
+    # Sunset -> sunrise (excluding last)
+    p <- p + annotate(geom = "rect", xmin = plot.sunset[1:length(plot.sunset)-1], xmax = plot.sunrise[2:length(plot.sunrise)], ymin = -Inf, ymax = Inf, fill = sunsetColour, alpha = sunFillAlpha)
+    
+    # Last sunset -> upper xlim
+    p <- p + annotate(geom = "rect", xmin = plot.sunset[length(plot.sunset)], xmax = timeEnd, ymin = -Inf, ymax = Inf, fill = sunsetColour, alpha = sunFillAlpha)
+  }
+  else{
+    ### To Do
+  }
+}
+
+
+
+#p <- p + annotate(geom = "rect", xmin = tmp$sunrise[1], xmax = tmp$sunset[1], ymin = -Inf, ymax = Inf, fill = sunriseColour, alpha = 0.5)
+  
+p
+  
+```
+
+```{r Curlew Plot 1}
+# Choose tag to plot
+currentTagID <- 60472
+
+## Choose time range to plot
+# Set completeTimeRange to 1 to plot all detections for the tag
+completeTimeRange <- 0
+# User-defined start and end time - in AEST
+# Curlew Plot 1
+timeStart <- "2023-03-27 00:00:00"
+timeEnd <- "2023-03-29 24:00:00"
+sunReceiver <- "Milham's Pond"
+# Curlew Plot 2
+#timeStart <- "2023-04-10 00:00:00"
+#timeEnd <- "2023-04-14 24:00:00"
+#sunReceiver <- "Milham's Pond"
+# Curlew Plot 3
+#timeStart <- "2023-04-20 00:00:00"
+#timeEnd <- "2023-04-23 24:00:00"
+#sunReceiver <- "Fullerton Entrance"
+
+# Graphical Options - General
+pointSize <- 1.5
+showPlotTitle <- 0
+
+# Sunrise and Sunset Graphical Options
+plotSun <- 1 # Sunrise and sunset vertical lines
+sunriseColour = "#ff9933"
+sunsetColour = "#530066"
+sunLineAlpha = 1
+sunLineWidth = 1
+sunFillAlpha = 0.06
+sunLineType = "longdash"
+
+# Receiver for sunrise/set
+#sunReceiver <- "Milham's Pond"
+#sunReceiver <- "Fullerton Entrance"
+
+# Graphical Options - Tide
+plotTidalCurve <- 1 # Interpolated tidal curve
+plotTide <- 0 # High and low tide vertical lines
+tideColour = "#61caff"
+tideLineWidth = 2
+tideAlpha = 0.6
+
+# Graphical Options - Font
+fontSizeAxisTitle = 14
+fontSizeAxisTicks = 10
+fontSizeLegendTitle = 13 
+fontSizeLegendLabels = 11
+
+paddingAxisTitle = 10
+
+#### End of User Input ####
+
+# Set start and end time for plot
+if (completeTimeRange) {
+  # Get time interval from first and last detections
+  timeStart <- min(filter(df.alltags,motusTagID == currentTagID)$timeAus)
+  timeEnd <- max(filter(df.alltags,motusTagID == currentTagID)$timeAus)
+} else{
+  timeStart <- ymd_hms(timeStart ,tz = "Australia/Sydney")
+  timeEnd <- ymd_hms(timeEnd ,tz = "Australia/Sydney")
+}
+
+# Filter by tag and time interval
+tmp <- filter(df.alltags, motusTagID == currentTagID, timeAus >= timeStart, timeAus <= timeEnd)
+
+# Get sunrise and sunset times during time interval
+plot.sunrise <- (tmp %>% filter(recvDeployName==sunReceiver) %>% dplyr::select(sunrise) %>% unique())$sunrise
+plot.sunset <- (tmp %>% filter(recvDeployName==sunReceiver) %>% dplyr::select(sunset) %>% unique())$sunset
+
+# Create plot
+p1 <- tmp %>%  
+  ggplot(aes(timeAus, sigPositive)) # x-axis = signal strength, y-axis = time
+  
+  # Add tidal curve
+if (plotTidalCurve) {
+  p1 <- plot.addTidalCurve(p1)
+}
+  
+  ## Gridlines and background
+  p1 <- p1 + theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank()) +
+  theme(panel.background = element_blank()) +
+  
+  # Plot points
+  geom_point(aes(colour = recvDeployName, shape = recvDeployName), 
+             size = pointSize) +
+             #size = pointSize, 
+             #shape = pointShape) + 
+  
+  ## Automatic legend
+  #labs(colour = "Receiver", shape = "Receiver") + # Legend title
+  #theme(legend.text = element_text(size = fontSizeLegendLabels),
+   #    legend.title = element_text(size = fontSizeLegendTitle)) +  
+  
+  ## Manually labelled legend
+  scale_colour_discrete(name = "Receiver",
+                        labels = c("Fullerton Entrance", "Milham's Pond")) +
+    scale_shape_discrete(name = "Receiver",
+                       labels = c("Fullerton Entrance", "Milham's Pond")) +
+  
+ # guides(colour = guide_legend(order = 1, byrow = TRUE), shape = guide_legend(order = 1, byrow = TRUE)) + # Make this legend appear first
+  
+  ## Axes
+  ylab("Signal Strength") + 
+  xlab(NULL) +
+  xlim(timeStart,timeEnd) +
+  theme(axis.line.x = element_line(linewidth = 1, colour = "black"), 
+        axis.title.x = element_text(size = fontSizeAxisTitle, margin = margin(t = paddingAxisTitle)),
+        axis.text.x = element_text(size = fontSizeAxisTicks),
+        
+        axis.line.y.left = element_line(linewidth = 1, colour = "black"),
+        axis.line.y.right = element_line(linewidth = 1, colour = tideColour),
+        axis.title.y = element_text(size = fontSizeAxisTitle, margin = margin(r = paddingAxisTitle)),
+        axis.text.y = element_text(size = fontSizeAxisTicks),
+        legend.spacing.y = unit(8,'pt'),
+        legend.position = "none") +
+    scale_x_datetime(breaks = "12 hours",expand = c(0,0), date_labels = "%e %b\n%H:%M")
+  
+  
+  if(showPlotTitle){
+  
+## Automatic plot title
+ p1 <- p1 + ggtitle(paste("Detections for Tag",currentTagID,"(",tagInfo %>% filter(motusTagID==currentTagID) %>% select(species),")")) +
+theme(plot.title = element_text(hjust = 0.5))
+}
+
+  
+  ## Custom plot title
+  #ggtitle("Tag 60472 - Eastern Curlew") + theme(plot.title = element_text(hjust = 0.5)) 
+
+# Add sunset and sunrise
+if (plotSun) {
+  p1 <- plot.addSunriseSet(p1)
+}
+
+# Add high and low tides
+if (plotTide) {
+  p1 <- plot.addTideHighLow(p1)
+}
+
+
+# Add sunrise shading  
+#p1 <- p1 + annotate(geom = "rect", xmin = tmp$sunrise %>% unique(), xmax = tmp$sunset %>% unique(), ymin = -Inf, ymax = Inf, fill = sunriseColour, alpha = 0.5)
+  
+# Fill days
+#  p1 <- p1 + annotate(geom = "rect", xmin = sunrise$sunrise, xmax = sunset$sunset, ymin = -Inf, ymax = Inf, fill = sunriseColour, alpha = 0.5)
+  
+# Fill nights
+#p1 <- p1 + annotate(geom = "rect", xmin = sunset$sunset, xmax = sunrise$sunrise, ymin = -Inf, ymax = Inf, fill = sunsetColour, alpha = 0.5)
+
+
+if (plot.sunrise[1]<plot.sunset[1]){
+  # Lower xlim to first sunrise
+  p1 <- p1 + annotate(geom = "rect", xmin = timeStart, xmax = plot.sunrise[1], ymin = -Inf, ymax = Inf, fill = sunsetColour, alpha = sunFillAlpha)
+  
+  # Check if equal number of sunrises and sunsets
+  if (length(plot.sunrise) == length(plot.sunset)){
+    
+    # All sunrise -> sunset
+    p1 <- p1 + annotate(geom = "rect", xmin = plot.sunrise, xmax = plot.sunset, ymin = -Inf, ymax = Inf, fill = sunriseColour, alpha = sunFillAlpha)
+    
+    # Sunset -> sunrise (excluding last)
+    p1 <- p1 + annotate(geom = "rect", xmin = plot.sunset[1:length(plot.sunset)-1], xmax = plot.sunrise[2:length(plot.sunrise)], ymin = -Inf, ymax = Inf, fill = sunsetColour, alpha = sunFillAlpha)
+    
+    # Last sunset -> upper xlim
+    p1 <- p1 + annotate(geom = "rect", xmin = plot.sunset[length(plot.sunset)], xmax = timeEnd, ymin = -Inf, ymax = Inf, fill = sunsetColour, alpha = sunFillAlpha)
+  }
+  else{
+    ### To Do
+  }
+}
+
+
+
+#p1 <- p1 + annotate(geom = "rect", xmin = tmp$sunrise[1], xmax = tmp$sunset[1], ymin = -Inf, ymax = Inf, fill = sunriseColour, alpha = 0.5)
+  
+p1
+  
+```
+
+```{r Curlew Plot Small Period FINAL}
+# Choose tag to plot
+currentTagID <- 60472
+
+## Choose time range to plot
+# Set completeTimeRange to 1 to plot all detections for the tag
+completeTimeRange <- 0
+# User-defined start and end time - in AEST
+# Curlew Plot 1
+#timeStart <- "2023-03-27 00:00:00"
+#timeEnd <- "2023-03-29 24:00:00"
+#sunReceiver <- "Milham's Pond"
+# Curlew Plot 2
+#timeStart <- "2023-04-10 00:00:00"
+#timeEnd <- "2023-04-14 24:00:00"
+#sunReceiver <- "Milham's Pond"
+# Curlew Plot 3
+timeStart <- "2023-04-20 00:00:00"
+timeEnd <- "2023-04-23 24:00:00"
+sunReceiver <- "Fullerton Entrance"
+
+# Graphical Options - General
+pointSize <- 1.5
+showPlotTitle <- 0
+
+# Sunrise and Sunset Graphical Options
+plotSun <- 1 # Sunrise and sunset vertical lines
+sunriseColour = "#ff9933"
+sunsetColour = "#530066"
+sunLineAlpha = 1
+sunLineWidth = 1
+sunFillAlpha = 0.06
+sunLineType = "longdash"
+
+# Receiver for sunrise/set
+#sunReceiver <- "Milham's Pond"
+#sunReceiver <- "Fullerton Entrance"
+
+# Graphical Options - Tide
+plotTidalCurve <- 1 # Interpolated tidal curve
+plotTide <- 0 # High and low tide vertical lines
+tideColour = "#61caff"
+tideLineWidth = 2
+tideAlpha = 0.6
+
+# Graphical Options - Font
+fontSizeAxisTitle = 18
+fontSizeAxisTicks = 14
+fontSizeLegendTitle = 17 
+fontSizeLegendLabels = 15
+
+paddingAxisTitle = 10
+
+#### End of User Input ####
+
+# Set start and end time for plot
+if (completeTimeRange) {
+  # Get time interval from first and last detections
+  timeStart <- min(filter(df.alltags,motusTagID == currentTagID)$timeAus)
+  timeEnd <- max(filter(df.alltags,motusTagID == currentTagID)$timeAus)
+} else{
+  timeStart <- ymd_hms(timeStart ,tz = "Australia/Sydney")
+  timeEnd <- ymd_hms(timeEnd ,tz = "Australia/Sydney")
+}
+
+# Filter by tag and time interval
+tmp <- filter(df.alltags, motusTagID == currentTagID, timeAus >= timeStart, timeAus <= timeEnd)
+
+# Get sunrise and sunset times during time interval
+plot.sunrise <- (tmp %>% filter(recvDeployName==sunReceiver) %>% dplyr::select(sunrise) %>% unique())$sunrise
+plot.sunset <- (tmp %>% filter(recvDeployName==sunReceiver) %>% dplyr::select(sunset) %>% unique())$sunset
+
+# Create plot
+p2 <- tmp %>%  
+  ggplot(aes(timeAus, sigPositive)) # x-axis = signal strength, y-axis = time
+  
+  # Add tidal curve
+if (plotTidalCurve) {
+  p2 <- plot.addTidalCurve(p2)
+}
+  
+  ## Gridlines and background
+  p2 <- p2 + theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank()) +
+  theme(panel.background = element_blank()) +
+  
+  # Plot points
+  geom_point(aes(colour = recvDeployName, shape = recvDeployName), 
+             size = pointSize) +
+             #size = pointSize, 
+             #shape = pointShape) + 
+    
+  scale_colour_manual(
+    values = c("Fullerton Entrance" = "#f8766d", "Milham's Pond" = "#00bfc4"),
+    name = "Receiver",
+    labels = c("Milham's Pond" = "Milhams Pond")
+  ) +
+  scale_shape_manual(
+    values = c("Fullerton Entrance" = 16, "Milham's Pond" = 17), # 16 = circle, 17 = triangle
+    name = "Receiver",
+    labels = c("Milham's Pond" = "Milhams Pond")
+  ) +
+  guides(
+    colour = guide_legend(override.aes = list(shape = c(16, 17))),  # Ensures only one legend
+    shape = "none"  # Hide shape legend
+  ) +
+    
+  theme(legend.text = element_text(size = fontSizeLegendLabels),
+        legend.title = element_text(size = fontSizeLegendTitle)) +  
+  
+  ## Automatic legend
+  #labs(colour = "Receiver", shape = "Receiver") + # Legend title
+  #theme(legend.text = element_text(size = fontSizeLegendLabels),
+  #      legend.title = element_text(size = fontSizeLegendTitle)) +  
+  
+  ## Manually labelled legend
+  #scale_colour_discrete(name = "Receiver",
+   #                     labels = c("Fullerton Entrance", "Milham's Pond")) +
+  #  scale_shape_discrete(name = "Receiver",
+   #                     labels = c("Fullerton Entrance", "Milham's Pond")) +
+  
+  guides(colour = guide_legend(order = 1, byrow = TRUE), shape = guide_legend(order = 1, byrow = TRUE)) + # Make this legend appear first
+  
+  ## Axes
+  ylab("Signal Strength") + 
+  xlab("Date (AEST)") +
+  #xlab(NULL) +
+  xlim(timeStart,timeEnd) +
+  theme(axis.line.x = element_line(linewidth = 1, colour = "black"), 
+        axis.title.x = element_text(size = fontSizeAxisTitle, margin = margin(t = paddingAxisTitle)),
+        axis.text.x = element_text(size = fontSizeAxisTicks),
+        
+        axis.line.y.left = element_line(linewidth = 1, colour = "black"),
+        axis.line.y.right = element_line(linewidth = 1, colour = tideColour),
+        axis.title.y = element_text(size = fontSizeAxisTitle, margin = margin(r = paddingAxisTitle)),
+        axis.text.y = element_text(size = fontSizeAxisTicks),
+        legend.spacing.y = unit(8,'pt')) +
+    scale_x_datetime(breaks = "12 hours",expand = c(0,0), date_labels = "%e %b\n%H:%M")
+  
+  
+  if(showPlotTitle){
+  
+## Automatic plot title
+ p2 <- p2 + ggtitle(paste("Detections for Tag",currentTagID,"(",tagInfo %>% filter(motusTagID==currentTagID) %>% select(species),")")) +
+theme(plot.title = element_text(hjust = 0.5))
+}
+
+  
+  ## Custom plot title
+  #ggtitle("Tag 60472 - Eastern Curlew") + theme(plot.title = element_text(hjust = 0.5)) 
+
+# Add sunset and sunrise
+if (plotSun) {
+  p2 <- plot.addSunriseSet(p2)
+}
+
+# Add high and low tides
+if (plotTide) {
+  p2 <- plot.addTideHighLow(p2)
+}
+
+
+# Add sunrise shading  
+#p2 <- p2 + annotate(geom = "rect", xmin = tmp$sunrise %>% unique(), xmax = tmp$sunset %>% unique(), ymin = -Inf, ymax = Inf, fill = sunriseColour, alpha = 0.5)
+  
+# Fill days
+#  p2 <- p2 + annotate(geom = "rect", xmin = sunrise$sunrise, xmax = sunset$sunset, ymin = -Inf, ymax = Inf, fill = sunriseColour, alpha = 0.5)
+  
+# Fill nights
+#p2 <- p2 + annotate(geom = "rect", xmin = sunset$sunset, xmax = sunrise$sunrise, ymin = -Inf, ymax = Inf, fill = sunsetColour, alpha = 0.5)
+
+
+if (plot.sunrise[1]<plot.sunset[1]){
+  # Lower xlim to first sunrise
+  p2 <- p2 + annotate(geom = "rect", xmin = timeStart, xmax = plot.sunrise[1], ymin = -Inf, ymax = Inf, fill = sunsetColour, alpha = sunFillAlpha)
+  
+  # Check if equal number of sunrises and sunsets
+  if (length(plot.sunrise) == length(plot.sunset)){
+    
+    # All sunrise -> sunset
+    p2 <- p2 + annotate(geom = "rect", xmin = plot.sunrise, xmax = plot.sunset, ymin = -Inf, ymax = Inf, fill = sunriseColour, alpha = sunFillAlpha)
+    
+    # Sunset -> sunrise (excluding last)
+    p2 <- p2 + annotate(geom = "rect", xmin = plot.sunset[1:length(plot.sunset)-1], xmax = plot.sunrise[2:length(plot.sunrise)], ymin = -Inf, ymax = Inf, fill = sunsetColour, alpha = sunFillAlpha)
+    
+    # Last sunset -> upper xlim
+    p2 <- p2 + annotate(geom = "rect", xmin = plot.sunset[length(plot.sunset)], xmax = timeEnd, ymin = -Inf, ymax = Inf, fill = sunsetColour, alpha = sunFillAlpha)
+  }
+  else{
+    ### To Do
+  }
+}
+
+
+
+#p2 <- p2 + annotate(geom = "rect", xmin = tmp$sunrise[1], xmax = tmp$sunset[1], ymin = -Inf, ymax = Inf, fill = sunriseColour, alpha = 0.5)
+  
+p2
+  
+```
+
+```{r Curlew Plot Long Period FINAL}
+# Choose tag to plot
+currentTagID <- 60472
+
+## Choose time range to plot
+# Set completeTimeRange to 1 to plot all detections for the tag
+completeTimeRange <- 1
+# User-defined start and end time - in AEST
+# Curlew Plot 1
+#timeStart <- "2023-03-27 00:00:00"
+#timeEnd <- "2023-03-29 24:00:00"
+#sunReceiver <- "Milham's Pond"
+# Curlew Plot 2
+#timeStart <- "2023-04-10 00:00:00"
+#timeEnd <- "2023-04-14 24:00:00"
+#sunReceiver <- "Milham's Pond"
+# Curlew Plot 3
+timeStart <- "2023-04-20 00:00:00"
+timeEnd <- "2023-04-23 24:00:00"
+sunReceiver <- "Fullerton Entrance"
+
+# Graphical Options - General
+pointSize <- 1.5
+showPlotTitle <- 0
+
+# Sunrise and Sunset Graphical Options
+plotSun <- 0 # Sunrise and sunset vertical lines
+sunriseColour = "#ff9933"
+sunsetColour = "#530066"
+sunLineAlpha = 1
+sunLineWidth = 1
+sunFillAlpha = 0.06
+sunLineType = "longdash"
+
+# Receiver for sunrise/set
+#sunReceiver <- "Milham's Pond"
+#sunReceiver <- "Fullerton Entrance"
+
+# Graphical Options - Tide
+plotTidalCurve <- 0 # Interpolated tidal curve
+plotTide <- 0 # High and low tide vertical lines
+tideColour = "#61caff"
+tideLineWidth = 2
+tideAlpha = 0.6
+
+# Graphical Options - Font
+fontSizeAxisTitle = 18
+fontSizeAxisTicks = 14
+fontSizeLegendTitle = 17 
+fontSizeLegendLabels = 15
+
+paddingAxisTitle = 10
+
+#### End of User Input ####
+
+# Set start and end time for plot
+if (completeTimeRange) {
+  # Get time interval from first and last detections
+  timeStart <- min(filter(df.alltags,motusTagID == currentTagID)$timeAus)
+  timeEnd <- max(filter(df.alltags,motusTagID == currentTagID)$timeAus)
+} else{
+  timeStart <- ymd_hms(timeStart ,tz = "Australia/Sydney")
+  timeEnd <- ymd_hms(timeEnd ,tz = "Australia/Sydney")
+}
+
+# Filter by tag and time interval
+tmp <- filter(df.alltags, motusTagID == currentTagID, timeAus >= timeStart, timeAus <= timeEnd)
+
+# Get sunrise and sunset times during time interval
+plot.sunrise <- (tmp %>% filter(recvDeployName==sunReceiver) %>% dplyr::select(sunrise) %>% unique())$sunrise
+plot.sunset <- (tmp %>% filter(recvDeployName==sunReceiver) %>% dplyr::select(sunset) %>% unique())$sunset
+
+# Create plot
+p2 <- tmp %>%  
+  ggplot(aes(timeAus, sigPositive)) # x-axis = signal strength, y-axis = time
+  
+  # Add tidal curve
+if (plotTidalCurve) {
+  p2 <- plot.addTidalCurve(p2)
+}
+  
+  ## Gridlines and background
+  p2 <- p2 + theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank()) +
+  theme(panel.background = element_blank()) +
+  
+  # Plot points
+  geom_point(aes(colour = recvDeployName, shape = recvDeployName), 
+             size = pointSize) +
+             #size = pointSize, 
+             #shape = pointShape) + 
+    
+  scale_colour_manual(
+    values = c("Fullerton Entrance" = "#f8766d", "Milhams Pond" = "#00bfc4"),
+    name = "Receiver"
+  ) +
+  scale_shape_manual(
+    values = c("Fullerton Entrance" = 16, "Milhams Pond" = 17), # 16 = circle, 17 = triangle
+    name = "Receiver"
+  ) +
+  guides(
+    colour = guide_legend(override.aes = list(shape = c(16, 17))),  # Ensures only one legend
+    shape = "none"  # Hide shape legend
+  ) +
+    
+  theme(legend.text = element_text(size = fontSizeLegendLabels),
+        legend.title = element_text(size = fontSizeLegendTitle)) +  
+  
+  ## Automatic legend
+  #labs(colour = "Receiver", shape = "Receiver") + # Legend title
+  #theme(legend.text = element_text(size = fontSizeLegendLabels),
+  #      legend.title = element_text(size = fontSizeLegendTitle)) +  
+  
+  ## Manually labelled legend
+  #scale_colour_discrete(name = "Receiver",
+   #                     labels = c("Fullerton Entrance", "Milham's Pond")) +
+  #  scale_shape_discrete(name = "Receiver",
+   #                     labels = c("Fullerton Entrance", "Milham's Pond")) +
+  
+  guides(colour = guide_legend(order = 1, byrow = TRUE), shape = guide_legend(order = 1, byrow = TRUE)) + # Make this legend appear first
+  
+  ## Axes
+  ylab("Signal Strength") + 
+  xlab("Date (AEST)") +
+  #xlab(NULL) +
+  xlim(timeStart,timeEnd) +
+  theme(axis.line.x = element_line(linewidth = 1, colour = "black"), 
+        axis.title.x = element_text(size = fontSizeAxisTitle, margin = margin(t = paddingAxisTitle)),
+        axis.text.x = element_text(size = fontSizeAxisTicks),
+        
+        axis.line.y.left = element_line(linewidth = 1, colour = "black"),
+        axis.line.y.right = element_line(linewidth = 1, colour = tideColour),
+        axis.title.y = element_text(size = fontSizeAxisTitle, margin = margin(r = paddingAxisTitle)),
+        axis.text.y = element_text(size = fontSizeAxisTicks),
+        legend.spacing.y = unit(8,'pt')) +
+    scale_x_datetime(breaks = "3 days",expand = c(0,0), date_labels = "%e %b")
+  
+  
+  if(showPlotTitle){
+  
+## Automatic plot title
+ p2 <- p2 + ggtitle(paste("Detections for Tag",currentTagID,"(",tagInfo %>% filter(motusTagID==currentTagID) %>% select(species),")")) +
+theme(plot.title = element_text(hjust = 0.5))
+}
+
+  
+  ## Custom plot title
+  #ggtitle("Tag 60472 - Eastern Curlew") + theme(plot.title = element_text(hjust = 0.5)) 
+
+# Add sunset and sunrise
+if (plotSun) {
+  p2 <- plot.addSunriseSet(p2)
+}
+
+# Add high and low tides
+if (plotTide) {
+  p2 <- plot.addTideHighLow(p2)
+}
+
+
+# Add sunrise shading  
+#p2 <- p2 + annotate(geom = "rect", xmin = tmp$sunrise %>% unique(), xmax = tmp$sunset %>% unique(), ymin = -Inf, ymax = Inf, fill = sunriseColour, alpha = 0.5)
+  
+# Fill days
+#  p2 <- p2 + annotate(geom = "rect", xmin = sunrise$sunrise, xmax = sunset$sunset, ymin = -Inf, ymax = Inf, fill = sunriseColour, alpha = 0.5)
+  
+# Fill nights
+#p2 <- p2 + annotate(geom = "rect", xmin = sunset$sunset, xmax = sunrise$sunrise, ymin = -Inf, ymax = Inf, fill = sunsetColour, alpha = 0.5)
+
+
+
+
+
+
+#p2 <- p2 + annotate(geom = "rect", xmin = tmp$sunrise[1], xmax = tmp$sunset[1], ymin = -Inf, ymax = Inf, fill = sunriseColour, alpha = 0.5)
+  
+p2
+  
+```
+
+```{Curlew Plot 3}
+# Choose tag to plot
+currentTagID <- 60472
+
+## Choose time range to plot
+# Set completeTimeRange to 1 to plot all detections for the tag
+completeTimeRange <- 0
+# User-defined start and end time - in AEST
+# Curlew Plot 1
+#timeStart <- "2023-03-27 00:00:00"
+#timeEnd <- "2023-03-29 24:00:00"
+#sunReceiver <- "Milham's Pond"
+# Curlew Plot 2
+#timeStart <- "2023-04-10 00:00:00"
+#timeEnd <- "2023-04-14 24:00:00"
+#sunReceiver <- "Milham's Pond"
+# Curlew Plot 3
+timeStart <- "2023-04-20 00:00:00"
+timeEnd <- "2023-04-23 24:00:00"
+sunReceiver <- "Fullerton Entrance"
+
+# Graphical Options - General
+pointSize <- 1.5
+showPlotTitle <- 0
+
+# Sunrise and Sunset Graphical Options
+plotSun <- 1 # Sunrise and sunset vertical lines
+sunriseColour = "#ff9933"
+sunsetColour = "#530066"
+sunLineAlpha = 1
+sunLineWidth = 1
+sunFillAlpha = 0.06
+sunLineType = "longdash"
+
+# Receiver for sunrise/set
+#sunReceiver <- "Milham's Pond"
+#sunReceiver <- "Fullerton Entrance"
+
+# Graphical Options - Tide
+plotTidalCurve <- 1 # Interpolated tidal curve
+plotTide <- 0 # High and low tide vertical lines
+tideColour = "#61caff"
+tideLineWidth = 2
+tideAlpha = 0.6
+
+# Graphical Options - Font
+fontSizeAxisTitle = 14
+fontSizeAxisTicks = 10
+fontSizeLegendTitle = 13 
+fontSizeLegendLabels = 11
+
+paddingAxisTitle = 10
+
+#### End of User Input ####
+
+# Set start and end time for plot
+if (completeTimeRange) {
+  # Get time interval from first and last detections
+  timeStart <- min(filter(df.alltags,motusTagID == currentTagID)$timeAus)
+  timeEnd <- max(filter(df.alltags,motusTagID == currentTagID)$timeAus)
+} else{
+  timeStart <- ymd_hms(timeStart ,tz = "Australia/Sydney")
+  timeEnd <- ymd_hms(timeEnd ,tz = "Australia/Sydney")
+}
+
+# Filter by tag and time interval
+tmp <- filter(df.alltags, motusTagID == currentTagID, timeAus >= timeStart, timeAus <= timeEnd)
+
+# Get sunrise and sunset times during time interval
+plot.sunrise <- (tmp %>% filter(recvDeployName==sunReceiver) %>% dplyr::select(sunrise) %>% unique())$sunrise
+plot.sunset <- (tmp %>% filter(recvDeployName==sunReceiver) %>% dplyr::select(sunset) %>% unique())$sunset
+
+# Create plot
+p3 <- tmp %>%  
+  ggplot(aes(timeAus, sigPositive)) # x-axis = signal strength, y-axis = time
+  
+  # Add tidal curve
+if (plotTidalCurve) {
+  p3 <- plot.addTidalCurve(p3)
+}
+  
+  ## Gridlines and background
+  p3 <- p3 + theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank()) +
+  theme(panel.background = element_blank()) +
+  
+  # Plot points
+  geom_point(aes(colour = recvDeployName, shape = recvDeployName), 
+             size = pointSize) +
+             #size = pointSize, 
+             #shape = pointShape) + 
+  
+  ## Automatic legend
+  labs(colour = "Receiver", shape = "Receiver") + # Legend title
+  theme(legend.text = element_text(size = fontSizeLegendLabels),
+        legend.title = element_text(size = fontSizeLegendTitle)) +  
+  
+  ## Manually labelled legend
+  #scale_colour_discrete(name = "Receiver",
+   #                     labels = c("Fullerton Entrance", "Milham's Pond")) +
+  #  scale_shape_discrete(name = "Receiver",
+   #                     labels = c("Fullerton Entrance", "Milham's Pond")) +
+  
+  guides(colour = guide_legend(order = 1, byrow = TRUE), shape = guide_legend(order = 1, byrow = TRUE)) + # Make this legend appear first
+  
+  ## Axes
+  ylab("Signal Strength") + 
+  xlab("Date (AEST)") +
+  xlim(timeStart,timeEnd) +
+  theme(axis.line.x = element_line(linewidth = 1, colour = "black"), 
+        axis.title.x = element_text(size = fontSizeAxisTitle, margin = margin(t = paddingAxisTitle)),
+        axis.text.x = element_text(size = fontSizeAxisTicks),
+        
+        axis.line.y.left = element_line(linewidth = 1, colour = "black"),
+        axis.line.y.right = element_line(linewidth = 1, colour = tideColour),
+        axis.title.y = element_text(size = fontSizeAxisTitle, margin = margin(r = paddingAxisTitle)),
+        axis.text.y = element_text(size = fontSizeAxisTicks),
+        legend.spacing.y = unit(8,'pt'),
+        legend.position = "none") +
+    scale_x_datetime(breaks = "12 hours",expand = c(0,0), date_labels = "%e %b\n%H:%M")
+  
+  
+  if(showPlotTitle){
+  
+## Automatic plot title
+ p3 <- p3 + ggtitle(paste("Detections for Tag",currentTagID,"(",tagInfo %>% filter(motusTagID==currentTagID) %>% select(species),")")) +
+theme(plot.title = element_text(hjust = 0.5))
+}
+
+  
+  ## Custom plot title
+  #ggtitle("Tag 60472 - Eastern Curlew") + theme(plot.title = element_text(hjust = 0.5)) 
+
+# Add sunset and sunrise
+if (plotSun) {
+  p3 <- plot.addSunriseSet(p3)
+}
+
+# Add high and low tides
+if (plotTide) {
+  p3 <- plot.addTideHighLow(p3)
+}
+
+
+# Add sunrise shading  
+#p3 <- p3 + annotate(geom = "rect", xmin = tmp$sunrise %>% unique(), xmax = tmp$sunset %>% unique(), ymin = -Inf, ymax = Inf, fill = sunriseColour, alpha = 0.5)
+  
+# Fill days
+#  p3 <- p3 + annotate(geom = "rect", xmin = sunrise$sunrise, xmax = sunset$sunset, ymin = -Inf, ymax = Inf, fill = sunriseColour, alpha = 0.5)
+  
+# Fill nights
+#p3 <- p3 + annotate(geom = "rect", xmin = sunset$sunset, xmax = sunrise$sunrise, ymin = -Inf, ymax = Inf, fill = sunsetColour, alpha = 0.5)
+
+
+if (plot.sunrise[1]<plot.sunset[1]){
+  # Lower xlim to first sunrise
+  p3 <- p3 + annotate(geom = "rect", xmin = timeStart, xmax = plot.sunrise[1], ymin = -Inf, ymax = Inf, fill = sunsetColour, alpha = sunFillAlpha)
+  
+  # Check if equal number of sunrises and sunsets
+  if (length(plot.sunrise) == length(plot.sunset)){
+    
+    # All sunrise -> sunset
+    p3 <- p3 + annotate(geom = "rect", xmin = plot.sunrise, xmax = plot.sunset, ymin = -Inf, ymax = Inf, fill = sunriseColour, alpha = sunFillAlpha)
+    
+    # Sunset -> sunrise (excluding last)
+    p3 <- p3 + annotate(geom = "rect", xmin = plot.sunset[1:length(plot.sunset)-1], xmax = plot.sunrise[2:length(plot.sunrise)], ymin = -Inf, ymax = Inf, fill = sunsetColour, alpha = sunFillAlpha)
+    
+    # Last sunset -> upper xlim
+    p3 <- p3 + annotate(geom = "rect", xmin = plot.sunset[length(plot.sunset)], xmax = timeEnd, ymin = -Inf, ymax = Inf, fill = sunsetColour, alpha = sunFillAlpha)
+  }
+  else{
+    ### To Do
+  }
+}
+
+
+
+#p3 <- p3 + annotate(geom = "rect", xmin = tmp$sunrise[1], xmax = tmp$sunset[1], ymin = -Inf, ymax = Inf, fill = sunriseColour, alpha = 0.5)
+  
+p3
+  
+```
+
+```{r Plot Detections for Single Tag by Single Receiver}
+# Choose tag and receiver to plot
+currentTagID <- 81140
+tmp.receiver <- "Curlew Point"
+
+## Choose time range to plot
+# Set completeTimeRange to 1 to plot all detections for the tag
+completeTimeRange <- 0 
+# User-defined start and end time
+timeStart <- "2023-04-20 00:00:00"
+timeEnd <- "2023-04-24 24:00:00"
+
+# Graphical options
+plotTidalCurve <- 1
+plotSun <- 1
+plotTide <- 0
+
+pointSize <- 1.5
+pointColour <- "#619CFF"
+
+# Set start and end time for plot
+if (completeTimeRange) {
+  # Get time interval from first and last detections
+  timeStart <- min(filter(df.alltags,motusTagID == currentTagID, recvDeployName == tmp.Receiver)$timeAus)
+  timeEnd <- max(filter(df.alltags,motusTagID == currentTagID, recvDeployName == tmp.Receiver)$timeAus)
+} else{
+  timeStart <- ymd_hms(timeStart, tz = "Australia/Sydney")
+  timeEnd <- ymd_hms(timeEnd, tz = "Australia/Sydney")
+}
+
+# Filter by tag and time interval
+tmp <- filter(df.alltags, motusTagID == currentTagID, timeAus >= timeStart, timeAus <= timeEnd)
+
+# Create plot
+p <- tmp %>% 
+  ggplot(aes(timeAus, sigPositive)) + # x-axis = signal strength, y-axis = time
+  
+  # Plot points
+  geom_point( 
+             size = pointSize, 
+             shape = pointShape,
+             colour = pointColour) + 
+
+  
+  ## Manually labelled legend
+  #scale_colour_discrete(name = "Receiver",
+                        #labels = c("Receiver 1", "Receiver 2")) +
+  
+  
+  # Axis titles
+  ylab("Signal Strength") + 
+  xlab("Date-Time") + 
+  
+  ## Automatic plot title
+ ggtitle(paste("Detections for Tag",currentTagID,"(",tagInfo %>% filter(motusTagID==currentTagID) %>% select(species),") at",tmp.receiver)) +
+  theme_gray(base_size = 14) +
+theme(plot.title = element_text(hjust = 0.5))
+  
+  ## Custom plot title
+  #ggtitle("Tag 60472 - Eastern Curlew") + theme(plot.title = element_text(hjust = 0.5)) 
+
+# Add sunset and sunrise
+if (plotSun) {
+  p <- plot.addSunriseSet(p)
+}
+
+# Add high and low tides
+if (plotTide) {
+  p <- plot.addTideHighLow(p)
+}
+
+# Add tidal curve
+if (plotTidalCurve) {
+  p <- plot.addTidalCurve(p)
+}
+
+p
+  
+```
+
+```{r Plot Detections for Single Receiver by Name}
+# Choose receiver to plot
+currentReceiver <- "Curlew Point"
+
+## Choose time range to plot
+# Set completeTimeRange to 1 to plot all detections for the tag
+completeTimeRange <- 0 
+# User-defined start and end time
+timeStart <- "2023-10-25 00:00:00"
+timeEnd <- "2023-10-27 24:00:00"
+
+# Graphical options
+plotTidalCurve <- 1
+plotSun <- 1
+plotTide <- 0
+pointSize <- 1.5
+
+
+# Set start and end time for plot
+if (completeTimeRange) {
+  # Get time interval from first and last detections
+  timeStart <- min(df.alltags$timeAus)
+  timeEnd <- max(df.alltags$timeAus)
+} else{
+  # Set time interval manually
+  #timeStart <- ymd_hms("2023-09-01 17:00:00",tz = "Australia/Sydney")
+  #timeEnd <- ymd_hms("2023-09-04 12:00:00", tz = "Australia/Sydney")
+  # Avocets - after banding
+  timeStart <- ymd_hms("2023-10-25 05:00:00",tz = "Australia/Sydney")
+  timeEnd <- ymd_hms("2023-10-27 24:00:00",tz = "Australia/Sydney")
+}
+
+# Filter by receiver and time interval
+tmp <- filter(df.alltags, recvDeployName == currentReceiver, timeAus >= timeStart, timeAus <= timeEnd)
+
+p <- tmp %>% 
+  ggplot(aes(x = timeAus, y = sigPositive)) + # x-axis = signal strength, y-axis = time
+  
+  # Plot points
+  geom_point(aes(colour = as.character(speciesEN)),
+                 shape = pointShape,
+                 size = pointSize) + # 
+  
+  # Legend
+  labs(colour = "Species", ) + 
+  guides(colour = guide_legend(order = 1)) + # Make this legend appear first
+
+  # Axis titles
+  ylab("Signal Strength") + 
+  xlab("Date-Time") +
+  
+  ## Automatic title 
+  ggtitle(paste("Detections at",currentReceiver)) + theme(plot.title = element_text(hjust = 0.5)) # Plot title
+  
+  ## Custom title
+  # ggtitle("Pied Stilt Detections") + theme(plot.title = element_text(hjust = 0.5)) # Plot title
+
+  
+# Add sunset and sunrise
+if (plotSun) {
+  p <- plot.addSunriseSet(p)
+}
+
+# Add high and low tides
+if (plotTide) {
+  p <- plot.addTideHighLow(p)
+}
+
+# Add tidal curve
+if (plotTidalCurve) {
+  p <- plot.addTidalCurve(p)
+}
+
+  
+p
+  
+```
+
+```{r Plot Detections for Single Species - Facet by Receiver}
+# Choose species to plot
+#currentSpecies <- "Red-necked Avocet"
+#currentSpecies <- "Bar-tailed Godwit"
+currentSpecies <- "Pacific Golden-Plover"
+
+## Choose time range to plot
+# Set completeTimeRange to 1 to plot all detections for the tag
+completeTimeRange <- 0 
+# User-defined start and end time
+timeStart <- "2024-11-24 00:00:00"
+timeEnd <- "2024-12-13 24:00:00"
+
+# Graphical options
+plotTidalCurve <- 1
+plotSun <- 0
+plotTide <- 0
+pointSize <- 1
+
+# Set start and end time for plot
+if (completeTimeRange) {
+  # Get time interval from first and last detections
+  timeStart <- min(df.alltags$timeAus)
+  timeEnd <- max(df.alltags$timeAus)
+} else{
+  timeStart <- ymd_hms(timeStart, tz = "Australia/Sydney")
+  timeEnd <- ymd_hms(timeEnd, tz = "Australia/Sydney")
+}
+
+# Filter by receiver and time interval
+tmp <- filter(df.alltags, speciesEN == currentSpecies, timeAus >= timeStart, timeAus <= timeEnd)
+
+# Manually remove swan pond
+#tmp <- filter(tmp, recvDeployName != "Swan Pond")
+
+p <- tmp %>% 
+  ggplot(aes(x = timeAus, y = sigPositive)) + # x-axis = signal strength, y-axis = time
+  
+  # Plot points
+  geom_point(aes(colour = as.character(motusTagID)),
+                 shape = pointShape,
+                 size = pointSize) + # 
+  
+  # Grid by receiver
+  facet_grid(vars(recvDeployName)) +
+  #facet_wrap(~factor(recvDeployName, levels = c("Tomago","Fullerton Cove","Curlew Point")), dir = "v", strip.position = "right") +
+  
+  # Legend
+  labs(colour = "Motus Tag ID", ) + 
+  guides(colour = guide_legend(order = 1)) + # Make this legend appear first
+
+  # Axis titles
+  ylab("Signal Strength") + 
+  xlab("Date-Time") +
+  
+  # Font Size
+  theme_gray(base_size = 14) +
+  
+  ## Automatic title 
+  ggtitle(paste("Detections for",currentSpecies)) + theme(plot.title = element_text(hjust = 0.5), legend.justification = c("right","top"))  # Plot title
+
+  
+  ## Custom title
+  # ggtitle("Pied Stilt Detections") + theme(plot.title = element_text(hjust = 0.5)) # Plot title
+
+  
+# Add sunset and sunrise
+if (plotSun) {
+  p <- plot.addSunriseSet(p)
+}
+
+# Add high and low tides
+if (plotTide) {
+  p <- plot.addTideHighLow(p)
+}
+
+# Add tidal curve
+if (plotTidalCurve) {
+  p <- plot.addTidalCurve(p)
+}
+
+  
+p
+```  
+
+```{r Heatmap for Detections by Receiver}
+currentTagID <- 60472
+burstInterval <- 7.0983
+
+# Filter by tag
+tmp <- filter(df.alltags, motusTagID == currentTagID)
+
+# Get list of dates
+tmp.dates <- tmp %>% dplyr::select(dateAus) %>% unique()
+tmp.receivers <- tmp %>% dplyr::select(recvDeployName) %>% unique()
+
+# Number of days
+tmp.nDays <- (max(tmp.dates$dateAus) - min(tmp.dates$dateAus) + 1) %>% as.integer()
+
+# Count number of detections each day
+tmp.data <- tmp %>% count(dateAus, recvDeployName) %>% rename("detections" = "n") 
+
+# Fill in for missing values (dates and receivers with no detections)
+tmp.data <- tmp.data %>% complete(dateAus = seq(min(tmp.data$dateAus),max(tmp.data$dateAus),"day"), recvDeployName, fill = list(detections = 0))
+
+# Calculate percentage of day that tag was detected
+tmp.data <- tmp.data %>% mutate(detectionTime = detections*burstInterval, proportionOfDay = detectionTime/86400)
+
+#p <- tmp.data %>% ggplot(aes(x = dateAus, y = recvDeployName, fill = proportionOfDay)) + 
+#  geom_tile() +
+#  coord_fixed() +
+#  scale_fill_gradient(low = "white", high = "red")
+
+#p
+
+## Test with single receiver
+tmp.receiver <- "Milham's Pond"
+tmp.data <- tmp.data %>% filter(recvDeployName == tmp.receiver)
+
+# Add day as number
+tmp.data <- tmp.data %>% mutate(day = as.numeric(dateAus - min(dateAus) + 1), plotRow = ceiling(3*(day/tmp.nDays)))
+
+# Manual input number of rows
+tmp.nRows = 3
+
+p <- tmp.data %>% ggplot(aes(x = dateAus, y = proportionOfDay)) +
+  geom_col() +
+  geom_col(aes(y = 1), alpha = 0, colour = "black") +
+  #facet_grid(rows = vars(plotRow), scales = "free_x")
+  facet_wrap(~plotRow, nrow = tmp.nRows, scales = "free_x")
+
+# Set y axis limit
+ylim(0, 1)
+
+p
+
+#facet_grid(rows = vars(recvDeployName)) +
+```
+
+```{r Heatmap for Detections all Receiver}
+currentTagID <- 81133
+burstInterval <- tag.burst(currentTagID)
+
+# Filter by tag
+tmp <- filter(df.alltags, motusTagID == currentTagID)
+
+# Get list of dates
+tmp.dates <- tmp %>% dplyr::select(dateAus) %>% unique()
+tmp.receivers <- tmp %>% dplyr::select(recvDeployName) %>% unique()
+
+# Number of days
+tmp.nDays <- (max(tmp.dates$dateAus) - min(tmp.dates$dateAus) + 1) %>% as.integer()
+
+# Count number of detections each day
+tmp.data <- tmp %>% count(dateAus, recvDeployName) %>% rename("detections" = "n") 
+
+# Fill in for missing values (dates and receivers with no detections)
+tmp.data <- tmp.data %>% complete(dateAus = seq(min(tmp.data$dateAus),max(tmp.data$dateAus),"day"), recvDeployName, fill = list(detections = 0))
+
+# Calculate percentage of day that tag was detected
+tmp.data <- tmp.data %>% mutate(detectionTime = detections*burstInterval, proportionOfDay = detectionTime/86400)
+
+#p <- tmp.data %>% ggplot(aes(x = dateAus, y = recvDeployName, fill = proportionOfDay)) + 
+#  geom_tile() +
+#  coord_fixed() +
+#  scale_fill_gradient(low = "white", high = "red")
+
+#p
+
+## Test with single receiver
+#tmp.receiver <- "Milham's Pond"
+#tmp.data <- tmp.data %>% filter(recvDeployName == tmp.receiver)
+
+# Manual input number of rows
+tmp.nRows = 4
+
+# Add day as number
+tmp.data <- tmp.data %>% mutate(day = as.numeric(dateAus - min(dateAus) + 1), plotRow = ceiling(tmp.nRows*(day/tmp.nDays)))
+
+# Set upper x limit (highest proportion to display)
+tmp.xlim <- 0.75
+
+p <- tmp.data %>% ggplot(aes(fill = recvDeployName, x = dateAus, y = proportionOfDay*24)) +
+  geom_col(position = "stack", width = 0.9) + # Add stacked column chart
+  geom_col(aes(y = tmp.xlim*24), alpha = 0, colour = "black", position = "identity", width = 0.9) + # Add rectangles
+  #facet_grid(rows = vars(plotRow), scales = "free_x")
+  facet_wrap(~plotRow, nrow = tmp.nRows, scales = "free_x") +
+  theme(strip.text = element_blank(), # Remove facet labels 
+        panel.background = element_blank(), # Remove background
+        axis.line = element_line(colour = "black")) + # Add axis lines 
+  ylab("Detection Time Period (hours)") +
+  xlab("Date") +
+  labs(fill = "Receiver") 
+p
+
+#facet_grid(rows = vars(recvDeployName)) +
+```
+
+```{r Heatmap for Detections individual Receiver V2}
+currentTagID <- 60472
+burstInterval <- 7.0983
+
+# Filter by tag
+tmp1 <- filter(df.alltags, motusTagID == currentTagID)
+
+# Get list of dates
+tmp1.dates <- tmp1 %>% dplyr::select(dateAus) %>% unique()
+tmp1.receivers <- tmp1 %>% dplyr::select(recvDeployName) %>% unique()
+
+# Number of days
+tmp1.nDays <- (max(tmp1.dates$dateAus) - min(tmp1.dates$dateAus) + 1) %>% as.integer()
+
+# Count number of detections each day
+tmp1.data <- tmp1 %>% count(dateAus, recvDeployName) %>% rename("detections" = "n") 
+
+# Fill in for missing values (dates and receivers with no detections)
+tmp1.data <- tmp1.data %>% complete(dateAus = seq(min(tmp1.data$dateAus),max(tmp1.data$dateAus),"day"), recvDeployName, fill = list(detections = 0))
+
+# Calculate percentage of day that tag was detected
+tmp1.data <- tmp1.data %>% mutate(detectionTime = detections*burstInterval, proportionOfDay = detectionTime/86400)
+
+#p1 <- tmp1.data %>% ggplot(aes(x = dateAus, y = recvDeployName, fill = proportionOfDay)) + 
+#  geom_tile() +
+#  coord_fixed() +
+#  scale_fill_gradient(low = "white", high = "red")
+
+#p1
+
+## Test with single receiver
+#tmp1.receiver <- "Milhams Pond"
+tmp1.receiver <- "Fullerton Entrance"
+tmp1.data <- tmp1.data %>% filter(recvDeployName == tmp1.receiver)
+
+tmp1.fill <- case_when(
+  tmp1.receiver == "Milhams Pond" ~ "#00bfc4",
+  tmp1.receiver == "Fullerton Entrance" ~ "#f8766d"
+)
+
+# Add day as number
+tmp1.data <- tmp1.data %>% mutate(day = as.numeric(dateAus - min(dateAus) + 1), plotRow = ceiling(3*(day/tmp1.nDays)))
+
+# Manual input number of rows
+tmp1.nRows = 4
+
+# Set upper x limit (highest proportion to display)
+#tmp1.xlim <- tmp1.data$proportionOfDay %>% max() %>% RoundTo(multiple = 0.02, FUN = ceiling)
+tmp1.xlim <- tmp1.data$proportionOfDay %>% max()*4/3
+
+p1 <- tmp1.data %>% ggplot(aes(x = dateAus, y = proportionOfDay*24)) +
+  geom_col(position = "stack", width = 0.9, fill = tmp1.fill) + # Add stacked column chart
+  geom_col(aes(y = tmp1.xlim*24), alpha = 0, colour = "black", position = "identity", width = 0.9) + # Add rectangles
+  #facet_grid(rows = vars(plotRow), scales = "free_x")
+  facet_wrap(~plotRow, nrow = tmp1.nRows, scales = "free_x") +
+  theme(strip.text = element_blank(), # Remove facet labels 
+        panel.background = element_blank(), # Remove background
+        axis.line = element_line(colour = "black"),
+        axis.text.x = element_text(size = 12),
+        axis.title.x = element_text(size = 14, margin = margin(t = 10)),
+        axis.text.y = element_text(size = 12),
+        axis.title.y = element_text(size = 14, margin = margin(r = 8)),
+        plot.title = element_text(size = 16)) + # Add axis lines 
+  ylab("Detection Duration (Hours)") +
+  xlab(NULL) +
+  #xlab("Date") +
+  ggtitle(tmp1.receiver) +
+  #ggtitle("Milhams Pond") +
+  easy_center_title() +
+  scale_x_date(date_breaks = "1 day", date_labels = "%b %d")
+  #labs(fill = "Receiver") 
+p1
+
+#facet_grid(rows = vars(recvDeployName)) +
+```
+
+```{r Heatmap for Detections individual Receiver V2 - Second Plot}
+currentTagID <- 60472
+burstInterval <- 7.0983
+
+# Filter by tag
+tmp2 <- filter(df.alltags, motusTagID == currentTagID)
+
+# Get list of dates
+tmp2.dates <- tmp2 %>% dplyr::select(dateAus) %>% unique()
+tmp2.receivers <- tmp2 %>% dplyr::select(recvDeployName) %>% unique()
+
+# Number of days
+tmp2.nDays <- (max(tmp2.dates$dateAus) - min(tmp2.dates$dateAus) + 1) %>% as.integer()
+
+# Count number of detections each day
+tmp2.data <- tmp2 %>% count(dateAus, recvDeployName) %>% rename("detections" = "n") 
+
+# Fill in for missing values (dates and receivers with no detections)
+tmp2.data <- tmp2.data %>% complete(dateAus = seq(min(tmp2.data$dateAus),max(tmp2.data$dateAus),"day"), recvDeployName, fill = list(detections = 0))
+
+# Calculate percentage of day that tag was detected
+tmp2.data <- tmp2.data %>% mutate(detectionTime = detections*burstInterval, proportionOfDay = detectionTime/86400)
+
+#p2 <- tmp2.data %>% ggplot(aes(x = dateAus, y = recvDeployName, fill = proportionOfDay)) + 
+#  geom_tile() +
+#  coord_fixed() +
+#  scale_fill_gradient(low = "white", high = "red")
+
+#p2
+
+## Test with single receiver
+#tmp2.receiver <- "Milham's Pond"
+tmp2.receiver <- "Fullerton Entrance"
+tmp2.data <- tmp2.data %>% filter(recvDeployName == tmp2.receiver)
+
+tmp2.fill <- case_when(
+  tmp2.receiver == "Milham's Pond" ~ "#00bfc4",
+  tmp2.receiver == "Fullerton Entrance" ~ "#f8766d"
+)
+
+# Add day as number
+tmp2.data <- tmp2.data %>% mutate(day = as.numeric(dateAus - min(dateAus) + 1), plotRow = ceiling(3*(day/tmp2.nDays)))
+
+# Manual input number of rows
+tmp2.nRows = 4
+
+# Set upper x limit (highest proportion to display)
+#tmp2.xlim <- tmp2.data$proportionOfDay %>% max() %>% RoundTo(multiple = 0.02, FUN = ceiling)
+tmp2.xlim <- tmp2.data$proportionOfDay %>% max()*4/3
+
+p2 <- tmp2.data %>% ggplot(aes(x = dateAus, y = proportionOfDay*24)) +
+  geom_col(position = "stack", width = 0.9, fill = tmp2.fill) + # Add stacked column chart
+  geom_col(aes(y = tmp2.xlim*24), alpha = 0, colour = "black", position = "identity", width = 0.9) + # Add rectangles
+  #facet_grid(rows = vars(plotRow), scales = "free_x")
+  facet_wrap(~plotRow, nrow = tmp2.nRows, scales = "free_x") +
+  theme(strip.text = element_blank(), # Remove facet labels 
+        panel.background = element_blank(), # Remove background
+        axis.line = element_line(colour = "black"),
+        axis.text.x = element_text(size = 12),
+        axis.title.x = element_text(size = 14, margin = margin(t = 10)),
+        axis.text.y = element_text(size = 12),
+        axis.title.y = element_text(size = 14, margin = margin(r = 8)),
+        plot.title = element_text(size = 16)) + # Add axis lines 
+  ylab("Detection Duration (Hours)") +
+  xlab(NULL) +
+  #xlab("Date") +
+  ggtitle(tmp2.receiver) +
+  easy_center_title() +
+  scale_x_date(date_breaks = "1 day", date_labels = "%b %d")
+  #labs(fill = "Receiver") 
+p2
+
+#facet_grid(rows = vars(recvDeployName)) +
+```
+
+```{r Generate map for current detection period / plot}
+# Import image
+r <- rast("data/StationMap.tif")
+
+# Crop
+map.extent <- extent(16883445, 16901909, -3883200, -3869842)
+r <- crop(r, map.extent)
+
+# Plot in true colour
+plotRGB(aggregate(r,10))
+
+# Select information from receiver info
+receiver.map <- receiverInfo %>% dplyr::select(recvDeployName, uniqueTags, lat, lon, species) #%>% filter(is.na(uniqueTags) == FALSE)
+
+## TO FIX LATER - Download individual .motus files for each station so that the coordinates of stations with no detections can be included (without manual input)
+# Manual coordinate input for now
+receiver.map$lat[2] = -32.8467
+receiver.map$lon[2] = 151.6811
+receiver.map$lat[8] = -32.6906
+receiver.map$lon[8] = 151.9698
+receiver.map$lat[9] = -32.6843
+receiver.map$lon[9] = 152.1371
+
+# Manually filter out receivers
+receiver.remove <- c("Tomago", "Hexham Swamp", "Curlew Point")
+receiver.map <- receiver.map %>% filter(recvDeployName %in% receiver.remove == FALSE)
+
+# Get lat and long and convert to SpatVector (spatial vector from Terra package)
+lat <- receiver.map %>% dplyr::select(lat) %>% lapply(as.numeric) %>% unlist()
+lon <- receiver.map %>% dplyr::select(lon) %>% lapply(as.numeric) %>% unlist()
+lonlat <- cbind(lon, lat)
+receiver.points <- lonlat %>% vect(crs = "+proj=longlat +datum=WGS84") %>% project("EPSG:3857")
+
+# Receiver names
+receiver.points$name <- receiver.map$recvDeployName
+
+# Get list of receivers with detections for current plot
+tmp.receiverList <- tmp %>% dplyr::select(recvDeployName) %>% unique() %>% pull(recvDeployName)
+
+# Loop through each receiver
+for (i in 1:nrow(receiver.points)){
+  receiver.points$detected[i] = receiver.points$name[i] %in% tmp.receiverList
+}
+
+receiver.points$colour <- case_when( receiver.points$name == "Tomago" ~ "purple", receiver.points$name == "Curlew Point" ~ "orange", receiver.points$detected == TRUE ~ "deepskyblue", receiver.points$detected == FALSE ~ "grey")
+
+
+points(receiver.points, col = "black", bg = receiver.points$colour, pch = 21, cex = 7, lwd = 3)
+
+```
+
+
+```{r Plot Detections for Single Species - No Facet, Colour = Receiver}
+# Choose species to plot
+currentSpecies <- "Pacific Golden-Plover"
+
+## Choose time range to plot
+# Set completeTimeRange to 1 to plot all detections for the tag
+completeTimeRange <- 0 
+# User-defined start and end time
+timeStart <- "2024-11-24 00:00:00"
+timeEnd <- "2024-11-28 24:00:00"
+
+# Graphical options
+plotTidalCurve <- 1
+plotSun <- 0
+plotTide <- 0
+pointSize <- 1
+
+# Set start and end time for plot
+if (completeTimeRange) {
+  # Get time interval from first and last detections
+  timeStart <- min(df.alltags$timeAus)
+  timeEnd <- max(df.alltags$timeAus)
+} else{
+  # Set time interval manually
+  
+  # Avocets
+  timeStart <- ymd_hms(timeStart, tz = "Australia/Sydney")
+  timeEnd <- ymd_hms(timeEnd, tz = "Australia/Sydney")
+  
+  # All 3 godwits
+  #timeStart <- ymd_hms("2023-04-10 00:00:00",tz = "Australia/Sydney")
+  #timeEnd <- ymd_hms("2023-04-30 24:00:00", tz = "Australia/Sydney")
+  
+  # Pied Stilts after banding August 2023
+  #timeStart <- ymd_hms("2023-09-01 00:00:00",tz = "Australia/Sydney")
+  #timeEnd <- ymd_hms("2023-10-18 24:00:00", tz = "Australia/Sydney")
+  
+  # Pied Stilts after banding August 2023
+  #timeStart <- ymd_hms("2023-08-29 16:00:00",tz = "Australia/Sydney")
+  #timeEnd <- ymd_hms("2023-08-30 16:00:00", tz = "Australia/Sydney")
+  
+  # Bar-tailed godwits March 2023
+  #timeStart <- ymd_hms("2023-03-24 00:00:00",tz = "Australia/Sydney")
+  #timeEnd <- ymd_hms("2023-03-30 24:00:00", tz = "Australia/Sydney")
+  
+  # Godwit zoomed March 2023
+  # timeStart <- ymd_hms("2023-03-27 00:00:00",tz = "Australia/Sydney")
+  # timeEnd <- ymd_hms("2023-03-27 24:00:00", tz = "Australia/Sydney")
+}
+
+# Filter by receiver and time interval
+tmp <- filter(df.alltags, speciesEN == currentSpecies, timeAus >= timeStart, timeAus <= timeEnd)
+
+p <- tmp %>% 
+  ggplot(aes(x = timeAus, y = sigPositive)) + # x-axis = signal strength, y-axis = time
+  
+  # Plot points
+  geom_point(aes(colour = as.character(recvDeployName)), 
+                 shape = pointShape,
+                 size = pointSize) + # 
+  
+  # Grid by receiver
+  
+  # Legend
+  labs(colour = "Receiver", ) + 
+  guides(colour = guide_legend(order = 1)) + # Make this legend appear first
+
+  # Axis titles
+  ylab("Signal Strength") + 
+  xlab("Date-Time") +
+  
+  # Font Size
+  theme_gray(base_size = 14) +
+  
+  ## Automatic title 
+  ggtitle(paste("Detections for",currentSpecies)) + theme(plot.title = element_text(hjust = 0.5))  # Plot title
+
+  
+  ## Custom title
+  # ggtitle("Pied Stilt Detections") + theme(plot.title = element_text(hjust = 0.5)) # Plot title
+
+  
+# Add sunset and sunrise
+if (plotSun) {
+  p <- plot.addSunriseSet(p)
+}
+
+# Add high and low tides
+if (plotTide) {
+  p <- plot.addTideHighLow(p)
+}
+
+# Add tidal curve
+if (plotTidalCurve) {
+  p <- plot.addTidalCurve(p)
+}
+
+  
+p
+```  
+
+```{r Plot Detections for All Tags, Grid = Tag, Colour = Receiver}
+## Choose time range to plot
+# Set completeTimeRange to 1 to plot all detections for the tag
+completeTimeRange <- 0 
+# User-defined start and end time
+timeStart <- "2023-10-25 00:00:00"
+timeEnd <- "2023-10-27 24:00:00"
+
+# Set start and end time for plot
+if (completeTimeRange) {
+  # Get time interval from first and last detections
+  timeStart <- min(df.alltags$timeAus)
+  timeEnd <- max(df.alltags$timeAus)
+} else{
+  # Set time interval manually
+  timeStart <- ymd_hms(timeStart, tz = "Australia/Sydney")
+  timeEnd <- ymd_hms(timeEnd, tz = "Australia/Sydney")
+}
+
+# Filter by time range
+tmp <- filter(df.alltags, timeAus >= timeStart, timeAus <= timeEnd)   
+  
+p <- tmp %>% 
+  ggplot(aes(timeAus, sigPositive)) +
+  
+  # Plot points
+  geom_point(aes(colour = recvDeployName), 
+             size=pointSize,
+             shape = pointShape) +
+  
+  # Grid by Motus tag
+  facet_grid(vars(motusTagID)) +
+  
+  # Legend
+  labs(colour = "Receiver") +
+  guides(colour = guide_legend(order = 1)) + # Make this legend appear first
+
+  ylab("Signal Strength") + xlab("Date-Time") + # Axis titles
+  ggtitle("Detections by all Receivers ") + theme(plot.title = element_text(hjust = 0.5)) # Plot title
+
+# Add sunset and sunrise
+if (plotSun) {
+  p <- plot.addSunriseSet(p)
+}
+
+# Add high and low tides
+if (plotTide) {
+  p <- plot.addTideHighLow(p)
+}
+
+# Add tidal curve
+if (plotTidalCurve) {
+  p <- plot.addTidalCurve(p)
+}
+
+p
+```
+```{r Plot Detections for All Tags, Grid = Receiver, Colour = Species}
+## Choose time range to plot
+# Set completeTimeRange to 1 to plot all detections for the tag
+completeTimeRange <- 0 
+# User-defined start and end time
+timeStart <- "2023-10-25 00:00:00"
+timeEnd <- "2023-10-27 24:00:00"
+
+# Set start and end time for plot
+if (completeTimeRange) {
+  # Get time interval from first and last detections
+  timeStart <- min(df.alltags$timeAus)
+  timeEnd <- max(df.alltags$timeAus)
+} else{
+  # Set time interval manually
+  timeStart <- ymd_hms(timeStart, tz = "Australia/Sydney")
+  timeEnd <- ymd_hms(timeEnd, tz = "Australia/Sydney")
+}
+
+tmp <- filter(df.alltags, timeAus >= timeStart, timeAus <= timeEnd)
+  
+p <- tmp %>% 
+  ggplot(aes(timeAus, sigPositive)) +
+  
+  # Plot points
+  geom_point(aes(colour = speciesEN), size=pointSize, shape = pointShape) +
+  
+  # Grid by receiver
+  facet_grid(vars(recvDeployName)) +
+  
+  # Legend
+  labs(colour = "Species") +
+  guides(colour = guide_legend(order = 1)) + # Make this legend appear first
+  
+  # Axis titles
+  ylab("Signal Strength") + 
+  xlab("Date Time") + 
+  
+  # Plot title
+  ggtitle("Detections by all Receivers ") + theme(plot.title = element_text(hjust = 0.5))
+
+# Add sunset and sunrise
+if (plotSun) {
+  p <- plot.addSunriseSet(p)
+}
+
+
+# Add high and low tides
+if (plotTide) {
+  p <- plot.addTideHighLow(p)
+}
+
+# Add tidal curve
+if (plotTidalCurve) {
+  p <- plot.addTidalCurve(p)
+}
+
+p
+```
+```{r Plot Detections for All Tags, Grid = Receiver, Colour = Tag}
+## Choose time range to plot
+# Set completeTimeRange to 1 to plot all detections for the tag
+completeTimeRange <- 0 
+# User-defined start and end time
+timeStart <- "2023-10-25 00:00:00"
+timeEnd <- "2023-10-27 24:00:00"
+
+# Set start and end time for plot
+if (completeTimeRange) {
+  # Get time interval from first and last detections
+  timeStart <- min(df.alltags$timeAus)
+  timeEnd <- max(df.alltags$timeAus)
+} else{
+  # Set time interval manually
+  timeStart <- ymd_hms(timeStart, tz = "Australia/Sydney")
+  timeEnd <- ymd_hms(timeEnd, tz = "Australia/Sydney")
+}
+
+# Filter by time range
+tmp <- filter(df.alltags, timeAus >= timeStart, timeAus <= timeEnd)
+
+p <- tmp %>% 
+  ggplot(aes(timeAus, sigPositive)) +
+  
+  # Plot points
+  geom_point(aes(colour = as.character(motusTagID)), 
+             size=pointSize, 
+             shape = pointShape) +
+  
+  # Grid by receiver
+  facet_grid(vars(recvDeployName)) +
+  
+  # Legend
+  labs(colour = "Motus Tag ID") +
+  guides(colour = guide_legend(order = 1)) + # Make this legend appear first
+
+  # Axis titles
+  ylab("Signal Strength") + 
+  xlab("Date Time") + 
+  
+  # Plot title
+  ggtitle("Detections by all Receivers ") + theme(plot.title = element_text(hjust = 0.5)) # Plot title
+
+# Add sunset and sunrise
+if (plotSun) {
+  p <- plot.addSunriseSet(p)
+}
+
+# Add high and low tides
+if (plotTide) {
+  p <- plot.addTideHighLow(p)
+}
+
+# Add tidal curve
+if (plotTidalCurve) {
+  p <- plot.addTidalCurve(p)
+}
+
+p
+```
+```{r Plot Detections for All Tags, Grid = Species, Colour = Receiver}
+## Choose time range to plot
+# Set completeTimeRange to 1 to plot all detections for the tag
+completeTimeRange <- 0 
+# User-defined start and end time
+timeStart <- "2023-10-25 00:00:00"
+timeEnd <- "2023-10-27 24:00:00"
+
+# Set start and end time for plot
+if (completeTimeRange) {
+  # Get time interval from first and last detections
+  timeStart <- min(df.alltags$timeAus)
+  timeEnd <- max(df.alltags$timeAus)
+} else{
+  # Set time interval manually
+  timeStart <- ymd_hms(timeStart, tz = "Australia/Sydney")
+  timeEnd <- ymd_hms(timeEnd, tz = "Australia/Sydney")
+}
+
+# Filter by time interval
+tmp <- filter(df.alltags, timeAus >= timeStart, timeAus <= timeEnd)
+  
+p <- tmp %>% 
+  ggplot(aes(timeAus, sigPositive)) +
+  
+  # Plot points
+  geom_point(aes(colour = recvDeployName), 
+             size=pointSize, 
+             shape = pointShape) +
+  
+  # Grid by species
+  facet_grid(vars(speciesEN)) +
+  
+  ## Automatic legend
+  labs(colour = "Receiver") + # Legend title
+   
+  ## Manually labelled legend
+  #scale_colour_discrete(name = "Receiver",
+   #                     labels = c("Receiver 1", "Receiver 2","Receiver 3","Receiver 4")) +
+  
+  guides(colour = guide_legend(order = 1)) + # Make this legend appear first
+  
+  # Axis titles
+  ylab("Signal Strength") + 
+  xlab("Date Time") + 
+  
+  # Plot title
+  ggtitle("Detections of Tagged Species ") + theme(plot.title = element_text(hjust = 0.5)) # Plot title
+
+# Add sunset and sunrise
+if (plotSun) {
+  p <- plot.addSunriseSet(p)
+}
+
+
+# Add high and low tides
+if (plotTide) {
+  p <- plot.addTideHighLow(p)
+}
+
+# Add tidal curve
+if (plotTidalCurve) {
+  p <- plot.addTidalCurve(p)
+}
+
+p
+```

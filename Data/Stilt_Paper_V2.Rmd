@@ -1,0 +1,59 @@
+---
+title: "Stilt_Paper_V2"
+output: html_document
+---
+
+```{r Set Time Bin Width}
+## We are interested in detections within 3 hours of a high / low tide.
+## Set maximum time from the most recent high or low tide. Value is in hours.
+## Note that this is either side of the tide, so bin width will be double.
+tideTimeCutoff <- 3
+
+# FILTER OUT ANY DETECTIONS FURTHER THAN 3 HOURS FROM HIGH / LOW TIDE
+## Note that this prevents analysis of those other detections.
+## They will need to be considered separately or the tidal classification
+## code / data will have to be re-structured.
+df.detections <- df.alltags %>% 
+  filter(tideTimeDiff <= tideTimeCutoff)
+```
+
+```{r Summarise Data by Tag, Receiver, and Tide Period}
+# Count the number of detections, grouped by: tag, receiver, and tide ID
+df.detections <- df.detections %>% 
+  group_by(motusTagID, recvDeployName, tideID) %>% 
+  summarise(tideCategory = first(tideCategory),
+            species = first(speciesEN),
+            burstInterval = first(tagBI),
+            # Count number of detections
+            detectionCount = n(), 
+            # Find duration of detection by multiplying burst and count
+            durationMinutes = detectionCount*burstInterval/60,
+            .groups = "drop")
+```
+
+```{r Explore Data for Single Tag}
+# Currently selected, 60470, is an Avocet with 43 detection days, and a 100%
+# detection rate while deployed.
+tag.tmp <- 81138
+
+df.tmp <- df.detections %>% 
+  filter(motusTagID == tag.tmp)
+
+df.summary <- df.tmp %>% 
+  group_by(recvDeployName, tideCategory) %>% 
+  summarise(meanDurationMinutes = mean(durationMinutes),
+            meanDurationHours = meanDurationMinutes/60,
+            periodCount = n())
+
+# Reorder factors for plotting
+df.tmp <- df.tmp %>% mutate(
+  tideCategory = factor(tideCategory, levels = c("Diurnal_Low", "Nocturnal_Low", "Diurnal_High", "Nocturnal_High"))
+)
+
+df.tmp %>% 
+  ggplot(aes(x = recvDeployName, y = durationMinutes, fill = tideCategory)) +
+  geom_bar(stat = "summary", fun = "mean", position = "dodge") +
+  stat_summary(fun.data = "mean_cl_normal", geom = "errorbar", position = position_dodge(width = 0.9)) +
+  ylim(c(0,NA))
+```
+

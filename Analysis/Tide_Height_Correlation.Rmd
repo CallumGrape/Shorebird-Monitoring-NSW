@@ -1,0 +1,330 @@
+---
+title: "Tide_Height_Correlation"
+author: "Callum Gapes"
+date: "2023-10-27"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(ISLR)
+library(flexmix)
+library(tidyverse)
+library(caret)
+```
+
+```{r Single Species Single Site}
+# Count number of detections at each tide height (for each species and site)
+df.tideHeight <- df.alltags %>% 
+  mutate(tideHeight = round(tideHeight,2)) %>% # Round to 2 decimal places
+  count(tideHeight,speciesEN,recvDeployName) %>% 
+  rename("detections" = "n")
+
+# Filter by species and site of interest
+receiver.tmp <- "Barry_Fullerton_cove"
+species.tmp <- "Pied Stilt"
+df.tideHeight.tmp <- df.tideHeight %>% filter(speciesEN == species.tmp, recvDeployName == receiver.tmp)
+
+# Scatter plot
+p <- ggplot(df.tideHeight.tmp, aes(x=tideHeight, y = detections)) + geom_point() + 
+  ggtitle(paste("Tide Height and Detection Count for",species.tmp,"at",receiver.tmp))
+
+p
+
+```
+
+```{r Single Species}
+# Count number of detections at each tide height (for each species and site)
+df.tideHeight <- df.alltags %>% 
+  mutate(tideHeight = round(tideHeight,2)) %>% # Round to 2 decimal places
+  count(tideHeight,speciesEN,recvDeployName) %>% 
+  rename("detections" = "n")
+
+# Filter by species and site of interest
+#species.tmp <- "Pied Stilt"
+species.tmp <- "Red-necked Avocet"
+#species.tmp <- "Bar-tailed Godwit"
+df.tideHeight.tmp <- df.tideHeight %>% filter(speciesEN == species.tmp)
+
+# Scatter plot
+p <- ggplot(df.tideHeight.tmp, aes(x=tideHeight, y = detections)) + geom_point() + 
+  ggtitle(paste("Tide Height and Detection Count for",species.tmp)) +
+  facet_wrap(~recvDeployName, scales = "free") +
+  stat_smooth(method = lm, formula = y ~ poly(x, 2, raw = TRUE)) +
+  ylim(0, NA) +
+  theme(plot.title = element_text(hjust = 0.5))
+
+p
+```
+
+```{r Save All Species Plots}
+# Count number of detections at each tide height (for each species and site)
+df.tideHeight <- df.alltags %>% 
+  mutate(tideHeight = round(tideHeight,2)) %>% # Round to 2 decimal places
+  count(tideHeight,speciesEN,recvDeployName) %>% 
+  rename("detections" = "n")
+
+
+for (i in 1:nrow(tagInfo %>% select(species) %>% unique())){
+  # Current species
+  species.tmp <-  (tagInfo %>% select(species) %>% unique())$species[i]
+  
+  # Filter by species and site of interest
+  df.tideHeight.tmp <- df.tideHeight %>% filter(speciesEN == species.tmp)
+  
+  # Scatter plot
+  p <- ggplot(df.tideHeight.tmp, aes(x=tideHeight, y = detections)) + geom_point() + 
+    ggtitle(paste("Tide Height and Detection Count for",species.tmp)) +
+    facet_wrap(~recvDeployName)
+  
+  save.plot()
+}
+```
+
+```{r Polynomial Regression}
+# Filter by species and site of interest
+# receiver.tmp <- "Barry_Fullerton_cove"
+# receiver.tmp <- "Ramsar Road Floodgate"
+receiver.tmp <- receiverInfo$recvDeployName[5]
+species.tmp <- "Pied Stilt"
+poly.dof <- 3
+df.tideHeight.tmp <- df.tideHeight %>% filter(speciesEN == species.tmp, recvDeployName == receiver.tmp)
+
+## Partition data into train / test
+set.seed(123)
+training.samples <- df.tideHeight.tmp$tideHeight %>% 
+  createDataPartition(p = 0.8, list = FALSE)
+train.data <- df.tideHeight.tmp[training.samples,]
+test.data <- df.tideHeight.tmp[-training.samples,]
+
+## Polynomial regression
+# Build the model
+model <- lm(detections ~ poly(tideHeight, poly.dof, raw = TRUE), data = train.data)
+# Make predictions
+predictions <- model %>% predict(test.data)
+# Model performance
+data.frame(
+  RMSE = RMSE(predictions, test.data$detections),
+  R2 = R2(predictions, test.data$detections)
+)
+
+model %>% summary()
+
+ggplot(train.data, aes(tideHeight, detections) ) +
+  geom_point() +
+  stat_smooth(method = lm, formula = y ~ poly(x, poly.dof, raw = TRUE))
+
+BIC(model)
+```
+
+### High Tide - Single Species
+```{r High Tide Only - Single Species}
+# Count number of detections at each tide height (for each species and site)
+df.tideHeight <- df.alltags %>% 
+  filter(tideCategory == "High") %>% 
+  count(tideCategoryHeight,speciesEN,recvDeployName) %>% 
+  rename("detections" = "n")
+
+# Filter by species and site of interest
+#species.tmp <- "Far Eastern Curlew"
+#species.tmp <- "Pied Stilt"
+species.tmp <- "Red-necked Avocet"
+df.tideHeight.tmp <- df.tideHeight %>% filter(speciesEN == species.tmp)
+df.tideHeight.tmp <- df.tideHeight.tmp %>% filter(recvDeployName != "Milham's Pond" & recvDeployName != "Curlew Point")
+#df.tideHeight.tmp <- df.tideHeight.tmp %>% filter(recvDeployName != "Barry_Fullerton_cove")
+
+# Summarise / get total number of detections at each site
+df.tideHeight.tmp.summary <- df.tideHeight.tmp %>% 
+  group_by(recvDeployName) %>% 
+  summarise(total = sum(detections))
+
+# Scatter plot
+p <- ggplot(df.tideHeight.tmp, aes(x=tideCategoryHeight, y = detections)) + geom_point() + 
+  ggtitle(paste("Max Height and High Tide Detections for",species.tmp)) +
+  facet_wrap(~recvDeployName, scales = "free") + 
+  xlim((df.alltags %>% filter(tideCategory == "High") %>% select(tideHeight) %>% min()),(df.alltags %>% filter(tideCategory == "High") %>% select(tideHeight) %>% max())) +
+  #geom_smooth(method = 'lm', formula = y ~ poly(x, poly.dof, raw = TRUE), data = df.tideHeight.tmp)
+  geom_smooth(method = 'lm', data = df.tideHeight.tmp) +
+  theme_gray(base_size = 14) +
+  theme(plot.title = element_text(hjust = 0.5),plot.subtitle = element_text(hjust = 0.5)) +
+  xlab("High Tide (m)") + ylab("Detection Count") 
+
+p
+
+```
+### High Tide - Correlation
+```{r Correlation - High Tide Only}
+df.tideHeight <- df.alltags %>% 
+  filter(tideCategory == "High") %>% 
+  count(tideCategoryHeight,speciesEN,recvDeployName) %>% 
+  rename("detections" = "n")
+
+# Filter by species and site of interest
+#receiver.tmp <- "Barry_Fullerton_cove"
+#receiver.tmp <- "North Swann Pond"
+receiver.tmp <- "Milham's Pond"
+#receiver.tmp <- "Ramsar Road Floodgate"
+#receiver.tmp <- receiverInfo$recvDeployName[5]
+#species.tmp <- "Pied Stilt"
+species.tmp <- "Far Eastern Curlew"
+df.tideHeight.tmp <- df.tideHeight %>% filter(speciesEN == species.tmp, recvDeployName == receiver.tmp)
+
+shapiro.test(df.tideHeight.tmp$tideCategoryHeight)
+shapiro.test(df.tideHeight.tmp$detections)
+
+cor.test(df.tideHeight.tmp$tideCategoryHeight,df.tideHeight.tmp$detections, method = "kendall", exact = TRUE)
+
+p <- ggplot(df.tideHeight.tmp, aes(tideCategoryHeight, detections) ) +
+  geom_point() +
+  stat_smooth(method = lm) +
+  ylim(0,NA) +
+  xlab("Tide Height (m)") + ylab("Detection Count") +
+  ggtitle(paste("High Tide Amplitude and Detections"),subtitle = paste(species.tmp,"at",receiver.tmp)) +
+  theme_gray(base_size = 14) +
+  theme(plot.title = element_text(hjust = 0.5),plot.subtitle = element_text(hjust = 0.5)) 
+
+p
+
+```
+### Low Tide - Single Species
+```{r Low Tide Only - Single Species}
+# Count number of detections at each tide height (for each species and site)
+df.tideHeight <- df.alltags %>% 
+  filter(tideCategory == "Low") %>% 
+  count(tideCategoryHeight,speciesEN,recvDeployName) %>% 
+  rename("detections" = "n")
+
+# Filter by species and site of interest
+species.tmp <- "Far Eastern Curlew"
+#species.tmp <- "Pied Stilt"
+df.tideHeight.tmp <- df.tideHeight %>% filter(speciesEN == species.tmp)
+#df.tideHeight.tmp <- df.tideHeight.tmp %>% filter(recvDeployName != "Milham's Pond" & recvDeployName != "Curlew Point")
+df.tideHeight.tmp <- df.tideHeight.tmp %>% filter(recvDeployName != "Barry_Fullerton_cove")
+
+# Summarise / get total number of detections at each site
+df.tideHeight.tmp.summary <- df.tideHeight.tmp %>% 
+  group_by(recvDeployName) %>% 
+  summarise(total = sum(detections))
+
+# Scatter plot
+p <- ggplot(df.tideHeight.tmp, aes(x=tideCategoryHeight, y = detections)) + geom_point() + 
+  ggtitle(paste("Min Height and Low Tide Detections for",species.tmp)) +
+  facet_wrap(~recvDeployName, scales = "free") + 
+  xlim((df.alltags %>% filter(tideCategory == "Low") %>% select(tideCategoryHeight) %>% min()),(df.alltags %>% filter(tideCategory == "Low") %>% select(tideCategoryHeight) %>% max())) +
+  #geom_smooth(method = 'lm', formula = y ~ poly(x, poly.dof, raw = TRUE), data = df.tideHeight.tmp)
+  geom_smooth(method = 'lm', data = df.tideHeight.tmp) +
+  theme_gray(base_size = 12) +
+  theme(plot.title = element_text(hjust = 0.5),plot.subtitle = element_text(hjust = 0.5)) +
+  xlab("Low Tide (m)") + ylab("Detection Count") 
+
+p
+
+```
+### Low Tide - Correlation
+```{r Correlation - Low Tide Only}
+df.tideHeight <- df.alltags %>% 
+  filter(tideCategory == "Low") %>% 
+  count(tideCategoryHeight,speciesEN,recvDeployName) %>% 
+  rename("detections" = "n")
+
+# Filter by species and site of interest
+#receiver.tmp <- "Barry_Fullerton_cove"
+#receiver.tmp <- "North Swann Pond"
+receiver.tmp <- "Milham's Pond"
+#receiver.tmp <- "Ramsar Road Floodgate"
+#receiver.tmp <- receiverInfo$recvDeployName[5]
+#species.tmp <- "Pied Stilt"
+species.tmp <- "Far Eastern Curlew"
+df.tideHeight.tmp <- df.tideHeight %>% filter(speciesEN == species.tmp, recvDeployName == receiver.tmp)
+
+shapiro.test(df.tideHeight.tmp$tideCategoryHeight)
+shapiro.test(df.tideHeight.tmp$detections)
+
+cor.test(df.tideHeight.tmp$tideCategoryHeight,df.tideHeight.tmp$detections, method = "kendall", exact = FALSE)
+
+p <- ggplot(df.tideHeight.tmp, aes(tideCategoryHeight, detections) ) +
+  geom_point() +
+  stat_smooth(method = lm) +
+  ylim(0,NA) +
+  xlab("Tide Height (m)") + ylab("Detection Count") +
+  ggtitle(paste("Low Tide Amplitude and Detections"),subtitle = paste(species.tmp,"at",receiver.tmp)) +
+  theme_gray(base_size = 14) +
+  theme(plot.title = element_text(hjust = 0.5),plot.subtitle = element_text(hjust = 0.5)) 
+
+p
+
+```
+
+```{r misc}
+# Filter by species and site of interest
+receiver.tmp <- "Barry_Fullerton_cove"
+species.tmp <- "Pied Stilt"
+df.tideHeight.tmp <- df.tideHeight %>% filter(speciesEN == species.tmp, recvDeployName == receiver.tmp)
+
+# Run poisson regression
+m <- glm(data = df.tideHeight.tmp, detections ~ tideHeight, family = "poisson")
+m %>% summary()
+
+# Predictions
+new_data <- data.frame(tideHeight = df.tideHeight.tmp$tideHeight)
+predictions <- as.data.frame(predict(m, newdata = new_data, type = "response"))
+
+# R^2 value
+with(summary(m), 1 - deviance/null.deviance)
+
+
+# Scatter plot
+p <- ggplot(df.tideHeight.tmp, aes(x=tideHeight, y = detections)) + geom_point() + 
+  ggtitle(paste("Tide Height and Detection Count for",species.tmp,"at",receiver.tmp)) 
+
+p
+
+
+## Test nonlinear regression
+set.seed(123)
+training.samples <- df.tideHeight.tmp$tideHeight %>% 
+  createDataPartition(p = 0.8, list = FALSE)
+train.data <- df.tideHeight.tmp[training.samples,]
+test.data <- df.tideHeight.tmp[-training.samples,]
+
+ggplot(train.data, aes(tideHeight, detections)) +
+  geom_point()+
+  stat_smooth()
+
+
+## Linear regression
+# Build the model
+model <- lm(detections ~ tideHeight, data = train.data)
+# Make predictions
+predictions <- model %>% predict(test.data)
+# Model performance
+data.frame(
+  RMSE = RMSE(predictions, test.data$detections),
+  R2 = R2(predictions, test.data$detections)
+)
+
+ggplot(train.data, aes(tideHeight, detections) ) +
+  geom_point() +
+  stat_smooth(method = lm, formula = y ~ x)
+
+## Polynomial
+poly.dof <- 2
+# Build the model
+model <- lm(detections ~ poly(tideHeight, poly.dof, raw = TRUE), data = train.data)
+# Make predictions
+predictions <- model %>% predict(test.data)
+# Model performance
+data.frame(
+  RMSE = RMSE(predictions, test.data$detections),
+  R2 = R2(predictions, test.data$detections)
+)
+
+model %>% summary()
+
+ggplot(train.data, aes(tideHeight, detections) ) +
+  geom_point() +
+  stat_smooth(method = lm, formula = y ~ poly(x, poly.dof, raw = TRUE))
+
+
+```
+

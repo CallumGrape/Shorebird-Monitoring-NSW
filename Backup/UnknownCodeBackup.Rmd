@@ -1,0 +1,819 @@
+---
+title: "Shorebird_Monitoring_NSW_Callum"
+author: "Callum Gapes"
+date: "2023-08-14"
+output: html_document
+---
+## Setup RStudio and Import Motus Data
+
+```{r Setup, results = "hide"}
+rm(list = ls()) # Clear environment
+Sys.setenv(TZ="UTC") # Set timezone to UTC
+setwd("C:/Users/callu/My Drive/Documents/UoN/SCIE3500/Shorebird Monitoring NSW") # Set working directory
+```
+
+## Load Required Packages
+
+```{r Packages, results = "hide", message = FALSE}
+library(lubridate)
+library(motus)
+library(motusData)
+library(dplyr)
+library(DBI)
+library(RSQLite)
+library(lutz)
+library(ggplot2)
+library(crayon)
+library(tidyverse)
+library(rnaturalearth)
+library(ggmap)
+library(sf) # Spatial vector data
+library(suntools) # Sunrise/set info
+library(ggnewscale)
+library(gginnards) # Moving plot layers (tide on bottom)
+
+motusLogout()
+```
+
+## Plot Setup (All Plots)
+```{r Plot Setup}
+plotSun <- 0
+plotTide <- 0
+plotTidalCurve <- 1
+completeTimeRange <- 0
+
+sunriseColour = "orange"
+sunsetColour = "purple"
+
+highTideColour = "blue"
+lowTideColour = "#61caff"
+tideColour = "#61caff"
+
+vlineAlpha <- 0.3
+vlineWidth <- 1
+pointSize <- 0.8
+```
+
+```{r Custom Functions}
+
+# Get species common name from tag ID
+get.species <- function(tagID) {
+  return(unique(filter(df.alltags,motusTagID==tagID)$speciesEN))
+}
+
+save.plot <- function(title = paste(p$labels$title," ",format(currentTime,"%Y-%m-%d %H-%M-%S"),".png",sep = "")) {
+  currentTime <- with_tz(Sys.time(),"Australia/Sydney")
+  #title <- paste(p$labels$title," ",format(currentTime,"%Y-%m-%d %H-%M-%S"),".png",sep = "")
+  if (title != paste(p$labels$title," ",format(currentTime,"%Y-%m-%d %H-%M-%S"),".png",sep = "")){
+    title <- paste(title,".png",sep = "")
+  }
+  ggsave(title,plot = p, path = "Plots")
+  return()
+}
+
+plot.addSunriseSet <- function(p){
+  p <- p + ggnewscale::new_scale_colour() +
+  geom_vline(aes(xintercept=sunrise,colour="sunriseColour"),alpha = 0.3,linewidth = 1) +
+  geom_vline(aes(xintercept=sunset,colour="sunsetColour"), alpha = 0.3,linewidth = 1) +
+  scale_color_manual(name = "Sun",
+        labels = c("Sunrise","Sunset"),
+        values = c(sunriseColour,sunsetColour),
+        guide = guide_legend(order = 2))
+  return(p)
+}
+
+plot.addTideHighLow <- function(p){
+  p <- p + ggnewscale::new_scale_colour() +
+  geom_vline(data = filter(tideData, high_low == "High"), aes(xintercept = tideDateTimeAus, colour = high_low),
+                                                              alpha = 0.3,
+                                                              linewidth = 1) +
+  geom_vline(data = filter(tideData, high_low == "Low"), aes(xintercept = tideDateTimeAus, colour = high_low),
+                                                             alpha = 0.3, linewidth = 1) +
+  scale_color_manual(name = "Tides",
+        labels = c("High Tide","Low Tide"),
+        values = c(highTideColour,lowTideColour),
+        guide = guide_legend(order = 3))
+  return(p)
+}
+
+plot.addTidalCurve <- function(p){
+  # Filter tidal curve by time range
+  tmpTide <- filter(tidalCurve, time >= timeStart, time <= timeEnd)
+  
+  # Scaling factor to plot tide on the same axes as signal strength
+  scaleCoeff <- (max(tmpTide$height)-min(tmpTide$height))/(max(tmp$sigPositive)-min(tmp$sigPositive))
+  
+  # Vertical shift amount to centre tidal curve on plot
+  verticalShift <- ((max(tmpTide$height/scaleCoeff)+min(tmpTide$height/scaleCoeff))/2) - ((max(tmp$sigPositive)+min(tmp$sigPositive))/2)
+
+  # Plot tidal curve
+  p <- p + geom_line(data = tmpTide, aes(x = time, y = height/scaleCoeff-verticalShift) ,colour = tideColour, linewidth = 3, alpha = 0.3)  +
+  theme(
+    axis.title.y.right = element_text(size = 13)
+  ) 
+  
+  # Add second axis for tide height
+  p <- p +  scale_y_continuous(
+    sec.axis = sec_axis(~.*scaleCoeff+verticalShift*scaleCoeff, name = "Tide Height (m)")
+)
+  return(p)
+}
+
+```
+
+
+```{r Recent Detections}
+mostRecentDetections <- function(){
+  for (i in 1:receiverCount) {
+    receiverInfo$recentDetection[i] <- df.alltags %>% filter(recvDeployName == receiverNames[i]) %>% select(ts) %>% max()
+    receiverInfo$recentDetectionFiltered[i] <- df.alltags %>% filter(recvDeployName == receiverNames[i],motusFilter == 1) %>% select(ts) %>% max()
+  }
+  
+  receiverInfo <- mutate(receiverInfo, recentDetectionAus = recentDetection %>% as_datetime(tz = "Australia/Sydney"))
+  receiverInfo <- mutate(receiverInfo, recentDetectionFilteredAus = recentDetectionFiltered %>% as_datetime(tz = "Australia/Sydney"))
+  receiverInfo <- receiverInfo %>% select(name, recentDetectionAus, recentDetectionFilteredAus)
+  
+  print(receiverInfo)
+  
+  return(invisible(NULL))
+}
+
+```
+
+
+Define tags and receivers of interest
+```{r Tags and Receivers}
+receiverNames <- c("Milham's Pond","Barry_Fullerton_cove", "North Swann Pond", "Ramsar Road Floodgate")
+#receiverNames <- df.alltags$recvDeployName %>% unique()
+tagIDs <- c(60472, 43423, 43289, 43298, 43301, 43302, 43304, 43305, 43306, 60473, 60577, 60578)
+tagIDs <- append(tagIDs, c(43296, 43300, 43303, 60471)) # Add new birds tagged at Stockton 29/08/2023
+
+receiverCount <- length(receiverNames)
+receiverInfo <- as.data.frame(receiverNames)
+colnames(receiverInfo) <- c("name")
+```
+
+
+Import Motus Data, Convert to Data Frame and Filter Receivers
+```{r}
+## Import Motus Data From File
+project294.motus <- dbConnect(SQLite(), "project-294.motus")
+
+# Extract "alltags" table, which contains the detection data
+tbl.alltags <- tbl(project294.motus, "alltags")
+
+# Filter by receivers and tags of interest
+tbl.alltags <- tbl.alltags %>% 
+  filter(recvDeployName %in% receiverNames, motusTagID %in% tagIDs)
+
+# Filter only by tags of interest
+#tbl.alltags <- tbl.alltags %>% 
+#  filter(motusTagID %in% tagIDs)
+
+# Convert to data frame for manual data exploration
+df.alltags <- tbl.alltags %>% collect() %>%  as.data.frame()
+
+## Format timestamps
+
+# Add datetime time stamp column - in both UTC (default) and Australian time
+df.alltags <- df.alltags %>% mutate(time = as_datetime(ts))
+df.alltags <- df.alltags %>% mutate(timeAus = as_datetime(ts, tz = "Australia/Sydney"))
+
+# Add column for date (without time)
+df.alltags$dateAus <- df.alltags$timeAus %>% as_date()
+
+## Add modified signal strength for plotting
+
+# Scale signal strength to positive (where minimum = 0) to make plotting easier
+df.alltags <- df.alltags %>% mutate(sigPositive = sig + abs(min(sig)))
+```
+
+
+## Import Sunset/Sunrise Data
+```{r Additional Data}
+df.alltags <- sunRiseSet(df.alltags, lat = "recvDeployLat", lon = "recvDeployLon", ts = "ts")
+```
+## Import NSW Tides from Spreadsheet and Generate Tidal Curve
+```{r Import Tide Data}
+tideData <- read.csv("TideDataNewcastle2023.csv")
+
+# Format date and datetime columns
+tideData$tideDateTimeAus <- ymd_hms(tideData$tideDateTime, tz = "Australia/Sydney")
+
+# Generate tidal curve
+# NOTE: Spline fits tide data quite well, EXCEPT for the second and second last values
+tidalCurve <- as_data_frame(spline(tideData$tideDateTimeAus, tideData$tideHeight, n = 1000*length(tideData$tideDateTimeAus), method = "natural"))
+tidalCurve$x <- as_datetime(tidalCurve$x, tz = "Australia/Sydney")
+
+colnames(tidalCurve) <- c("time","height")
+```
+
+
+
+
+## SETUP: RUN ALL SECTIONS ABOVE HERE (Ctrl + Alt + Shift + P)
+
+## Download Motus Detection Data NOTE
+ATTEMPTED TO DOWNLOAD DETECTIONS: GOT ERROR
+```{r, eval = FALSE}
+# Specify Motus project number
+proj.num <- 294
+
+## Download project detections across motus network
+# Change new = TRUE if running for the first time (to create the .motus SQLite databse on your computer)
+sql.motus <- tagme(projRecv = proj.num, new = FALSE, update = TRUE)
+
+# download detections on my project's receivers only
+sql.motus <-tagme(proj.num, new=FALSE, update = TRUE)
+metadata(sql.motus,proj.num)
+tbl.recvDeps <- tbl(sql.motus, "recvDeps")
+
+df.serno <- tbl.recvDeps %>%
+  filter(projectID == proj.num) %>%
+  select(serno) %>%
+  distinct() %>%
+  collect() %>% as.data.frame()
+
+#loop through each receiver 
+for(row in 1:nrow(df.serno)) {
+  tagme(df.serno[row, "serno"], new = FALSE, update = TRUE)
+}
+```
+
+
+
+## Explore Structure of Motus Data
+```{r, eval = FALSE, echo = FALSE}
+# List of tables within .motus file
+dbListTables(project294.motus)
+
+# Extract "alltags" table, which contains the detection data
+tbl.alltags <- tbl(project294.motus, "alltags")
+
+# Convert to data frame for manual data exploration
+df.alltags <- tbl.alltags %>% collect() %>%  as.data.frame()
+
+names(df.alltags) # field names
+str(df.alltags) # variable types
+
+```
+
+
+
+## Plot detections for single tag
+```{r Plot: Single Tag}
+
+# Choose tag to plot
+currentTagID <- 60472
+
+# Set start and end time for plot
+if (completeTimeRange) {
+  # Get time interval from first and last detections
+  timeStart <- min(df.alltags$timeAus)
+  timeEnd <- max(df.alltags$timeAus)
+} else{
+  # Set time interval manually
+  timeStart <- ymd_hms("2023-04-16 09:00:00",tz = "Australia/Sydney")
+  timeEnd <- ymd_hms("2023-04-24 21:00:00",tz = "Australia/Sydney")
+}
+
+# Filter by tag and time interval
+tmp <- filter(df.alltags, motusTagID == currentTagID, timeAus >= timeStart, timeAus <= timeEnd)
+
+# Create plot
+p <- tmp %>% 
+  ggplot(aes(timeAus, sigPositive)) + # x-axis = signal strength, y-axis = time
+  
+  # Plot points
+  geom_point(aes(colour = recvDeployName), 
+             size = pointSize, 
+             shape = "circle") + 
+  
+  ## Automatic Legend
+  #labs(colour = "Receiver") + # Legend title
+  
+  ## Manually labelled legend
+  scale_colour_discrete(name = "Receiver",
+                        labels = c("Receiver 1", "Receiver 2")) +
+  
+  guides(colour = guide_legend(order = 1)) + # Make this legend appear first
+  
+  # Axis titles
+  ylab("Signal Strength") + 
+  xlab("Date-Time") + 
+  
+  ## Automatic Plot Title
+  #ggtitle(paste("Detections for Tag",currentTagID)) + theme(plot.title = element_text(hjust = 0.5)) 
+  
+  ## Custom Plot Title
+  ggtitle("Tag 60472 - Eastern Curlew") + theme(plot.title = element_text(hjust = 0.5)) 
+
+# Add sunset and sunrise
+if (plotSun) {
+  p <- plot.addSunriseSet(p)
+}
+
+# Add high and low tides
+if (plotTide) {
+  p <- plot.addTideHighLow(p)
+}
+
+# Add tidal curve
+if (plotTidalCurve) {
+  p <- plot.addTidalCurve(p)
+}
+
+p
+  
+```
+## Plot detections for all tags, grid by tag, grouped by receiver
+```{r Plot: Grid - Tag, Colour - Receiver}
+
+# Set start and end time for plot
+if (completeTimeRange) {
+  # Get time interval from first and last detections
+  timeStart <- min(df.alltags$timeAus)
+  timeEnd <- max(df.alltags$timeAus)
+} else{
+  # Set time interval manually
+  timeStart <- ymd_hms("2023-04-10 09:00:00",tz = "Australia/Sydney")
+  timeEnd <- ymd_hms("2023-04-12 09:00:00",tz = "Australia/Sydney")
+}
+
+# Filter by time range
+tmp <- filter(df.alltags, timeAus >= timeStart, timeAus <= timeEnd)   
+  
+p <- tmp %>% 
+  ggplot(aes(timeAus, sigPositive)) +
+  
+  # Plot points
+  geom_point(aes(colour = recvDeployName), size=0.3) +
+  facet_grid(vars(motusTagID)) +
+  labs(colour = "Receiver") + # Legend title
+  guides(colour = guide_legend(order = 1)) +
+
+  ylab("Signal Strength") + xlab("Date-Time") + # Axis titles
+  ggtitle("Detections by all Receivers ") + theme(plot.title = element_text(hjust = 0.5)) # Plot title
+
+# Add sunset and sunrise
+if (plotSun) {
+  p <- plot.addSunriseSet(p)
+}
+
+# Add high and low tides
+if (plotTide) {
+  p <- plot.addTideHighLow(p)
+}
+
+# Add tidal curve
+if (plotTidalCurve) {
+  p <- plot.addTidalCurve(p)
+}
+
+p
+
+```
+## Plot detections for single receiver
+```{r Plot: Single Receiver}
+# Choose receiver to plot
+currentReceiver <- "Barry_Fullerton_cove"
+
+# Set start and end time for plot
+if (completeTimeRange) {
+  # Get time interval from first and last detections
+  timeStart <- min(df.alltags$timeAus)
+  timeEnd <- max(df.alltags$timeAus)
+} else{
+  # Set time interval manually
+  timeStart <- ymd_hms("2023-08-29 17:00:00",tz = "Australia/Sydney")
+  timeEnd <- ymd_hms("2023-08-30 12:00:00", tz = "Australia/Sydney")
+}
+
+# Filter by receiver and time interval
+tmp <- filter(df.alltags, recvDeployName == currentReceiver, timeAus >= timeStart, timeAus <= timeEnd)
+
+p <- tmp %>% 
+  ggplot(aes(x = timeAus, y = sigPositive)) + # x-axis = signal strength, y-axis = time
+  
+  geom_point(aes(colour = as.character(motusTagID)),
+                 shape = "circle",
+                 size = 0.5) + # plot points
+  labs(colour = "Motus Tag ID", ) + # Legend title
+  guides(colour = guide_legend(order = 1)) +
+
+  ylab("Signal Strength") + xlab("Date-Time") + # Axis titles
+  theme(axis.title.y = element_text(size = 13)) + # y-axis title format
+  
+  ## Automatic title 
+  #ggtitle(paste("Detections at",currentReceiver)) + theme(plot.title = element_text(hjust = 0.5)) # Plot title
+  
+  ## Custom title
+  ggtitle("Pied Stilt Detections") + theme(plot.title = element_text(hjust = 0.5)) # Plot title
+
+  
+# Add sunset and sunrise
+if (plotSun) {
+  p <- plot.addSunriseSet(p)
+}
+
+# Add high and low tides
+if (plotTide) {
+  p <- plot.addTideHighLow(p)
+}
+
+# Add tidal curve
+if (plotTidalCurve) {
+  p <- plot.addTidalCurve(p)
+}
+
+  
+p
+  
+```
+## Plot detections for all tags, grid by receiver, colour by species
+```{r Plot" Grid - Receiver, Colour - Species}
+# Set start and end time for plot
+if (completeTimeRange) {
+  # Get time interval from first and last detections
+  timeStart <- min(df.alltags$timeAus)
+  timeEnd <- max(df.alltags$timeAus)
+} else{
+  # Set time interval manually
+  timeStart <- ymd_hms("2023-04-10 09:00:00",tz = "Australia/Sydney")
+  timeEnd <- ymd_hms("2023-04-12 09:00:00",tz = "Australia/Sydney")
+}
+
+tmp <- filter(df.alltags, timeAus >= timeStart, timeAus <= timeEnd)
+  
+p <- tmp %>% 
+  ggplot(aes(timeAus, sigPositive)) +
+  
+  geom_point(aes(colour = speciesEN), size=0.8) +
+  facet_grid(vars(recvDeployName)) +
+  labs(colour = "Species") + # Legend title
+  guides(colour = guide_legend(order = 1)) +
+  
+  ylab("Signal Strength") + xlab("Date Time") + # Axis titles
+  ggtitle("Detections by all Receivers ") + theme(plot.title = element_text(hjust = 0.5)) # Plot title
+
+# Add sunset and sunrise
+if (plotSun) {
+  p <- plot.addSunriseSet(p)
+}
+
+
+# Add high and low tides
+if (plotTide) {
+  p <- plot.addTideHighLow(p)
+}
+
+# Add tidal curve
+if (plotTidalCurve) {
+  p <- plot.addTidalCurve(p)
+}
+
+p
+```
+
+## Plot detections for all tags, grid by receiver, colour by tag
+```{r Plot: Grid - Receiver, Colour - Tag}
+# Set start and end time for plot
+if (completeTimeRange) {
+  # Get time interval from first and last detections
+  timeStart <- min(df.alltags$timeAus)
+  timeEnd <- max(df.alltags$timeAus)
+} else{
+  # Set time interval manually
+  timeStart <- ymd_hms("2023-04-15 09:00:00",tz = "Australia/Sydney")
+  timeEnd <- ymd_hms("2023-04-20 09:00:00",tz = "Australia/Sydney")
+}
+
+tmp <- filter(df.alltags, timeAus >= timeStart, timeAus <= timeEnd)
+
+p <- tmp %>% 
+  ggplot(aes(timeAus, sigPositive)) +
+  
+  geom_point(aes(colour = as.character(motusTagID)), size=0.3) +
+  facet_grid(vars(recvDeployName)) +
+  labs(colour = "Motus Tag ID") + # Legend title
+  guides(colour = guide_legend(order = 1)) +
+
+  ylab("Signal Strength") + xlab("Date Time") + # Axis titles
+  ggtitle("Detections by all Receivers ") + theme(plot.title = element_text(hjust = 0.5)) # Plot title
+
+# Add sunset and sunrise
+if (plotSun) {
+  p <- plot.addSunriseSet(p)
+}
+
+# Add high and low tides
+if (plotTide) {
+  p <- plot.addTideHighLow(p)
+}
+
+# Add tidal curve
+if (plotTidalCurve) {
+  p <- plot.addTidalCurve(p)
+}
+
+p
+```
+
+## Plot detections for all tags, grid by species, colour by receiver
+```{r Plot: Grid - Species, Colour - Receiver}
+# Set start and end time for plot
+if (completeTimeRange) {
+  # Get time interval from first and last detections
+  timeStart <- min(df.alltags$timeAus)
+  timeEnd <- max(df.alltags$timeAus)
+} else{
+  # Set time interval manually
+  timeStart <- ymd_hms("2023-04-12 09:00:00",tz = "Australia/Sydney")
+  timeEnd <- ymd_hms("2023-04-15 09:00:00",tz = "Australia/Sydney")
+}
+
+tmp <- filter(df.alltags, timeAus >= timeStart, timeAus <= timeEnd)
+  
+p <- tmp %>% 
+  ggplot(aes(timeAus, sigPositive)) +
+  
+  geom_point(aes(colour = recvDeployName), size=0.8) +
+  facet_grid(vars(speciesEN)) +
+  labs(colour = "Receiver") + # Legend title
+  guides(colour = guide_legend(order = 1)) + 
+  scale_colour_discrete(name = "Receiver",
+                        labels = c("Receiver 1", "Receiver 2","Receiver 3","Receiver 4")) +
+  
+  ylab("Signal Strength") + xlab("Date Time") + # Axis titles
+  ggtitle("Detections of Tagged Species ") + theme(plot.title = element_text(hjust = 0.5)) # Plot title
+
+# Add sunset and sunrise
+if (plotSun) {
+  p <- plot.addSunriseSet(p)
+}
+
+
+# Add high and low tides
+if (plotTide) {
+  p <- plot.addTideHighLow(p)
+}
+
+# Add tidal curve
+if (plotTidalCurve) {
+  p <- plot.addTidalCurve(p)
+}
+
+p
+```
+
+```{r Experimenting with Tide Data}
+# Select date range
+timeStart <- ymd_hms("2023-04-10 09:00:00",tz = "Australia/Sydney")
+timeEnd <- ymd_hms("2023-04-20 09:00:00",tz = "Australia/Sydney")
+  
+# Filter date range
+tmp <- filter(tideData, tideDateTimeAus >= timeStart, tideDateTimeAus <= timeEnd)
+
+# Scatter plot
+#ggplot(tmp, aes(x = tideDateTimeAus, y = tideHeight)) + geom_point()
+
+# Sinusoidal regression
+#sinlist <- sinreg(as.numeric(x), tmp$tideHeight, plot = TRUE)
+
+# Test for single period
+#high <- tmp$tideHeight[1]
+#low <- tmp$tideHeight[2]
+#highTime <- tmp$tideDateTimeAus[1]
+#lowTime <- tmp$tideDateTimeAus[2]
+
+#x <- seq(lowTime,highTime,length.out=1000)
+
+
+# Filter tidalCurve by time period
+tmpTide <- filter(tidalCurve, time >= timeStart, time <= timeEnd)
+
+#
+#out = spline(tmp$tideDateTimeAus, tmp$tideHeight, n = 1000*length(tmp$tideDateTimeAus), method = "natural")
+#out <- as_data_frame(out)
+
+p <- ggplot(tmpTide, aes(x=x,y=y))+geom_line()+geom_point(data = tmp, aes(x=tideDateTimeAus, y = tideHeight))
+
+
+```
+
+## TO DO - FUNCTION FOR FINDING MOST RECENT DETECTION AT EACH SITE
+
+
+## Data Summarising (Motus Docs Article 03)
+```{r}
+file.name = project294.motus
+
+# List tables within motus sqlite file
+dbListTables(project294.motus)
+
+# List of variables (fields) within a table
+dbListFields(file.name, "runs")
+
+# Find number of detections of each tag by each receiver
+df.detectSum <- df.alltags %>%
+  count(motusTagID, recv) %>% 
+  collect() %>% 
+  as.data.frame()
+
+# Add species name
+for (i in 1:nrow(df.detectSum)){
+   df.detectSum$species[i] <- get.species(df.detectSum$motusTagID[i])
+}
+```
+
+## Deployment Information (Motus Docs Article 04)
+```{r}
+## Check number of tags registered to Motus project
+tbl.tags <- tbl(project294.motus, "tags") 
+df.tags <- tbl.tags %>%
+  filter(projectID == 294) %>%
+  collect() %>%
+  as.data.frame()
+
+nrow(df.tags) # number of registered tags in the database
+
+## Check number of registered tags that were deployed
+tbl.tagDeps <- tbl(project294.motus, "tagDeps") 
+
+df.tagDeps <- tbl.tagDeps %>%
+  filter(projectID == 294) %>%
+  collect() %>%
+  as.data.frame() %>% # once in df format, can format dates with lubridate
+  mutate(timeStart = as_datetime(tsStart),
+         timeEnd = as_datetime(tsEnd)) 
+
+anti_join(df.tags, df.tagDeps, by = "tagID") 
+
+## Check if any tags have multiple deployments (which would make motusTagID unsuitable as a unique identifier)
+df.alltags %>%
+  select(motusTagID, tagDeployID) %>%
+  filter(!(is.na(tagDeployID))) %>% # remove NA tagDeployIDs
+  distinct() %>%
+  group_by(motusTagID) %>%
+  mutate(n = n()) %>%
+  filter(n > 1)
+```
+# Tag deployment locations
+```{r}
+#world <- ne_countries(scale = "medium", returnclass = "sf") 
+#lakes <- ne_download(scale = "medium", type = 'lakes', category = 'physical',
+ #                    returnclass = "sf", destdir = "map-data") # only need this first time downloading
+lakes <- ne_load(type = "lakes", scale = "medium", category = 'physical',
+                 returnclass = "sf",
+                 destdir = "map-data") # use this if already downloaded shapefiles
+
+xmin <- min(df.tagDeps$longitude, na.rm = TRUE) - 5
+xmax <- max(df.tagDeps$longitude, na.rm = TRUE) + 5
+ymin <- min(df.tagDeps$latitude, na.rm = TRUE) - 5
+ymax <- max(df.tagDeps$latitude, na.rm = TRUE) + 5
+                
+# map using ggplot and sf
+ggplot(data = world) + 
+  geom_sf(colour = NA) +
+  geom_sf(data = lakes, colour = NA, fill = "white") +
+  coord_sf(xlim = c(xmin, xmax), ylim = c(ymin, ymax), expand = FALSE) +
+  labs(x = "", y = "") + 
+  theme_bw() + 
+  geom_point(data = filter(df.tagDeps, projectID == 294), 
+             aes(longitude, latitude), size = 2, shape = 19, colour = "red")
+```
+## Number of project receiver deployments
+```{r}
+tbl.recvDeps <- tbl(project294.motus, "recvDeps") 
+
+df.projRecvs <- tbl.recvDeps %>%
+  filter(projectID == 294) %>%
+  collect() %>%
+  as.data.frame() %>%
+  mutate(timeStart = as_datetime(tsStart),
+         timeEnd = as_datetime(tsEnd))
+
+df.projRecvs %>%
+  mutate(dateStart = date(timeStart)) %>% 
+  select(-serno,-fixtureType, -macAddress, -timeStart, -timeEnd, -elevation, 
+         -projectID, -status, -receiverType, -siteName) %>%
+  arrange(deviceID, latitude, dateStart)
+
+## Filter by names
+df.projRecvs <- df.projRecvs %>%
+  filter(name %in% receiverInfo$name)
+
+## Plot deployment periods
+
+# put data in long format to simplify plotting (or use geom_segment)
+df.projRecvs.long <- df.projRecvs %>%
+  select(deviceID, name, timeStart, timeEnd) %>% 
+  gather(when, time, c(timeStart, timeEnd)) %>%
+  # fake end date:
+  mutate(time = if_else(is.na(time), max(time, na.rm = TRUE) + duration(6, "month"), time)) 
+
+ggplot(data = df.projRecvs.long, 
+       aes(x = time, y = as.factor(deviceID), colour = as.factor(name))) +
+  theme(legend.position = "none") +
+  geom_line(lwd = 3) + 
+  # instead, centre to the right
+  geom_text(data = filter(df.projRecvs.long, when == "timeStart"), 
+            aes(label = name), hjust = "left", nudge_y = 0.2, size = 3, angle = 45) +
+  scale_color_viridis_d() +
+  theme_bw() +
+  #labs(x = "Year", y = "Receiver ID")
+  labs(x = "Year", y = "Name")
+```
+## Check receiver and antenna metadata
+```{r}
+# Load all receiver metadata
+df.recvDeps <- tbl.recvDeps %>%
+  collect() %>%
+  as.data.frame() %>%
+  mutate(timeStart = as_datetime(tsStart),
+         timeEnd = as_datetime(tsEnd))
+
+# antenna metadata for ALL Motus antenna deployments; 
+# to simplify, keep only the variables of interest.
+tbl.antDeps <- tbl(project294.motus, "antDeps") 
+
+df.antDeps <- tbl.antDeps %>%
+  select(deployID, port, antennaType, bearing, heightMeters) %>%
+  collect() %>%
+  as.data.frame()
+
+# receiver deployments; select variables of interest
+df.recvDeps <- df.recvDeps %>%
+  select(deployID, receiverType, deviceID, name, latitude, longitude, 
+         isMobile, timeStart, timeEnd, projectID, elevation) 
+
+df.stationDeps <- left_join(df.recvDeps, df.antDeps, by = "deployID")
+#df.stationDeps <- filter(df.stationDeps, projectID == 294)
+
+# Filter by specific list of receivers (based on name)
+df.stationDeps <- filter(df.stationDeps, name %in% receiverInfo$name)
+
+summary(df.stationDeps)
+
+# Filter deployments with missing bearing
+df.stationDeps %>%
+  filter(is.na(bearing)) %>%
+  select(-elevation, -deviceID, -timeEnd)
+
+# 
+```
+
+## Data Cleaning (Motus Docs Article 05)
+```{r}
+## Check how many detections (hits) have motusFilter = 0 (meaning they are likely 'dubious')
+df.alltags %>% filter(motusFilter == 0) %>% count()
+
+
+```
+
+## Occurence by day by tag
+```{r}
+dateStart <- ymd("2023-01-01",tz="Australia/Sydney")
+dateEnd <- ymd("2023-05-05",tz="Australia/Sydney")
+numDays <- as.integer(dateEnd - dateStart + 1)
+
+occurrenceDays <- filter(df.alltags,dateAus >= dateStart, dateAus <= dateEnd) %>% 
+  count(dateAus,motusTagID) %>%
+  count(motusTagID) %>%
+  rename("days"="n") %>% 
+  mutate(occurrence = days/numDays)
+```
+
+## Tidal categorisation
+```{r}
+# Import test data
+tideTest <- read.csv("tideTest.csv")
+
+# Convert dates to POSIXct format
+tideTest$dateTimeAus <- ymd_hms(tideTest$dateTimeAus, tz = "Australia/Sydney")
+
+tideTest$tideCategory[which.min(abs(tideTest$dateTimeAus-ymd_hms("2023-01-01 07:14:00", tz = "Australia/Sydney")))]
+
+# This one takes ages
+df.alltags <- df.alltags  %>% rowwise() %>% mutate(tideCategory = get.tideCategory(timeAus)) %>% ungroup()
+
+```
+
+## Occurence by day by tag by tide
+```{r}
+dateStart <- ymd("2023-01-01",tz="Australia/Sydney")
+dateEnd <- ymd("2023-05-05",tz="Australia/Sydney")
+numDays <- as.integer(dateEnd - dateStart + 1)
+
+occurrenceDaysTide <- filter(df.alltags,dateAus >= dateStart, dateAus <= dateEnd)
+occurrenceDaysTide %>% 
+  count(dateAus,motusTagID,tideCategory) %>%
+  count(motusTagID,tideCategory) %>%
+  rename("days"="n") %>% 
+  mutate(occurrence = days/numDays)
+
+
+
+
+
+

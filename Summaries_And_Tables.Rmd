@@ -1,0 +1,44 @@
+---
+title: "Summaries_And_Tables"
+author: "Callum Gapes"
+date: "2023-11-10"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r Nicely Formatted Tag Summary}
+tmp.tagSummary <- tagSummary %>% dplyr::select(motusTagID, species, recentDetectionAus, firstDetectionAus, detectionDays, detectionProportion) %>% rename("First_Detection" = "firstDetectionAus", "Last_Detection" = "recentDetectionAus", "Days_Detected" = "detectionDays", "Rate" = "detectionProportion") %>% mutate(First_Detection = as.Date(First_Detection), Last_Detection = as.Date(Last_Detection), Rate = percent(Rate)) %>% relocate(First_Detection, .before = Last_Detection) %>% arrange(desc(Last_Detection))
+
+kable(tmp.tagSummary, align = "l") %>% kableExtra::kable_styling()
+```
+
+```{r Nicely Formatted Tag Summary - Single Species}
+tmp.species <- "Bar-tailed Godwit"
+tmp.tagInfo <- tagInfo %>% filter(species == tmp.species) %>% dplyr::select(motusTagID, recentDetectionAus, firstDetectionAus, detectionDays, detectionProportion) %>% rename("First_Detection" = "firstDetectionAus", "Last_Detection" = "recentDetectionAus", "Days_Detected" = "detectionDays", "Rate" = "detectionProportion") %>% mutate(First_Detection = as.Date(First_Detection), Last_Detection = as.Date(Last_Detection), Rate = percent(Rate)) %>% relocate(First_Detection, .before = Last_Detection)
+
+kable(tmp.tagInfo, align = "l") %>% kableExtra::kable_styling()
+```
+
+```{r Receiver Summary}
+tmp.receiverSummary <- receiverSummary %>% dplyr::select(recvDeployName, firstDetectionAus, recentDetectionAus, uniqueTags) %>% mutate(firstDetectionAus = as.Date(firstDetectionAus), recentDetectionAus = as.Date(recentDetectionAus)) %>%  rename("Receiver" = "recvDeployName", "First Detection" = "firstDetectionAus", "Last Detection" = "recentDetectionAus", "Unique Tags" = "uniqueTags") %>% arrange(desc(`Last Detection`))
+
+# Manually remove receivers
+tmp.receiverSummary <- tmp.receiverSummary %>% filter(Receiver != "Davies Point" & Receiver != "Corrie Island")
+#tmp.receiverSummary$lon[7] = 151.6811
+
+kable(tmp.receiverSummary, align = "l") %>% kableExtra::kable_styling()
+```
+
+```{r "StationDays" Summary}
+tmp.stationDays <- stationDaysProportion %>% dplyr::select(recvDeployName, proportion) %>% arrange(desc(proportion)) %>% mutate(proportion = percent(proportion)) %>% rename("Receiver" = "recvDeployName", "Sum of Station Days" = "proportion")
+# Manually add Hexham
+tmp.stationDays[7,1] <- "Hexham Swamp"
+tmp.stationDays[7,2] <- percent(0)
+#tmp.stationDays <- tmp.stationDays %>% arrange(desc(`Sum of Station Days`))
+kable(tmp.stationDays, align = "l") %>% kableExtra::kable_styling()
+
+```
+
