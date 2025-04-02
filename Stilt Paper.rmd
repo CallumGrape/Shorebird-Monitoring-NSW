@@ -4,7 +4,10 @@ author: "Callum Gapes"
 date: "2025-02-26"
 output: html_document
 ---
-poopy
+```{r Test block OH YEAH}
+beep
+```
+
 
 ```{r Set Time Bin Width}
 ## We are interested in detections within 3 hours of a high / low tide.
