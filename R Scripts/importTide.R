@@ -1,3 +1,4 @@
+# beeep
 # Read high/low tide data from file
 tideData <- read.csv("Tide/TideDataNewcastle.csv")
 
