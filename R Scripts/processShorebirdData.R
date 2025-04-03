@@ -34,15 +34,15 @@ tagIDs <- (df.tagdeps %>% filter(!is.na(speciesID)) %>% select(tagID))$tagID %>%
 rm(df.tagdeps)
 
 # Filter detections by list of tags deployed with a species
-tbl.alltags <- df.alltags %>% filter(motusTagID %in% tagIDs)
+#tbl.alltags <- df.alltags %>% filter(motusTagID %in% tagIDs)
 
 ## Filter to relevant stations / receivers, and rename them ----
 # Filter out detections by NA stations
 df.alltags <- df.alltags %>% filter(!is.na(recvDeployName))
 
 # Filter out specific stations
-receivers.remove <- c("Wanggong, Changhua")
-df.alltags <- df.alltags %>% filter(!(recvDeployName %in% receivers.remove))
+#receivers.remove <- c("Wanggong, Changhua")
+#df.alltags <- df.alltags %>% filter(!(recvDeployName %in% receivers.remove))
 
 # Rename specific stations
 df.alltags <- df.alltags %>% 
@@ -102,11 +102,13 @@ source("R Scripts/importTide.R")
 # custom functions)
 receiverSummary <- generateReceiverSummary()
 tagSummary <- generateTagSummary()
+speciesSummary <- generateSpeciesSummary()
 
 ## Save data frames to file and clean up environment ----
 saveRDS(df.alltags, "Data/df.alltags.rds")
 saveRDS(receiverSummary, "Data/receiverSummary.rds")
 saveRDS(tagSummary, "Data/tagSummary.rds")
+saveRDS(speciesSummary, "Data/speciesSummary.rds")
 
 ## Remove unnecessary objects
 dbDisconnect(project294.motus)
