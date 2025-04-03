@@ -79,6 +79,96 @@ ggplot(sum.singletag, aes(x = recvDeployName, y = meanDuration, fill = tideCateg
 
 ```
 
+```{r Test Producing Complete (All Tide Period) Table For Individual Tag}
+tmp.tag = 43296 %>% as.factor()
+df.tmp <- df.byTidePeriod %>% filter(motusTagID == tmp.tag) 
+
+## Start with single station
+tmp.receiver <- "Fullerton Entrance"
+df.tmp <- df.tmp %>% filter(recvDeployName == "Fullerton Entrance")
+
+## Filter unique tidal periods by individual tag detections
+tideData = readRDS("Data/tideData.rds")
+
+tide.tmp <- tideData %>% filter(
+  tideDateTimeAus >= tag.firstDetection(tmp.tag),
+  tideDateTimeAus <= tag.lastDetection(tmp.tag)
+)
+
+grid.test <- expand.grid(
+  motusTagID = tmp.tag,
+  recvDeployName = tmp.receiver,
+  tideID = tide.tmp$tideID
+)
+
+grid.test <- grid.test %>% mutate(
+  motusTagID = as_factor(motusTagID)
+)
+
+join.test <- left_join(grid.test, df.tmp,
+                       by = c("motusTagID", "tideID", "recvDeployName")) %>% 
+  mutate(detectionDuration = ifelse(is.na(detectionDuration), 0, detectionDuration))
+```
+
+```{r Test From Tag Summary}
+# So basically, need a unique list of valid tide periods for each tag..
+# Already have list of tags with first and last detection in tagSummary
+# Want to filter tideData for each combination
+valid_tides <- tagSummary %>% mutate(
+  valid_tide_periods = pmap(.l = list(firstDetectionAus, recentDetectionAus), .f = function(start, end){
+    tideData %>% 
+      filter(tideDateTimeAus >= start & tideDateTimeAus <= end) %>% 
+      pull(tideID)
+  })
+) %>% unnest(valid_tide_periods) %>% 
+  select(motusTagID, firstDetectionAus, recentDetectionAus, speciesEN, valid_tide_periods) %>% 
+  rename(tideID = valid_tide_periods)
+
+# Now want to expand for each receiver
+## Note: all receivers will be included, validity based on whether the station was actually up / receiving at the time will be implemented later
+
+valid_tides_stations <- valid_tides %>%
+  complete(nesting(motusTagID, tideID)) %>% 
+  crossing(recvDeployName = receiverSummary %>% pull(recvDeployName))
+  
+
+# Use left_join to add data for tidal periods WITH detections
+#join.test <- valid_tides_stations %>% 
+#  left_join(df.byTidePeriod, by = c("motusTagID","recvDeployName","tideID"))
+
+# Add tideCategory back to data frame (variable needed for summarising)
+valid_tides_stations <- valid_tides_stations %>% 
+  left_join(tideData %>% select(tideCategory, tideID))
+
+# Add data from tidal periods that have detections to the complete dataframe
+join.test <- valid_tides_stations %>% 
+  left_join(df.byTidePeriod) %>% 
+  select(motusTagID, tideID, recvDeployName, speciesEN, tideCategory, detectionDuration)
+
+# Add zeros 
+join.test <- join.test %>% mutate(
+  detectionDuration = replace_na(detectionDuration, 0)
+)
+```
+
+
+```{r ChatGPT Test}
+detection_ranges <- df.byTidePeriod %>%
+  distinct(motusTagID) %>%
+  mutate(
+    start_time = purrr::map(motusTagID, tag.firstDetection) %>% unlist() %>% as.POSIXct(origin = "1970-01-01"),
+    end_time = purrr::map(motusTagID, tag.lastDetection) %>% unlist() %>% as.POSIXct(origin = "1970-01-01")
+  )
+
+tidal_periods_filtered <- detection_ranges %>%
+  mutate(valid_tidePeriods = pmap(motusTagID, ~tideData %>%
+    filter(time >= .x$start_time & time <= .x$end_time) %>%
+    pull(tideID))) %>%
+  unnest(valid_tidePeriods) %>%
+  rename(tideID = valid_tidePeriods)
+```
+
+
 ```{r Produce Plots for All Individual Tags TO DO}
 # Filter detections by species of interest
 tmp.species <- c("Red-necked Avocet", "Pacific Golden-Plover", "Masked Lapwing")

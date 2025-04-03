@@ -17,6 +17,6 @@ proj.num <- 294
 ## If you have an existing version on your device and just need to update it with the new detections
 sql.motus <- tagme(projRecv = proj.num, update = TRUE, dir = "./data/")
 dbDisconnect()
-#metadata(sql.motus, proj.num)
 
+#metadata(sql.motus, proj.num)
 
