@@ -128,6 +128,38 @@ generateTagSummary <- function(){
   return(tagSummary)
 }
 
+generateSpeciesSummary <- function(){
+  speciesSummary <- df.alltags %>% 
+    select(speciesEN) %>% 
+    distinct()
+  
+  unique_by_species <- df.alltags %>% 
+    group_by(speciesEN) %>% 
+    summarise(uniqueTags = n_distinct(motusTagID), .groups = "drop")
+  
+  speciesSummary <- speciesSummary %>% 
+    left_join(unique_by_species, by = "speciesEN")
+  
+  speciesSummary <- speciesSummary %>% 
+    mutate(
+      motusTagIDs = purrr::map(.x = speciesEN, .f = function(species){
+      df.alltags %>% 
+        filter(speciesEN == species) %>% 
+        distinct(motusTagID) %>% 
+        pull(motusTagID) 
+    }),
+      receivers = purrr::map(.x = speciesEN, .f = function(species){
+        df.alltags %>% 
+          filter(speciesEN == species) %>% 
+          distinct(recvDeployName) %>% 
+          pull(recvDeployName)
+    }))
+  
+  speciesSummary <- speciesSummary %>% 
+    as_tibble()
+  
+  return(speciesSummary)
+}
 ## Functions to help with plotting ----
 plot.addSunriseSet <- function(p){
   p <- p + ggnewscale::new_scale_colour() +
@@ -262,4 +294,15 @@ niceTagSummary <- function(){
   tagSummary %>% dplyr::select(motusTagID, species, recentDetectionAus, firstDetectionAus, detectionDays, detectionProportion) %>% rename("First_Detection" = "firstDetectionAus", "Last_Detection" = "recentDetectionAus", "Days_Detected" = "detectionDays", "Rate" = "detectionProportion") %>% mutate(First_Detection = as.Date(First_Detection), Last_Detection = as.Date(Last_Detection), Rate = percent(Rate)) %>% relocate(First_Detection, .before = Last_Detection) %>% arrange(desc(Last_Detection)) %>% 
   kable(align = "l") %>% kableExtra::kable_styling()
 }
+
+tag.firstDetection <- function(tagID){
+  firstDetection <- (tagSummary %>% filter(motusTagID == tagID))$firstDetectionAus
+  return(firstDetection)
+}
+
+tag.lastDetection <- function(tagID){
+  lastDetection <- (tagSummary %>% filter(motusTagID == tagID))$recentDetectionAus
+  return(lastDetection)
+}
+
 
