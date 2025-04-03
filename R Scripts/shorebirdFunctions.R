@@ -98,9 +98,9 @@ generateTagSummary <- function(){
   tagSummary <- mutate(tagSummary, numDays = as.integer(date(recentDetectionAus) - date(firstDetectionAus) + 1))
   
   # Add species
-  tagSummary <- cbind(tagSummary, species = NA)
+  tagSummary <- cbind(tagSummary, speciesEN = NA)
   for (i in 1:nrow(tagSummary)){
-    tagSummary$species[i] <- tag.species(tagSummary$motusTagID[i])
+    tagSummary$speciesEN[i] <- tag.species(tagSummary$motusTagID[i])
   }
  
   # Coerce tag ID to factor
