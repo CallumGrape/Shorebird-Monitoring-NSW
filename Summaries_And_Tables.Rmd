@@ -32,6 +32,15 @@ tmp.receiverSummary <- tmp.receiverSummary %>% filter(Receiver != "Davies Point"
 kable(tmp.receiverSummary, align = "l") %>% kableExtra::kable_styling()
 ```
 
+```{r Species Summary}
+speciesSummary %>% 
+  as_tibble() %>% 
+  mutate(motusTagIDs = map_chr(motusTagIDs, toString)) %>% 
+  kable(align = "c") %>% 
+  kable_styling()
+```
+
+
 ```{r "StationDays" Summary}
 tmp.stationDays <- stationDaysProportion %>% dplyr::select(recvDeployName, proportion) %>% arrange(desc(proportion)) %>% mutate(proportion = percent(proportion)) %>% rename("Receiver" = "recvDeployName", "Sum of Station Days" = "proportion")
 # Manually add Hexham
@@ -39,6 +48,5 @@ tmp.stationDays[7,1] <- "Hexham Swamp"
 tmp.stationDays[7,2] <- percent(0)
 #tmp.stationDays <- tmp.stationDays %>% arrange(desc(`Sum of Station Days`))
 kable(tmp.stationDays, align = "l") %>% kableExtra::kable_styling()
-
 ```
 
