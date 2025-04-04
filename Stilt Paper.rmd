@@ -141,14 +141,36 @@ valid_tides_stations <- valid_tides_stations %>%
   left_join(tideData %>% select(tideCategory, tideID))
 
 # Add data from tidal periods that have detections to the complete dataframe
-join.test <- valid_tides_stations %>% 
+df.allTidePeriods <- valid_tides_stations %>% 
   left_join(df.byTidePeriod) %>% 
   select(motusTagID, tideID, recvDeployName, speciesEN, tideCategory, detectionDuration)
 
 # Add zeros 
-join.test <- join.test %>% mutate(
+df.allTidePeriods <- df.allTidePeriods %>% mutate(
   detectionDuration = replace_na(detectionDuration, 0)
 )
+
+### CODE VALIDATING STATION UPTIME NEEDS TO GO HERE ### 
+
+# Now we can summarise back down to the level we are interested in
+summ.tag <- df.allTidePeriods %>% 
+  group_by(motusTagID, recvDeployName, tideCategory, speciesEN) %>% 
+  summarise(mean_duration = mean(detectionDuration),
+            sd_duration = sd(detectionDuration),
+            se_duration = sd_duration/(sqrt(n())),
+            period_count = n(),
+            period_detected_count = length(detectionDuration[detectionDuration > 0]),
+            .groups = "drop")
+
+# Further summarise to the species level
+summ.species <- summ.tag %>%
+  group_by(speciesEN, recvDeployName, tideCategory) %>% 
+  summarise(mean_species = mean(mean_duration),
+            sd_species = sd(mean_duration),
+            se_species = (sd_species)/(sqrt(n())),
+            n_individual = n(),
+            .groups = "drop") %>% 
+  print()
 ```
 
 
