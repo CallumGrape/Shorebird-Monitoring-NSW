@@ -1,0 +1,52 @@
+---
+title: "ExploreReceiverDatabase"
+author: "Callum Gapes"
+date: "2025-04-08"
+output: html_document
+---
+
+```{r Explore a Single Table}
+tbl_of_interest <- "activity"
+recv_of_interest <- "SG-61F1RPI3C8AB"
+
+recv.db <- dbConnect(SQLite(), paste("Data/motus_receiver_data/",recv_of_interest,".motus",sep=""))
+tbl.recv <- tbl(recv.db, tbl_of_interest)
+df.recv <- tbl.recv %>% as.data.frame()
+
+df.recv %>% str()
+
+# Check how many hourBin there are for each day
+sum.day <- df.recv %>% group_by(year, month, day) %>% summarise(
+  n = n(), 
+  .groups = "drop")
+
+print(paste("There are", nrow(sum.day),"days of detection data"))
+
+sum.bin <- df.recv %>% group_by(year, month, day, hourBin) %>% summarise(
+  n = n(), 
+  .groups = "drop")
+
+# Add start time of period (UTC)
+sum.bin <- sum.bin %>% mutate(
+  binStart = as.POSIXct(hourBin * 3600, tz = "UTC"),
+  binEnd = as.POSIXct((hourBin + 1) * 3600, tz = "UTC")
+)
+
+```
+
+```{r GGplot ChatGPT}
+ggplot(sum.bin) +
+  geom_segment(aes(x = binStart, xend = binEnd, y = 1, yend = 1), 
+               size = 4, colour = "steelblue") +
+  scale_x_datetime(date_breaks = "12 hours", date_labels = "%d %b %H:%M") +
+  theme_minimal() +
+  labs(title = "Receiver Uptime", x = "Time", y = NULL) +
+  theme(
+    axis.text.y = element_blank(),
+    axis.ticks.y = element_blank(),
+    panel.grid.major.y = element_blank()
+  )
+
+```
+
+
