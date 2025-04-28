@@ -7,7 +7,8 @@ output: html_document
 
 ```{r Explore a Single Table}
 tbl_of_interest <- "activity"
-recv_of_interest <- "SG-61F1RPI3C8AB"
+#recv_of_interest <- "SG-61F1RPI3C8AB"
+recv_of_interest <- df.serno[9,1]
 
 recv.db <- dbConnect(SQLite(), paste("Data/motus_receiver_data/",recv_of_interest,".motus",sep=""))
 tbl.recv <- tbl(recv.db, tbl_of_interest)
@@ -32,20 +33,53 @@ sum.bin <- sum.bin %>% mutate(
   binEnd = as.POSIXct((hourBin + 1) * 3600, tz = "UTC")
 )
 
+all_bins <- data_frame(
+  binStart = seq(from = min(sum.bin$binStart),
+                 to = max(sum.bin$binStart),
+                 by = "hour")
+    ,
+  binEnd = seq(from = min(sum.bin$binEnd),
+                 to = max(sum.bin$binEnd),
+                 by = "hour")
+  )
+
+all_bins <- all_bins %>% mutate(
+  binStart = as.POSIXct(binStart, tz ="UTC") %>% with_tz(tzone = "Australia/Sydney"),
+  binEnd = as.POSIXct(binEnd, tz ="UTC") %>% with_tz(tzone = "Australia/Sydney")
+)
+
+sum.bin$present <- 1
+
+uptime <- all_bins %>%
+  left_join(sum.bin[, c("binStart", "present")], by = "binStart") %>%
+  mutate(present = ifelse(is.na(present), 0, present))
+
+# Check station of deployment / check for multiple deployments
+tmp.stations <- recv.db %>% tbl("recvDeps") %>% as.data.frame() %>% select(stationName)
+print(tmp.stations)
 ```
 
 ```{r GGplot ChatGPT}
+if(nrow(tmp.stations) == 1){
+   
+
 ggplot(sum.bin) +
   geom_segment(aes(x = binStart, xend = binEnd, y = 1, yend = 1), 
-               size = 4, colour = "steelblue") +
-  scale_x_datetime(date_breaks = "12 hours", date_labels = "%d %b %H:%M") +
+               linewidth = 4, colour = "steelblue") +
+  scale_x_datetime(date_breaks = "1 month", date_labels = "%m\n%Y") +
   theme_minimal() +
-  labs(title = "Receiver Uptime", x = "Time", y = NULL) +
+  labs(title = paste(sep = "", "Receiver Uptime For ", tmp.stations$stationName[1]," (",recv_of_interest,")"), x = "Time", y = NULL) +
   theme(
     axis.text.y = element_blank(),
     axis.ticks.y = element_blank(),
-    panel.grid.major.y = element_blank()
+    panel.grid.major.y = element_blank(),
+    panel.grid.major = element_blank(), 
+    panel.grid.minor = element_blank(),
+    panel.background = element_blank()
   )
+} else {
+  print("Error, multiple station deployments for this receiver")
+}
 
 ```
 
