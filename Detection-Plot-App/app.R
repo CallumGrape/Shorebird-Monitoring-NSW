@@ -15,7 +15,7 @@ ui <- fluidPage(
       # Input: Options for species
       selectInput(inputId = "speciesId",
       label = "Species",
-      choices = (tagSummary$species %>% unique()),
+      choices = (tagSummary$speciesEN %>% unique()),
       selected = "Pied Stilt"),
       
       # Input: Options for tag IDs
@@ -63,8 +63,8 @@ server <- function(input, output, session) {
   
   observe({
     updateSelectInput(session, "tagID",
-                      choices = ((tagSummary %>% filter(species == input$speciesId))$motusTagID),
-                      selected = (tagSummary %>% filter(species == input$speciesId))$motusTagID[1])
+                      choices = ((tagSummary %>% filter(speciesEN == input$speciesId))$motusTagID),
+                      selected = (tagSummary %>% filter(speciesEN == input$speciesId))$motusTagID[1])
   })
   
   output$detectionPlot <- renderPlot({

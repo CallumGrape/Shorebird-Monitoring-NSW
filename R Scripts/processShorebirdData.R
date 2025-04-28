@@ -42,7 +42,8 @@ df.alltags <- df.alltags %>% filter(!is.na(recvDeployName))
 
 # Filter out specific stations
 #receivers.remove <- c("Wanggong, Changhua")
-#df.alltags <- df.alltags %>% filter(!(recvDeployName %in% receivers.remove))
+receivers.remove <- c("Throsby Creek Test Site")
+df.alltags <- df.alltags %>% filter(!(recvDeployName %in% receivers.remove))
 
 # Rename specific stations
 df.alltags <- df.alltags %>% 
