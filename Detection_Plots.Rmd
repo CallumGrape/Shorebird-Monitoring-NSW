@@ -371,7 +371,8 @@ sunsetColour = "#530066"
 sunLineAlpha = 1
 sunLineWidth = 1
 sunFillAlpha = 0.06
-sunLineType = "longdash"
+#sunLineType = "longdash"
+sunLineType = "solid"
 
 # Receiver for sunrise/set
 #sunReceiver <- "Milham's Pond"

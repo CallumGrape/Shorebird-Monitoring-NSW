@@ -10,7 +10,7 @@ output:
 # Shorebird_Monitoring_NSW.Rmd
 ## Setup RStudio and Load Packages
 ```{r Packages}
-rm(list = ls()) # Clear environment
+#rm(list = ls()) # Clear environment
 Sys.setenv(TZ="UTC") # Set timezone to UTC
 
 library(lubridate)
