@@ -10,7 +10,7 @@ knitr::opts_chunk$set(echo = TRUE)
 ```
 
 ```{r Nicely Formatted Tag Summary}
-tmp.tagSummary <- tagSummary %>% dplyr::select(motusTagID, species, recentDetectionAus, firstDetectionAus, detectionDays, detectionProportion) %>% rename("First_Detection" = "firstDetectionAus", "Last_Detection" = "recentDetectionAus", "Days_Detected" = "detectionDays", "Rate" = "detectionProportion") %>% mutate(First_Detection = as.Date(First_Detection), Last_Detection = as.Date(Last_Detection), Rate = percent(Rate)) %>% relocate(First_Detection, .before = Last_Detection) %>% arrange(desc(Last_Detection))
+tmp.tagSummary <- tagSummary %>% dplyr::select(motusTagID, speciesEN, recentDetectionAus, firstDetectionAus, detectionDays, detectionProportion) %>% mutate(firstDetectionAus = as.Date(firstDetectionAus), recentDetectionAus = as.Date(recentDetectionAus), detectionProportion = percent(detectionProportion)) %>% relocate(firstDetectionAus, .before = recentDetectionAus) %>% arrange(desc(recentDetectionAus)) %>% rename("Species" = "speciesEN", "First Detection" = "firstDetectionAus", "Last Detection" = "recentDetectionAus", "Days Detected" = "detectionDays", "Rate" = "detectionProportion")
 
 kable(tmp.tagSummary, align = "l") %>% kableExtra::kable_styling()
 ```

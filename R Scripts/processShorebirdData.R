@@ -46,13 +46,22 @@ receivers.remove <- c("Throsby Creek Test Site")
 df.alltags <- df.alltags %>% filter(!(recvDeployName %in% receivers.remove))
 
 # Rename specific stations
+station_rename_map <- list(
+  "Barry_Fullerton_cove" = "Fullerton Entrance",
+  "North Swann Pond" = "Swan Pond" ,
+  "Ramsar Road Floodgate" = "Ramsar Road",
+  "Milham's Pond" = "Milhams Pond"
+)
+
+# df.alltags <- df.alltags %>% 
+#   mutate(recvDeployName = recode(recvDeployName,
+#                                  "Barry_Fullerton_cove" = "Fullerton Entrance",
+#                                  "North Swann Pond" = "Swan Pond",
+#                                  "Ramsar Road Floodgate" = "Ramsar Road",
+#                                  "Milham's Pond" = "Milhams Pond"
+#                                  ))
 df.alltags <- df.alltags %>% 
-  mutate(recvDeployName = recode(recvDeployName,
-                                 "Barry_Fullerton_cove" = "Fullerton Entrance",
-                                 "North Swann Pond" = "Swan Pond",
-                                 "Ramsar Road Floodgate" = "Ramsar Road",
-                                 "Milham's Pond" = "Milhams Pond"
-                                 ))
+  mutate(recvDeployName = recode(recvDeployName, !!!station_rename_map))
 
 ## Filtering / data cleaning ----
 # Filter using basic Motus filter (removing 'dubious' detections)
@@ -110,6 +119,7 @@ saveRDS(df.alltags, "Data/df.alltags.rds")
 saveRDS(receiverSummary, "Data/receiverSummary.rds")
 saveRDS(tagSummary, "Data/tagSummary.rds")
 saveRDS(speciesSummary, "Data/speciesSummary.rds")
+saveRDS(station_rename_map, "Data/station_rename_map.rds")
 
 ## Remove unnecessary objects
 dbDisconnect(project294.motus)

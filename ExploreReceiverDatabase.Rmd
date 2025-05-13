@@ -83,4 +83,19 @@ ggplot(sum.bin) +
 
 ```
 
+```{r Consider All Receivers (by using entire motus db instead of single receiver)}
+# Some sites have had multiple receivers; the uptime for the SITE should take into account all receivers that have been deployed there
+# Therefore see if can filter by site name instead of receiver ID
+
+#tbl_of_interest <- "activity"
+tbl_of_interest <- "recvdeps"
+
+motusData <- dbConnect(SQLite(), "Data/project-294.motus")
+tbl.activity <- tbl(motusData, tbl_of_interest)
+df.activity <- tbl.activity %>% as.data.frame()
+
+df.activity %>% head()
+```
+
+
 

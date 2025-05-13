@@ -65,6 +65,26 @@ generateReceiverSummary <- function(){
     receiverSummary$lon[i] <- df.alltags %>% filter(recvDeployName == receiverSummary$recvDeployName[i]) %>% dplyr::select(recvDeployLon) %>% unique() 
   }
   
+  # Add list of recv ID's that have been deployed for the station name (recvDeployName)
+  ## Open connection with sqlite database. 
+  ## This is for robustness, in the case that a recv has been deployed but does not have any tag detections
+  motusData <- dbConnect(SQLite(), "Data/project-294.motus")
+  tbl.recvs <- tbl(motusData, "recvDeps")
+  df.recvs <- tbl.recvs %>% as.data.frame()
+  
+  # Rename specific stations
+  df.recvs <- df.recvs %>% 
+    mutate(stationName = recode(stationName, !!!station_rename_map))
+  
+  df.recvs$stationName %>% unique()
+  
+  for (i in 1:receiverCount){
+    receiverSummary$recvIDs[i] <- df.recvs %>% 
+      filter(stationName == receiverSummary$recvDeployName[i]) %>% 
+      select(serno) %>% 
+      unique()
+  }
+  
   return(receiverSummary)
 }
 
@@ -291,7 +311,7 @@ get.tideHeight <- function(timeVal){
 }
 
 niceTagSummary <- function(){
-  tagSummary %>% dplyr::select(motusTagID, species, recentDetectionAus, firstDetectionAus, detectionDays, detectionProportion) %>% rename("First_Detection" = "firstDetectionAus", "Last_Detection" = "recentDetectionAus", "Days_Detected" = "detectionDays", "Rate" = "detectionProportion") %>% mutate(First_Detection = as.Date(First_Detection), Last_Detection = as.Date(Last_Detection), Rate = percent(Rate)) %>% relocate(First_Detection, .before = Last_Detection) %>% arrange(desc(Last_Detection)) %>% 
+  tagSummary %>% dplyr::select(motusTagID, speciesEN, recentDetectionAus, firstDetectionAus, detectionDays, detectionProportion) %>% rename("First_Detection" = "firstDetectionAus", "Last_Detection" = "recentDetectionAus", "Days_Detected" = "detectionDays", "Rate" = "detectionProportion") %>% mutate(First_Detection = as.Date(First_Detection), Last_Detection = as.Date(Last_Detection), Rate = percent(Rate)) %>% relocate(First_Detection, .before = Last_Detection) %>% arrange(desc(Last_Detection)) %>% 
   kable(align = "l") %>% kableExtra::kable_styling()
 }
 
