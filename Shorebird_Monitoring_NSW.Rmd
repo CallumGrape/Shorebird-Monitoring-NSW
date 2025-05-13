@@ -48,12 +48,10 @@ library(forcats) # Reorder factor levels
 library(Hmisc) # Installed for bar plot error bars
 library(rstatix) # Easy calculation of statistical summaries
 
-source("R Scripts/shorebirdFunctions.R")
-```
-
-```{r Load Packages for Basic Analysis / Summaries}
 library(kableExtra) # Produce nicely formatted tables
 library(scales) # Display values as percentages
+
+source("R Scripts/shorebirdFunctions.R")
 ```
 
 
@@ -63,6 +61,7 @@ receiverSummary <- readRDS("Data/receiverSummary.rds")
 tagSummary <- readRDS("Data/tagSummary.rds")
 tidalCurve <- readRDS("Data/tidalCurve.rds")
 tideData <- readRDS("Data/tideData.rds")
+station_rename_map <- readRDS("Data/station_rename_map.rds")
 ```
 
 
