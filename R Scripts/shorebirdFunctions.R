@@ -65,23 +65,21 @@ generateReceiverSummary <- function(){
     receiverSummary$lon[i] <- df.alltags %>% filter(recvDeployName == receiverSummary$recvDeployName[i]) %>% dplyr::select(recvDeployLon) %>% unique() 
   }
   
-  # Add list of recv ID's that have been deployed for the station name (recvDeployName)
-  ## Open connection with sqlite database. 
-  ## This is for robustness, in the case that a recv has been deployed but does not have any tag detections
-  motusData <- dbConnect(SQLite(), "Data/project-294.motus")
-  tbl.recvs <- tbl(motusData, "recvDeps")
-  df.recvs <- tbl.recvs %>% as.data.frame()
-  
-  # Rename specific stations
-  df.recvs <- df.recvs %>% 
-    mutate(stationName = recode(stationName, !!!station_rename_map))
-  
-  df.recvs$stationName %>% unique()
-  
+  # Add list of serno's and motus device IDs that have been deployed for the station name (recvDeployName)
   for (i in 1:receiverCount){
-    receiverSummary$recvIDs[i] <- df.recvs %>% 
+    receiverSummary$sernos[i] <- df.recvDeps %>% 
       filter(stationName == receiverSummary$recvDeployName[i]) %>% 
       select(serno) %>% 
+      unique()
+    
+    receiverSummary$deviceIDs[i] <- df.recvDeps %>% 
+      filter(stationName == receiverSummary$recvDeployName[i]) %>% 
+      select(deviceID) %>% 
+      unique()
+    
+    receiverSummary$deployIDs[i] <- df.recvDeps %>% 
+      filter(stationName == receiverSummary$recvDeployName[i]) %>% 
+      select(deployID) %>% 
       unique()
   }
   
@@ -325,4 +323,83 @@ tag.lastDetection <- function(tagID){
   return(lastDetection)
 }
 
+deviceID_from_name <- function(recvDeployName){
+  
+  deviceIDs <- df.recvDeps %>%
+    filter(stationName == recvDeployName) %>% 
+    select(deviceID) %>% 
+    distinct()
+  
+  return(deviceIDs$deviceID)
+}
 
+serno_from_name <- function(recvDeployName){
+  
+  deviceIDs <- df.recvDeps %>%
+    filter(stationName == recvDeployName) %>% 
+    select(serno) %>% 
+    distinct()
+  
+  return(deviceIDs$serno)
+}
+
+deployID_from_name <- function(recvDeployName){
+  
+  deployIDs <- df.recvDeps %>%
+    filter(stationName == recvDeployName) %>% 
+    select(deployID) %>% 
+    distinct()
+  
+  return(deployIDs$deployID)
+}
+
+name_from_ID <- function(stationID){
+  
+  if(is.character(stationID)){
+   name <- receiverSummary %>% 
+     filter(map_lgl(sernos, ~stationID %in% .x))
+  } else{
+    name <- receiverSummary %>%
+      filter(map_lgl(deviceIDs, ~stationID %in% .x))
+  }
+  return(name$recvDeployName)
+}
+
+activity_by_name <- function(target_station_name){
+  
+  # Get deployments
+  station_deployments <- df.recvDeps %>%
+    filter(stationName == target_station_name) %>%
+    select(deviceID, tsStart, tsEnd)
+  
+  station_deployments %>% datatable(caption = paste0("Deployments for Station '",target_station_name,"'."))
+  
+  # Set arbitrary max end date for current deployment
+  max_ts_future <- as.numeric(as.POSIXct("2100-01-01", tz = "UTC")) # Define a date far in the future
+  station_deployments <- station_deployments %>%
+    mutate(tsEnd = if_else(is.na(tsEnd), max_ts_future, tsEnd))
+  
+  # Filter the activity dataframe to our station of interest.
+  ## semi_join necessary here to filter by multiple conditions
+  ## due to the complications of having several receiver deployments at the same
+  ## site / under the same name, and having the same receiver deployed at different
+  ## sites / under different names.
+  df.activity.station <- df.activity %>%
+    semi_join(
+      station_deployments,       # The lookup table defining valid deployments
+      by = join_by(
+        motusDeviceID == deviceID,  # Condition 1: motusDeviceID from left == deviceID from right
+        hourBinStart_ts >= tsStart,         # Condition 2: hourBin from left >= tsStart from right
+        hourBinEnd_ts <= tsEnd            # Condition 3: hourBin from left <= tsEnd from right
+      )
+    )
+  
+  # Step 7: Print the result
+  df.activity.station %>% datatable()
+  
+  # Display first and last times
+  cat("The beginning of the first hour bin for",target_station_name,"is",format(min(df.activity.station$hourBinStart)))
+  cat("\nThe end of the last hour bin for",target_station_name,"is",format(max(df.activity.station$hourBinEnd)))
+  
+  return(df.activity.station)
+}
