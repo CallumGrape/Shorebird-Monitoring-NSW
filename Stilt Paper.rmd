@@ -3,6 +3,8 @@ title: "Stilt Paper not notebook"
 author: "Callum Gapes"
 date: "2025-02-26"
 output: html_document
+editor_options: 
+  chunk_output_type: inline
 ---
 
 ```{r Calculate Detection Duration}
