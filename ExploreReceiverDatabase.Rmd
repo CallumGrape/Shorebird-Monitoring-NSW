@@ -3,12 +3,32 @@ title: "ExploreReceiverDatabase"
 author: "Callum Gapes"
 date: "2025-04-08"
 output: html_document
+editor_options: 
+  chunk_output_type: inline
 ---
+
+```{r setup}
+library(DT)
+library(dplyr)
+library(plotly)
+
+```
+
 
 ```{r Explore a Single Table}
 tbl_of_interest <- "activity"
 #recv_of_interest <- "SG-61F1RPI3C8AB"
-recv_of_interest <- df.serno[9,1]
+#recv_of_interest <- serno_from_name("Milhams Pond")
+#recv_of_interest <- serno_from_name("Tomago")
+recv_of_interest <- serno_from_name("Curlew Point")
+#recv_of_interest <- df.serno[9,1]
+
+# Hexham 1
+#recv_of_interest <- "SG-010DRPI3D708"
+# Hexham 2
+#recv_of_interest <- "SG-D5BBRPI3E2F7"
+
+#recv_of_interest = "Hexham Swamp"
 
 recv.db <- dbConnect(SQLite(), paste("Data/motus_receiver_data/",recv_of_interest,".motus",sep=""))
 tbl.recv <- tbl(recv.db, tbl_of_interest)
@@ -59,10 +79,217 @@ tmp.stations <- recv.db %>% tbl("recvDeps") %>% as.data.frame() %>% select(stati
 print(tmp.stations)
 ```
 
+
+```{r Get activity data}
+# Some sites have had multiple receivers; the uptime for the SITE should take into account all receivers that have been deployed there
+# Therefore see if can filter by site name instead of receiver ID
+
+# Get activity data as a data frame
+tbl_of_interest <- "activity"
+motusData <- dbConnect(SQLite(), "Data/project-294.motus")
+tbl.activity <- tbl(motusData, tbl_of_interest)
+df.activity <- tbl.activity %>% as.data.frame()
+
+#df.activity %>% datatable(filter = 'top')
+df.activity %>% head()
+
+# Add columns
+df.activity <- df.activity %>% 
+  mutate(
+    date = make_date(year, month, day),
+    hourBinStart_ts = hourBin*3600, # Raw value column needed for filtering based on ts
+    hourBinEnd_ts = hourBinStart_ts + 3600,
+    hourBinStart = as.POSIXct(hourBinStart_ts) ,
+    hourBinEnd = as.POSIXct(hourBinEnd_ts)
+  )
+```
+```{r Filter Activity By Station Name (non function version), echo=FALSE}
+# Select station by name
+#target_station_name <- "Curlew Point"
+#target_station_name <- "Swan Pond"
+#target_station_name <- "Tomago"
+target_station_name <- "Hexham Swamp"
+
+# Step 4: Filter receiver deployments for the target station and select relevant columns
+# We need the deviceID and the start/end timestamps for each deployment at this station.
+station_deployments <- df.recvDeps %>%
+  filter(stationName == target_station_name) %>%
+  select(deviceID, tsStart, tsEnd)
+
+station_deployments %>% datatable(caption = paste0("Deployments for Station '",target_station_name,"'."))
+
+# Set arbitrary max end date for current deployment
+max_ts_future <- as.numeric(as.POSIXct("2100-01-01", tz = "UTC")) # Define a date far in the future
+station_deployments <- station_deployments %>%
+  mutate(tsEnd = if_else(is.na(tsEnd), max_ts_future, tsEnd))
+
+# Filter the activity dataframe to our station of interest.
+## semi_join necessary here to filter by multiple conditions
+## due to the complications of having several receiver deployments at the same
+## site / under the same name, and having the same receiver deployed at different
+## sites / under different names.
+df.activity.station <- df.activity %>%
+  semi_join(
+    station_deployments,       # The lookup table defining valid deployments
+    by = join_by(
+      motusDeviceID == deviceID,  # Condition 1: motusDeviceID from left == deviceID from right
+      hourBinStart_ts >= tsStart,         # Condition 2: hourBin from left >= tsStart from right
+      hourBinEnd_ts <= tsEnd            # Condition 3: hourBin from left <= tsEnd from right
+    )
+  )
+
+# Step 7: Print the result
+df.activity.station %>% datatable()
+
+# Display first and last times
+cat("The beginning of the first hour bin for",target_station_name,"is",format(min(df.activity.station$hourBinStart)))
+cat("\nThe end of the last hour bin for",target_station_name,"is",format(max(df.activity.station$hourBinEnd)))
+```
+
+```{r Single Station Using Function}
+tmp.station <- "Hexham Swamp"
+df.activity.station <- activity_by_name(tmp.station)
+
+station_recent_activity <- df.activity.station$hourBinEnd %>% max()
+station_num_dates <- df.activity.station %>% select(date) %>% unique() %>% nrow()
+
+cat(sep = "","\n\nThere are ",station_num_dates," dates with radio activity data for ",tmp.station,".")
+```
+
+
+
+
+```{r Manual Interactive Gantt Using filtered_activity}
+fig <- plot_ly()
+
+## Test with n rows
+#tmp <- df.activity.station[1:10,] %>% 
+ # mutate(color = "blue")
+
+tmp <- df.activity.station %>%
+  mutate(color = "blue")
+
+activity_blocks <- tmp %>%
+  mutate(
+    is_new_block = ifelse(lag(hourBinEnd) == hourBinStart & lag(motusDeviceID) == motusDeviceID, 0, 1),
+    is_new_block = ifelse(is.na(is_new_block), 1, is_new_block), # First row is always a new block
+    block_id = cumsum(is_new_block)
+  )
+
+gantt_data <- activity_blocks %>%
+  group_by(motusDeviceID, block_id) %>%
+  summarise(
+    start_time = min(hourBinStart),
+    end_time = max(hourBinEnd),
+    .groups = 'drop'
+  ) %>%
+  mutate(
+    task_label = paste("Receiver Active"), # Simple label for the y-axis
+    color = "blue"
+  )
+
+for(i in 1:(nrow(gantt_data) - 1)){
+ fig <- add_trace(fig,
+                 x = c(gantt_data$start_time[i], gantt_data$end_time[i]),  # x0, x1
+                 #y = c(i, i),  # y0, y1
+                 y = 1,
+                 mode = "lines",
+                 line = list(color = gantt_data$color[i], height = 5),
+                 showlegend = F,
+                 hoverinfo = "text",
+
+                 # Create custom hover text
+
+                 text = paste("Start: ", gantt_data$start_time[i], "<br>",
+                              "Duration: ", gantt_data$end_time[i], "days<br>"),
+
+
+                 evaluate = T  # needed to avoid lazy loading
+  )
+}
+
+fig
+```
+```{r Testing what HourBin Means}
+# Select motus device ID to consider
+tmp.motus_ID <- deviceID_from_name("Milhams Pond")
+# Select deployment of interest
+#tmp.deploy_ID <- 9583 # Fullerton
+#tmp.deploy_ID <- 9504 # Milhams
+#tmp.deploy_ID <- 10187 # Curlew Point
+#tmp.deploy_ID <-  # Curlew Point
+#tmp.deploy_ID <-  10315 # Tomago
+
+#Get list of all motusDeviceIDs that are present in receiverSummary
+## Representing only the stations we are interested in
+all_individual_device_ids_vector <- unlist(receiverSummary$deviceIDs)
+
+# Keep only rows where motusDeviceID is in our list of valid IDs
+filtered_activity <- df.activity[df.activity$motusDeviceID %in% all_individual_device_ids_vector, ]
+
+# Select first 10 rows of data to look at
+tmp.activity <- filter(filtered_activity, motusDeviceID == tmp.motus_ID)[1:10,]
+
+tmp.dep <- df.recvDeps %>% filter(deployID == tmp.deploy_ID)
+
+dep.StartAus <- tmp.dep %>% select(timeStartAus)
+dep.StartAus <- dep.StartAus$timeStartAus
+dep.StartAus
+dep.Start <- tmp.dep %>% select(timeStart)
+dep.Start <- dep.Start$timeStart
+dep.Start
+hourBin.Start <- (tmp.activity %>% select(hourBin))[1,]
+hourBin.Start
+
+ref_hourBin <- hourBin.Start
+#ref_datetime_str <- "2025-04-05 00:00:00"
+
+unit_in_seconds <- 3600
+
+timezone <- "UTC"
+
+# 4. Convert the reference datetime string to a POSIXct object
+# This is R's standard class for date/time data
+#ref_datetime <- as.POSIXct(ref_datetime_str, tz = timezone)
+ref_datetime <- dep.Start
+
+# 5. Calculate the difference in hourBin for each row relative to the reference
+tmp.activity <- tmp.activity %>% mutate(hourBin_diffs = tmp.activity$hourBin - ref_hourBin)
+
+# 6. Convert the hourBin difference into a time difference in seconds
+tmp.activity <- tmp.activity %>% mutate(time_diff_seconds = hourBin_diffs * unit_in_seconds)
+
+# 7. Add the time difference (in seconds) to the reference datetime
+# R's POSIXct objects can correctly add a numeric vector representing seconds
+tmp.activity <- tmp.activity %>% mutate(calculatedTime = ref_datetime + time_diff_seconds)
+tmp.activity <- tmp.activity %>% mutate(timeAus = with_tz(calculatedTime, tz = "Australia/Sydney"))
+tmp.activity <- tmp.activity %>% mutate(ts = as.numeric(calculatedTime))
+tmp.activity <- tmp.activity %>% mutate(test = hourBin*3600-ts)
+
+tmp.activity
+```
+
+```{r OLD - Filter to specific station name}
+## Not sure what this is
+## I assume this is before realising that it doesn't work if the same receiver
+## has been deployed at different sites
+# Select receiver of interest
+recv_of_interest = "Hexham Swamp"
+
+## List all associated motus device IDs
+deviceIDs = deviceID_from_name(recv_of_interest)
+
+# Filter activity table to receiver of interest
+tmp.activity <- df.activity %>% 
+  filter(motusDeviceID %in% deviceIDs)
+
+tmp.activity %>% datatable()
+
+```
+
 ```{r GGplot ChatGPT}
 if(nrow(tmp.stations) == 1){
    
-
 ggplot(sum.bin) +
   geom_segment(aes(x = binStart, xend = binEnd, y = 1, yend = 1), 
                linewidth = 4, colour = "steelblue") +
@@ -82,20 +309,3 @@ ggplot(sum.bin) +
 }
 
 ```
-
-```{r Consider All Receivers (by using entire motus db instead of single receiver)}
-# Some sites have had multiple receivers; the uptime for the SITE should take into account all receivers that have been deployed there
-# Therefore see if can filter by site name instead of receiver ID
-
-#tbl_of_interest <- "activity"
-tbl_of_interest <- "recvdeps"
-
-motusData <- dbConnect(SQLite(), "Data/project-294.motus")
-tbl.activity <- tbl(motusData, tbl_of_interest)
-df.activity <- tbl.activity %>% as.data.frame()
-
-df.activity %>% head()
-```
-
-
-
