@@ -53,17 +53,24 @@ station_rename_map <- list(
   "Milham's Pond" = "Milhams Pond"
 )
 
-# df.alltags <- df.alltags %>% 
-#   mutate(recvDeployName = recode(recvDeployName,
-#                                  "Barry_Fullerton_cove" = "Fullerton Entrance",
-#                                  "North Swann Pond" = "Swan Pond",
-#                                  "Ramsar Road Floodgate" = "Ramsar Road",
-#                                  "Milham's Pond" = "Milhams Pond"
-#                                  ))
 df.alltags <- df.alltags %>% 
   mutate(recvDeployName = recode(recvDeployName, !!!station_rename_map))
 
-## Filtering / data cleaning ----
+# ---- Import recvDeps table and rename stations ----
+tbl.recvDeps <- tbl(project294.motus, "recvDeps")
+df.recvDeps <- tbl.recvDeps %>% as.data.frame()
+
+# Rename specific stations
+df.recvDeps <- df.recvDeps %>% 
+  mutate(stationName = recode(stationName, !!!station_rename_map))
+
+# Add timestamps
+df.recvDeps <- df.recvDeps %>% mutate(timeStart = as_datetime(tsStart))
+df.recvDeps <- df.recvDeps %>% mutate(timeStartAus = as_datetime(tsStart, tz = "Australia/Sydney"))
+df.recvDeps <- df.recvDeps %>% mutate(timeEnd = as_datetime(tsEnd))
+df.recvDeps <- df.recvDeps %>% mutate(timeEndAus = as_datetime(tsEnd, tz = "Australia/Sydney"))
+
+## ---- Filtering / data cleaning ----
 # Filter using basic Motus filter (removing 'dubious' detections)
 print("Filtering dubious detections (motusFilter = 1)")
 df.alltags <- df.alltags %>% filter(motusFilter == 1)
@@ -120,6 +127,7 @@ saveRDS(receiverSummary, "Data/receiverSummary.rds")
 saveRDS(tagSummary, "Data/tagSummary.rds")
 saveRDS(speciesSummary, "Data/speciesSummary.rds")
 saveRDS(station_rename_map, "Data/station_rename_map.rds")
+saveRDS(df.recvDeps, "Data/df.recvDeps.rds")
 
 ## Remove unnecessary objects
 dbDisconnect(project294.motus)
