@@ -5,11 +5,13 @@ date: "2023-08-14"
 output:
   word_document: default
   pdf_document: default
+editor_options: 
+  chunk_output_type: inline
 ---
 
 # Shorebird_Monitoring_NSW.Rmd
 ## Setup RStudio and Load Packages
-```{r Packages}
+```{r setup Packages include = False}
 #rm(list = ls()) # Clear environment
 Sys.setenv(TZ="UTC") # Set timezone to UTC
 
@@ -47,9 +49,11 @@ library(bioRad) # Find sunrise and sunset at coordinates
 library(forcats) # Reorder factor levels
 library(Hmisc) # Installed for bar plot error bars
 library(rstatix) # Easy calculation of statistical summaries
-
 library(kableExtra) # Produce nicely formatted tables
 library(scales) # Display values as percentages
+library(fuzzyjoin)
+library(plotly)
+library(DT)
 
 source("R Scripts/shorebirdFunctions.R")
 ```
@@ -61,7 +65,8 @@ receiverSummary <- readRDS("Data/receiverSummary.rds")
 tagSummary <- readRDS("Data/tagSummary.rds")
 tidalCurve <- readRDS("Data/tidalCurve.rds")
 tideData <- readRDS("Data/tideData.rds")
-station_rename_map <- readRDS("Data/station_rename_map.rds")
+#station_rename_map <- readRDS("Data/station_rename_map.rds")
+df.recvDeps <- readRDS("Data/df.recvDeps.rds")
 ```
 
 
