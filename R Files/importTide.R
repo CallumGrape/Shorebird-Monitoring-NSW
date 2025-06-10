@@ -1,6 +1,5 @@
-# beeep
 # Read high/low tide data from file
-tideData <- read.csv("Tide/TideDataNewcastle.csv")
+tideData <- read.csv("Data/Tide/TideDataNewcastle.csv")
 #beep again
 # Format date and datetime columns
 tideData$tideDateTimeAus <- ymd_hms(tideData$tideDateTime, tz = "Australia/Sydney")
@@ -20,9 +19,7 @@ colnames(tidalCurve) <- c("time","height")
 print("Assigning tide height to each detection")
 df.alltags <- df.alltags %>% mutate(tideHeight = tidalCurveFunc(timeAus))
 
-# ======================================
-# Classify tides as diurnal or nocturnal
-# ======================================
+# ==== Classify tides as diurnal or nocturnal====
 # Nocturnal = before sunrise or after sunset.
 # Diurnal = after sunrise and before sunset.
 
@@ -45,9 +42,7 @@ tideData <- tideData %>% mutate(
   )
 )
 
-# ==============================================================================
-# Categorise each tide by tidal/diel period and give numeric ID
-# ==============================================================================
+# ==== Categorise each tide by tidal/diel period and give numeric ID ====
 # Define each tide point by day / night and high / low
 tideData <- tideData %>% mutate(  
     tideCategory = case_when(
@@ -64,9 +59,7 @@ tideData <- tideData %>%
   mutate(tideID = paste0(tideCategory, "_", row_number())) %>% 
   ungroup()
 
-# ============================================================
-# Find Nearest Tide Point for Each Detection (Update df.alltags)
-# ============================================================
+# ==== Find Nearest Tide Point for Each Detection (Update df.alltags) ====
 
 # Function for finding index of nearest tide point (index in list of tides)
 get.tideIndex <- function(time){
@@ -98,9 +91,8 @@ df.alltags <- df.alltags %>%
 
 
 
-# ================================================================================
-# Save Tide Data to File
-# ================================================================================
+# ==== Save Tide Data to File ====
+
 saveRDS(tideData, "Data/tideData.rds")
 saveRDS(tidalCurve, "Data/tidalCurve.rds")
 saveRDS(tidalCurveFunc, "Data/tidalCurveFunc.rds")

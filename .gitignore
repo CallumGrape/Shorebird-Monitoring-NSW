@@ -1,0 +1,15 @@
+.Rproj.user
+.Rhistory
+.RData
+.Ruserdata
+.RDataTmp*
+
+
+# Specific folders
+Backup/
+Data/
+Papers/
+Plots/
+Docs/
+GIS Map/
+Maps/
