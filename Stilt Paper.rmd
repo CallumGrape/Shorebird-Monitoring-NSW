@@ -1,11 +1,27 @@
 ---
-title: "Stilt Paper not notebook"
+title: "Stilt Paper"
 author: "Callum Gapes"
 date: "2025-02-26"
 output: html_document
 editor_options: 
   chunk_output_type: inline
 ---
+
+```{r setup}
+# ---- Load Packages ----
+library(dplyr)
+library(ggplot2)
+library(forcats)
+
+# ---- Load Custom Functions ----
+source("R Scripts/shorebirdFunctions.R")
+
+# ---- Load Data ----
+df.alltags <- readRDS("Data/df.alltags.rds")
+tagSummary <- readRDS("Data/tagSummary.rds")
+tidalCurve <- readRDS("Data/tidalCurve.rds")
+```
+
 
 ```{r Calculate Detection Duration}
 # Set Time Bin Width
