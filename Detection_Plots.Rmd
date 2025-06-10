@@ -7,6 +7,18 @@ output: html_document
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE, eval = FALSE)
+
+library(dplyr)
+library(ggplot2)
+library(lubridate)
+library(tidyr)
+library(ggeasy)
+
+source("R Scripts/shorebirdFunctions.R")
+
+df.alltags <- readRDS("Data/df.alltags.rds")
+tagSummary <- readRDS("Data/tagSummary.rds")
+tidalCurve <- readRDS("Data/tidalCurve.rds")
 ```
 
 ```{r Plot Detections for Single Tag - Long Time Period}
@@ -136,7 +148,7 @@ if (plotTidalCurve) {
   if(showPlotTitle){
   
 ## Automatic plot title
- p <- p + ggtitle(paste("Detections for Tag",currentTagID,"(",tagInfo %>% filter(motusTagID==currentTagID) %>% dplyr::select(species),")")) +
+ p <- p + ggtitle(paste("Detections for Tag",currentTagID,"(",tagSummary %>% filter(motusTagID==currentTagID) %>% dplyr::select(species),")")) +
 theme(plot.title = element_text(hjust = 0.5))
 }
 
@@ -281,7 +293,7 @@ if (plotTidalCurve) {
   if(showPlotTitle){
   
 ## Automatic plot title
- p <- p + ggtitle(paste("Detections for Tag",currentTagID,"(",tagInfo %>% filter(motusTagID==currentTagID) %>% select(species),")")) +
+ p <- p + ggtitle(paste("Detections for Tag",currentTagID,"(",tagSummary %>% filter(motusTagID==currentTagID) %>% select(species),")")) +
 theme(plot.title = element_text(hjust = 0.5))
 }
 
@@ -464,7 +476,7 @@ if (plotTidalCurve) {
   if(showPlotTitle){
   
 ## Automatic plot title
- p1 <- p1 + ggtitle(paste("Detections for Tag",currentTagID,"(",tagInfo %>% filter(motusTagID==currentTagID) %>% select(species),")")) +
+ p1 <- p1 + ggtitle(paste("Detections for Tag",currentTagID,"(",tagSummary %>% filter(motusTagID==currentTagID) %>% select(species),")")) +
 theme(plot.title = element_text(hjust = 0.5))
 }
 
@@ -664,7 +676,7 @@ if (plotTidalCurve) {
   if(showPlotTitle){
   
 ## Automatic plot title
- p2 <- p2 + ggtitle(paste("Detections for Tag",currentTagID,"(",tagInfo %>% filter(motusTagID==currentTagID) %>% select(species),")")) +
+ p2 <- p2 + ggtitle(paste("Detections for Tag",currentTagID,"(",tagSummary %>% filter(motusTagID==currentTagID) %>% select(species),")")) +
 theme(plot.title = element_text(hjust = 0.5))
 }
 
@@ -862,7 +874,7 @@ if (plotTidalCurve) {
   if(showPlotTitle){
   
 ## Automatic plot title
- p2 <- p2 + ggtitle(paste("Detections for Tag",currentTagID,"(",tagInfo %>% filter(motusTagID==currentTagID) %>% select(species),")")) +
+ p2 <- p2 + ggtitle(paste("Detections for Tag",currentTagID,"(",tagSummary %>% filter(motusTagID==currentTagID) %>% select(species),")")) +
 theme(plot.title = element_text(hjust = 0.5))
 }
 
@@ -1025,7 +1037,7 @@ if (plotTidalCurve) {
   if(showPlotTitle){
   
 ## Automatic plot title
- p3 <- p3 + ggtitle(paste("Detections for Tag",currentTagID,"(",tagInfo %>% filter(motusTagID==currentTagID) %>% select(species),")")) +
+ p3 <- p3 + ggtitle(paste("Detections for Tag",currentTagID,"(",tagSummary %>% filter(motusTagID==currentTagID) %>% select(species),")")) +
 theme(plot.title = element_text(hjust = 0.5))
 }
 
@@ -1099,6 +1111,7 @@ timeEnd <- "2023-04-24 24:00:00"
 plotTidalCurve <- 1
 plotSun <- 1
 plotTide <- 0
+pointShape <- "circle"
 
 pointSize <- 1.5
 pointColour <- "#619CFF"
@@ -1137,7 +1150,7 @@ p <- tmp %>%
   xlab("Date-Time") + 
   
   ## Automatic plot title
- ggtitle(paste("Detections for Tag",currentTagID,"(",tagInfo %>% filter(motusTagID==currentTagID) %>% select(species),") at",tmp.receiver)) +
+ ggtitle(paste("Detections for Tag",currentTagID,"(",tagSummary %>% filter(motusTagID==currentTagID) %>% select(speciesEN),") at",tmp.receiver)) +
   theme_gray(base_size = 14) +
 theme(plot.title = element_text(hjust = 0.5))
   
@@ -1800,6 +1813,7 @@ if (plotTidalCurve) {
 
 p
 ```
+
 ```{r Plot Detections for All Tags, Grid = Receiver, Colour = Species}
 ## Choose time range to plot
 # Set completeTimeRange to 1 to plot all detections for the tag
@@ -1859,6 +1873,7 @@ if (plotTidalCurve) {
 
 p
 ```
+
 ```{r Plot Detections for All Tags, Grid = Receiver, Colour = Tag}
 ## Choose time range to plot
 # Set completeTimeRange to 1 to plot all detections for the tag
@@ -1920,6 +1935,7 @@ if (plotTidalCurve) {
 
 p
 ```
+
 ```{r Plot Detections for All Tags, Grid = Species, Colour = Receiver}
 ## Choose time range to plot
 # Set completeTimeRange to 1 to plot all detections for the tag

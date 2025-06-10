@@ -7,6 +7,12 @@ output: html_document
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
+
+library(dplyr)
+library(ggplot2)
+library(lubridate)
+
+df.alltags <- readRDS("Data/df.alltags.rds")
 ```
 
 ```{r October - November Plot}
@@ -47,10 +53,6 @@ sunReceiver <- "Curlew Point"
 # Set receivers to exclude from output
 recvExclude = c("Swan Pond", "Fullerton Entrance")
 
-# Get sunrise and sunset times during time interval
-plot.sunrise <- (tmp %>% filter(recvDeployName==sunReceiver) %>% dplyr::select(sunrise) %>% unique())$sunrise
-plot.sunset <- (tmp %>% filter(recvDeployName==sunReceiver) %>% dplyr::select(sunset) %>% unique())$sunset
-
 # Set start and end time for plot
 if (completeTimeRange) {
   # Get time interval from first and last detections
@@ -66,6 +68,10 @@ tmp <- filter(df.alltags, speciesEN == currentSpecies, timeAus >= timeStart, tim
 
 # Exclude specific stations
 tmp <- tmp %>% filter(!recvDeployName %in% recvExclude)
+
+# Get sunrise and sunset times during time interval
+plot.sunrise <- (tmp %>% filter(recvDeployName==sunReceiver) %>% dplyr::select(sunrise) %>% unique())$sunrise
+plot.sunset <- (tmp %>% filter(recvDeployName==sunReceiver) %>% dplyr::select(sunset) %>% unique())$sunset
 
 # Manually remove swan pond
 #tmp <- filter(tmp, recvDeployName != "Swan Pond")
