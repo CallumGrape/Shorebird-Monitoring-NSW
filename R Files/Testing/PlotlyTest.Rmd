@@ -5,10 +5,21 @@ date: "2025-04-08"
 output: html_document
 ---
 
-```{r}
+```{r setup}
+library(dplyr)
+library(plotly)
+library(ggplot2)
+
+source("R Files/shorebirdFunctions.R")
+source("R Files/plotDefaults.R")
+
+df.alltags <- readRDS("Data/df.alltags.rds")
+```
+
+
+```{r Using ggplotly}
 # Choose tag to plot
 currentTagID <- 60472
-
 ## Choose time range to plot
 # Set completeTimeRange to 1 to plot all detections for the tag
 completeTimeRange <- 1
