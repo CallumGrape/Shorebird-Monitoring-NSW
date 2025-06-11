@@ -28,5 +28,3 @@ fontSizeAxisTicks = 10
 fontSizeLegendTitle = 13 
 fontSizeLegendLabels = 11
 paddingAxisTitle = 10
-
-rscript
