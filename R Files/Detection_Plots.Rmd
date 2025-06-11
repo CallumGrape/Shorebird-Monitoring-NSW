@@ -7,6 +7,8 @@ editor_options:
   chunk_output_type: console
 ---
 
+
+
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE, eval = FALSE)
 knitr::opts_knit$set(root.dir = "C:/Users/callu/Documents/Shorebird Monitoring NSW")
@@ -23,6 +25,7 @@ library(raster)
 
 source("R Files/shorebirdFunctions.R")
 source("R Files/plotDefaults.R")
+source("R Files/shorebirdGlobals.R")
 
 df.alltags <- readRDS("Data/df.alltags.rds")
 tagSummary <- readRDS("Data/tagSummary.rds")
@@ -393,8 +396,8 @@ sunsetColour = "#530066"
 sunLineAlpha = 1
 sunLineWidth = 1
 sunFillAlpha = 0.06
-#sunLineType = "longdash"
-sunLineType = "solid"
+sunLineType = "longdash"
+#sunLineType = "solid"
 
 # Receiver for sunrise/set
 #sunReceiver <- "Milham's Pond"
@@ -553,17 +556,17 @@ currentTagID <- 60472
 completeTimeRange <- 0
 # User-defined start and end time - in AEST
 # Curlew Plot 1
-#timeStart <- "2023-03-27 00:00:00"
-#timeEnd <- "2023-03-29 24:00:00"
-#sunReceiver <- "Milham's Pond"
+timeStart <- "2023-03-27 00:00:00"
+timeEnd <- "2023-03-29 24:00:00"
+sunReceiver <- "Milham's Pond"
 # Curlew Plot 2
 #timeStart <- "2023-04-10 00:00:00"
 #timeEnd <- "2023-04-14 24:00:00"
 #sunReceiver <- "Milham's Pond"
 # Curlew Plot 3
-timeStart <- "2023-04-20 00:00:00"
-timeEnd <- "2023-04-23 24:00:00"
-sunReceiver <- "Fullerton Entrance"
+# timeStart <- "2023-04-20 00:00:00"
+# timeEnd <- "2023-04-23 24:00:00"
+# sunReceiver <- "Fullerton Entrance"
 
 # Graphical Options - General
 pointSize <- 1.5
@@ -1160,7 +1163,7 @@ p <- tmp %>%
   xlab("Date-Time") + 
   
   ## Automatic plot title
- ggtitle(paste("Detections for Tag",currentTagID,"(",tagSummary %>% filter(motusTagID==currentTagID) %>% select(speciesEN),") at",tmp.receiver)) +
+ ggtitle(paste("Detections for Tag",currentTagID,"(",tagSummary %>% filter(motusTagID==currentTagID) %>% dplyr::select(speciesEN),") at",tmp.receiver)) +
   theme_gray(base_size = 14) +
 theme(plot.title = element_text(hjust = 0.5))
   
@@ -1267,20 +1270,22 @@ p
 ```{r Plot Detections for Single Species - Facet by Receiver}
 # Choose species to plot
 #currentSpecies <- "Red-necked Avocet"
-#currentSpecies <- "Bar-tailed Godwit"
-currentSpecies <- "Pacific Golden-Plover"
+currentSpecies <- "Bar-tailed Godwit"
+#currentSpecies <- "Pacific Golden-Plover"
 
 ## Choose time range to plot
 # Set completeTimeRange to 1 to plot all detections for the tag
 completeTimeRange <- 0 
 # User-defined start and end time
-timeStart <- "2024-11-24 00:00:00"
-timeEnd <- "2024-12-01 24:00:00"
+#timeStart <- "2024-11-24 00:00:00"
+#timeEnd <- "2024-12-01 24:00:00"
 #timeEnd <- "2024-12-13 24:00:00"
+timeStart <- "2023-10-28 00:00:00"
+timeEnd <- "2023-11-01 24:00:00"
 
 # Graphical options
 plotTidalCurve <- 1
-plotSun <- 0
+plotSun <- 1
 plotTide <- 0
 pointSize <- 1
 
@@ -1294,11 +1299,29 @@ if (completeTimeRange) {
   timeEnd <- ymd_hms(timeEnd, tz = "Australia/Sydney")
 }
 
+# # Find sunset / sunrise times
+# date_seq <- seq(as_date(timeStart), as_date(timeEnd), by = 'day')
+# plot_dates <- tibble(date = date_seq)
+# 
+# LON_NEWCASTLE <- 151.7833
+# LAT_NEWCASTLE <- -32.9167
+# 
+# plot_sun_data <- plot_dates %>% 
+#   mutate(
+#     sunriseNewcastle = sunrise(date, lon = LON_NEWCASTLE, lat = LAT_NEWCASTLE),
+#     sunsetNewcastle = sunset(date, lon = LON_NEWCASTLE, lat = LAT_NEWCASTLE))
+
 # Filter by receiver and time interval
 tmp <- filter(df.alltags, speciesEN == currentSpecies, timeAus >= timeStart, timeAus <= timeEnd)
 
 # Manually remove swan pond
 #tmp <- filter(tmp, recvDeployName != "Swan Pond")
+
+# Get sunrise and sunset times during time interval
+sunReceiver <- "Fullerton Entrance"
+
+# plot.sunrise <- (tmp %>% filter(recvDeployName==sunReceiver) %>% dplyr::select(sunrise) %>% unique())$sunrise
+# plot.sunset <- (tmp %>% filter(recvDeployName==sunReceiver) %>% dplyr::select(sunset) %>% unique())$sunset
 
 p <- tmp %>% 
   ggplot(aes(x = timeAus, y = sigPositive)) + # x-axis = signal strength, y-axis = time
@@ -1312,19 +1335,27 @@ p <- tmp %>%
   facet_grid(vars(recvDeployName)) +
   #facet_wrap(~factor(recvDeployName, levels = c("Tomago","Fullerton Cove","Curlew Point")), dir = "v", strip.position = "right") +
   
+  #   geom_vline(data = plot_sun_data, aes(xintercept = sunriseNewcastle, colour="sunriseColour"),alpha = sunLineAlpha,linewidth = sunLineWidth, linetype = sunLineType) +
+  # geom_vline(data = plot_sun_data, aes(xintercept = sunsetNewcastle, colour="sunsetColour"),alpha = sunLineAlpha,linewidth = sunLineWidth, linetype = sunLineType) +
+  
+  
+  
   # Legend
   labs(colour = "Motus Tag ID", ) + 
   guides(colour = guide_legend(order = 1)) + # Make this legend appear first
 
   # Axis titles
-  ylab("Signal Strength") + 
+  ylab("Signal Strength") +  
   xlab("Date-Time") +
+  
+  # Grid / background
+  easy_remove_gridlines() +
   
   # Font Size
   theme_gray(base_size = 14) +
   
   ## Automatic title 
-  ggtitle(paste("Detections for",currentSpecies)) + theme(plot.title = element_text(hjust = 0.5), legend.justification = c("right","top"))  # Plot title
+  ggtitle(paste("Detections for",currentSpecies)) + theme(plot.title = element_text(hjust = 0.5), legend.justification = c("right","top"))# Plot title
 
   
   ## Custom title
@@ -1333,7 +1364,8 @@ p <- tmp %>%
   
 # Add sunset and sunrise
 if (plotSun) {
-  p <- plot.addSunriseSet(p)
+  #p <- plot.addSunriseSet(p)
+  p <- plot.addSunriseSetBetter(p)
 }
 
 # Add high and low tides
