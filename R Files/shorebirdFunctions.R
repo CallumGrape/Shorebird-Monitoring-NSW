@@ -179,7 +179,8 @@ generateSpeciesSummary <- function(){
   return(speciesSummary)
 }
 ## Functions to help with plotting ----
-plot.addSunriseSet <- function(p){
+# Leaving here for now in case I need to make any emergency plots
+plot.addSunriseSetOld <- function(p = p, sun_data = plot_sun_data){
   p <- p + ggnewscale::new_scale_colour() +
     geom_vline(data = as_data_frame(plot.sunrise), aes(xintercept = value, colour="sunriseColour"),alpha = sunLineAlpha,linewidth = sunLineWidth, linetype = sunLineType) +
     geom_vline(data = as_data_frame(plot.sunset), aes(xintercept=value,colour="sunsetColour"), alpha = sunLineAlpha,linewidth = sunLineWidth, linetype = sunLineType) +
@@ -189,6 +190,31 @@ plot.addSunriseSet <- function(p){
                        guide = guide_legend(order = 2))
   return(p)
 }
+
+
+plot.addSunriseSet <- function(p){
+  
+  # Find sunset / sunrise times
+  date_seq <- seq(p$data$dateAus %>% min(), p$data$dateAus %>% max(), by = 'day')
+  plot_dates <- tibble(date = date_seq)
+  
+  plot_sun_data <- plot_dates %>% 
+    mutate(
+      sunriseNewcastle = sunrise(date, lon = LON_NEWCASTLE, lat = LAT_NEWCASTLE),
+      sunsetNewcastle = sunset(date, lon = LON_NEWCASTLE, lat = LAT_NEWCASTLE))
+  
+  p <- p + ggnewscale::new_scale_colour() +
+    
+    geom_vline(data = plot_sun_data, aes(xintercept = sunriseNewcastle, colour="sunriseColour"),alpha = sunLineAlpha,linewidth = sunLineWidth, linetype = sunLineType) +
+    geom_vline(data = plot_sun_data, aes(xintercept = sunsetNewcastle, colour="sunsetColour"),alpha = sunLineAlpha,linewidth = sunLineWidth, linetype = sunLineType) +
+    
+    scale_color_manual(name = "Sun",
+                       labels = c("Sunrise","Sunset"),
+                       values = c(sunriseColour,sunsetColour),
+                       guide = guide_legend(order = 2))
+  return(p)
+}
+
 
 plot.addTideHighLow <- function(p){
   p <- p + ggnewscale::new_scale_colour() +
