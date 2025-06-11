@@ -5,30 +5,36 @@ date: "2023-11-07"
 output: html_document
 ---
 
+# Description
+
+This file looks at variation in signal strength.
+Haven't looked at it recently
+
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
+
+# ---- Load Packages ----
+library(dplyr)
+
+# ---- Load Data ----
+df.alltags <- readRDS("Data/df.alltags.rds")
 ```
 
-```{r Obtain Data}
-### Run this chunk before doing any analyses
-
-load("Data/NSW_Shorebird_Data.Rda")
-
+```{r Load Data}
 # Filter detections to only those +- 1 hour of high or low tide.
-df.highLowDetections <- df.alltags %>% filter((tideCategory == "High" | tideCategory == "Low") & abs(timeSinceTideCategory) <= 1) %>% 
-  select(sig, motusTagID, recvDeployName, tideCategoryTime, tideCategory, timeAus, speciesEN) %>% 
-  group_by(motusTagID, recvDeployName, tideCategoryTime, tideCategory, speciesEN) %>% 
-  summarise(sigMean = mean(sig), sigVar = var(sig))
+df.highLowDetections <- df.alltags %>% filter(abs(tideTimeDiff) <= 1) %>% 
+  select(sig, motusTagID, recvDeployName, tideDateTimeAus, tideCategory, timeAus, speciesEN) %>% 
+  group_by(motusTagID, recvDeployName, tideDateTimeAus, tideCategory, speciesEN) %>% 
+  summarise(sigMean = mean(sig), sigVar = var(sig), .groups = "drop")
 ```
 
 ```{r One-way ANOVA - Single Species, Single Receiver (High/Low Tide)}
 # Select species and receiver
-tmp.receiver <- "Barry_Fullerton_cove"
+tmp.receiver <- "Fullerton Entrance"
 tmp.species <- "Pied Stilt"
 
 # Filter detections by species and receiver
 tmp.detections <- df.highLowDetections %>% filter(speciesEN == tmp.species, recvDeployName == tmp.receiver) 
-
 # Run ANOVA on one species at one site
 res_aov <- aov(data = tmp.detections, sigVar ~ tideCategory)
 res_aov %>% summary()
@@ -56,7 +62,7 @@ res_aov %>% summary()
 
 ```{r Misc/Testing}
 # Import tide data and format time stamps
-tideData <- read.csv("Tide/TideDataNewcastle2023.csv") %>% select(tideHeight, tideDateTimeAus, high_low)
+tideData <- read.csv("Data/Tide/TideDataNewcastle2023.csv") %>% select(tideHeight, tideDateTimeAus, high_low)
 tideData$tideDateTimeAus <- ymd_hms(tideData$tideDateTime, tz = "Australia/Sydney")
 
 # Set start and end time

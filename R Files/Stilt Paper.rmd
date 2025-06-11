@@ -8,18 +8,54 @@ editor_options:
 ---
 
 ```{r setup}
+setwd("C:/Users/callu/Documents/Shorebird Monitoring NSW")
+knitr::opts_knit$set(root.dir = "C:/Users/callu/Documents/Shorebird Monitoring NSW")
+
 # ---- Load Packages ----
 library(dplyr)
+library(tidyr)
 library(ggplot2)
 library(forcats)
+library(ggeasy)
+library(purrr)
+library(DT)
 
 # ---- Load Custom Functions ----
-source("R Scripts/shorebirdFunctions.R")
+source("R Files/shorebirdFunctions.R")
 
 # ---- Load Data ----
 df.alltags <- readRDS("Data/df.alltags.rds")
 tagSummary <- readRDS("Data/tagSummary.rds")
+receiverSummary <- readRDS("Data/receiverSummary.rds")
 tidalCurve <- readRDS("Data/tidalCurve.rds")
+tideData <- readRDS("Data/tideData.rds")
+
+# ---- DataTable Default Options ----
+js_code_formatter <- "
+function(data, type, row, meta) {
+  if (type === 'display' && typeof data === 'number') {
+    // Check if the number is an integer
+    if (Number.isInteger(data)) {
+      return data.toString(); // If integer, display as is (converted to string)
+    } else {
+      // If float, format to 2 decimal places
+      return data.toFixed(2); 
+    }
+  }
+  // Return original data for non-numeric types or non-display types
+  return data; 
+}"
+
+options(DT.options = list(
+  pageLength = 100,
+  columnDefs = list(
+    list(
+      targets = '_all',
+      render = DT::JS(js_code_formatter) # Pass the single string variable
+    )
+  )
+  # , pageLength = 10 # Example
+))
 ```
 
 
@@ -62,10 +98,9 @@ df.byTidePeriod <- df.byTidePeriod %>%
 ## Reorder factor levels for tideCategory to choose order in plot
 df.byTidePeriod <- df.byTidePeriod %>%
   mutate(tideCategory = fct_relevel(tideCategory, "Diurnal_Low", "Nocturnal_Low", "Diurnal_High", "Nocturnal_High"))
-
 ```
 
-```{r Individual Tag - Mean, SE, and Bar Plot}
+```{r Individual Tag - Mean SE  and Bar Plot}
 # Filter data for the specific tag
 tag.tmp <- 81121
 
@@ -77,8 +112,9 @@ sum.singletag <- sum.singletag %>%
   summarise(meanDuration = mean(detectionDuration),
             sd = sd(detectionDuration, na.rm = TRUE),
             periodCount = n(),
-            se = sd/sqrt(periodCount)) %>% 
-  ungroup()
+            se = sd/sqrt(periodCount),
+            .groups = "drop") %>% 
+  ungroup() 
 
 # Create the bar plot with error bars
 ggplot(sum.singletag, aes(x = recvDeployName, y = meanDuration, fill = tideCategory)) +
@@ -98,7 +134,11 @@ ggplot(sum.singletag, aes(x = recvDeployName, y = meanDuration, fill = tideCateg
 ```
 
 ```{r Test Producing Complete (All Tide Period) Table For Individual Tag}
-tmp.tag = 43296 %>% as.factor()
+# By complete, I mean every tide period between the first and last time the 
+# tag was detected, including those where the tag was NOT detected.
+# (Only values if tideID where the tag was detected are present in df.alltags)
+#tmp.tag = 43296 %>% as.factor()
+tmp.tag = 43296
 df.tmp <- df.byTidePeriod %>% filter(motusTagID == tmp.tag) 
 
 ## Start with single station
@@ -129,7 +169,7 @@ join.test <- left_join(grid.test, df.tmp,
 ```
 
 ```{r Test From Tag Summary}
-# So basically, need a unique list of valid tide periods for each tag..
+# So basically, need a unique list of valid tide periods for each tag.
 # Already have list of tags with first and last detection in tagSummary
 # Want to filter tideData for each combination
 valid_tides <- tagSummary %>% mutate(
@@ -187,39 +227,13 @@ summ.species <- summ.tag %>%
             sd_species = sd(mean_duration),
             se_species = (sd_species)/(sqrt(n())),
             n_individual = n(),
-            .groups = "drop") %>% 
-  print()
+            .groups = "drop")
+
+summ.species %>% datatable(filter = "top")
 ```
 
 
-```{r ChatGPT Test}
-detection_ranges <- df.byTidePeriod %>%
-  distinct(motusTagID) %>%
-  mutate(
-    start_time = purrr::map(motusTagID, tag.firstDetection) %>% unlist() %>% as.POSIXct(origin = "1970-01-01"),
-    end_time = purrr::map(motusTagID, tag.lastDetection) %>% unlist() %>% as.POSIXct(origin = "1970-01-01")
-  )
-
-tidal_periods_filtered <- detection_ranges %>%
-  mutate(valid_tidePeriods = pmap(motusTagID, ~tideData %>%
-    filter(time >= .x$start_time & time <= .x$end_time) %>%
-    pull(tideID))) %>%
-  unnest(valid_tidePeriods) %>%
-  rename(tideID = valid_tidePeriods)
-```
-
-
-```{r Produce Plots for All Individual Tags TO DO}
-# Filter detections by species of interest
-tmp.species <- c("Red-necked Avocet", "Pacific Golden-Plover", "Masked Lapwing")
-
-df.byTidePeriod_individual <- df.byTidePeriod %>% 
-  filter(speciesEN %in% tmp.species)
-
-
-```
-
-```{r Summarise by Species)}
+```{r Summarise by Species}
 # Select species of interest
 tmp.species <- c("Red-necked Avocet", "Pacific Golden-Plover", "Pied Stilt")
 
@@ -257,12 +271,12 @@ summ.bySpecies <- summ.byTag %>%
 ```{r Plot for Single Species}
 # Select species of interest
 #tmp.species <- "Pacific Golden-Plover"
-tmp.species <- "Red-necked Avocet"
-#tmp.species <- "Pied Stilt"
+#tmp.species <- "Red-necked Avocet"
+tmp.species <- "Pied Stilt"
 
 errorBarLabelOffset = 0.1
 
-summ.species_individual <- sum.species %>% 
+summ.species_individual <- summ.bySpecies %>% 
   filter(speciesEN == tmp.species)
 
 # Create the bar plot with error bars
@@ -284,7 +298,8 @@ ggplot(summ.species_individual, aes(x = recvDeployName, y = meanDurationSpecies,
   easy_center_title()
 ```
 
-```{r Three-way Repeated Measures ANOVA}
+```{r BROKEN Three-way Repeated Measures ANOVA}
+# Broken / old - not worth fixing rn
 # Get statistical summary
 sum.species <- sum.alltags %>% 
   group_by(speciesEN, tideCategory, recvDeployName) %>% 
@@ -367,7 +382,7 @@ res.aov <- anova_test(
 
 ```
 
-```{r Chat GPT Test}
+```{r Chat GPT Test - Plot for detection duration averages by species}
 # Step 1: Compute the average detection duration per tag for each site × tide category
 df.avg_tag <- df.byTidePeriod %>%
   group_by(motusTagID, recvDeployName, tideCategory) %>%
@@ -400,30 +415,3 @@ ggplot(df.avg_species, aes(x = tideCategory, y = avg_species_detection, fill = s
 
 ```
 
-```{r Single Species - Two-way repeated measures ANOVA}
-# Select species of interest
-tmp.species <- "Red-necked Avocet"
-df.single_species <- df.byTidePeriod %>% 
-  filter(speciesEN == tmp.species) %>% 
-  group_by()
-
-
-```
-
-```{r Old Code}
-# ================================================================================
-# Categorising each detection, where "other" is included. This was written 
-# before the categorisation was moved into "importTide.R"
-# ================================================================================
-# # Classify into either one of the four categories, or "Other".
-# df.alltags <- df.alltags %>% 
-#   mutate(
-#     tideCategory = case_when(
-#       tideTimeDiff > tideTimeCutoff ~ "Other",
-#       tideHighLow == "Low" & tideDiel == "Diurnal" ~ "Diurnal_Low",
-#       tideHighLow == "Low" & tideDiel == "Nocturnal" ~ "Nocturnal_Low",
-#       tideHighLow == "High" & tideDiel == "Diurnal" ~ "Diurnal_High",
-#       tideHighLow == "High" & tideDiel == "Nocturnal" ~ "Nocturnal_High"
-#     ) %>% as_factor()
-#   )
-```

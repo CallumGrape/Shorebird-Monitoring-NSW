@@ -3,9 +3,6 @@ library(dplyr)
 library(lubridate)
 library(bioRad) # Sunrise/set from coordinates
 
-# ---- Load Shorebird Data ----
-
-
 # Read high/low tide data from file
 tideData <- read.csv("Data/Tide/TideDataNewcastle.csv")
 #beep again
