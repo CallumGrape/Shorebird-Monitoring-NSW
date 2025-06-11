@@ -251,12 +251,12 @@ plot.addTidalCurveShiny <- function(p, tmp.detections){
   return(p)
 }
 
-save.plot <- function(title = paste(p$labels$title," ",format(currentTime,"%Y-%m-%d %H-%M-%S"),sep = ""), format = "png") {
+save.plot <- function(title = paste(p$labels$title," ",format(currentTime,"%Y-%m-%d %H-%M-%S"),sep = ""), format = "png", dir_path = "Plots") {
   currentTime <- with_tz(Sys.time(),"Australia/Sydney")
   if (title != paste(p$labels$title," ",format(currentTime,"%Y-%m-%d %H-%M-%S"),".",format,sep = "")){
     title <- paste(title,".",format,sep = "")
   }
-  ggsave(title,plot = p, path = "Plots")
+  ggsave(title,plot = p, path = dir_path)
   return()
 }
 
