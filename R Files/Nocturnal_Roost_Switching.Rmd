@@ -12,7 +12,13 @@ library(dplyr)
 library(ggplot2)
 library(lubridate)
 
+print(getwd())
+
+source("R Files/shorebirdFunctions.R")
+source("R Files/plotDefaults.R")
+
 df.alltags <- readRDS("Data/df.alltags.rds")
+tidalCurve <- readRDS("Data/tidalCurve.rds")
 ```
 
 ```{r October - November Plot}
@@ -40,6 +46,7 @@ tideAlpha = 0.6
 
 sunriseColour = "#ff9933"
 sunsetColour = "#530066"
+sunFillAlpha = 0.06
 
 fontSizeAxisTitle = 13
 fontSizeAxisTicks = 10

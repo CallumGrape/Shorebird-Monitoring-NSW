@@ -325,6 +325,8 @@ tag.lastDetection <- function(tagID){
 
 deviceID_from_name <- function(recvDeployName){
   
+  df.recvDeps <- readRDS("Data/df.recvDeps.rds")
+  
   deviceIDs <- df.recvDeps %>%
     filter(stationName == recvDeployName) %>% 
     select(deviceID) %>% 
@@ -334,6 +336,8 @@ deviceID_from_name <- function(recvDeployName){
 }
 
 serno_from_name <- function(recvDeployName){
+  
+  df.recvDeps <- readRDS("Data/df.recvDeps.rds")
   
   deviceIDs <- df.recvDeps %>%
     filter(stationName == recvDeployName) %>% 

@@ -8,11 +8,81 @@ editor_options:
 ---
 
 ```{r setup}
+# ---- Load Packages ----
 library(DT)
 library(dplyr)
 library(plotly)
+library(here)
 
+library(DBI)
+library(RSQLite)
+
+# ---- Set working directory ----
+## Not sure why I need this, is working fine in other files
+setwd("C:/Users/callu/Documents/Shorebird Monitoring NSW")
+knitr::opts_knit$set(root.dir = "C:/Users/callu/Documents/Shorebird Monitoring NSW")
+
+# ---- Load Custom Functions ----
+source(here("R Files","shorebirdFunctions.R"))
+
+# ---- Load Data ----
+df.recvDeps <- readRDS("Data/df.recvDeps.rds")
 ```
+
+
+```{r Explore a Single Table v2}
+# Trying to figure out whether we have detected tags from any other projects!!
+recv_of_interest <- serno_from_name("Milhams Pond")
+recv.db <- dbConnect(SQLite(), paste("Data/motus_receiver_data/",recv_of_interest,".motus",sep=""))
+
+# Select specific table to look at
+tbl_of_interest <- "tags"
+tbl.recv <- tbl(recv.db, tbl_of_interest)
+df.recv <- tbl.recv %>% as.data.frame()
+
+df.recv %>% datatable()
+```
+
+```{r Check Number of Tags Detected by Each Receiver Database}
+# Define folder with the receiver data
+folder_path <- "./Data/motus_receiver_data"
+
+# Get a list of all files within the folder
+file_list <- list.files(path = folder_path, full.names = TRUE)
+
+# Loop through each receiver
+for (file in file_list) {
+  # Only process .motus filesAdd commentMore actions
+  if (grepl("\\.motus$",file)) {
+    # Connect to SQLite database
+    receiverMotus <- dbConnect(SQLite(), file)
+    print(file %>% basename())
+    receiverTable <- tbl(receiverMotus, "tags") %>% collect() %>% as.data.frame()
+    receiverTable %>% pull(projectID) %>% unique() %>% print()
+    receiverTable %>% pull(tagID) %>% unique() %>% length() %>% print()
+    #assign(paste(basename(file)), receiverTable)
+    #receiverTable %>% select(speciesEN) %>% unique() %>% print()
+    dbDisconnect(receiverMotus)
+  }
+}
+
+
+# Below: old code from deleted file (on git) looking at alltags
+# # Loop through each receiver
+# for (file in file_list) {
+#   # Only process .motus filesAdd commentMore actions
+#   if (grepl("\\.motus$",file)) {
+#     # Connect to SQLite database
+#     receiverMotus <- dbConnect(SQLite(), file)
+#     print(file %>% basename())
+#     receiverTable <- tbl(receiverMotus, "alltags") %>% collect() %>% as.data.frame()
+#     assign(paste(basename(file)), receiverTable)
+#     receiverTable %>% select(speciesEN) %>% unique() %>% print()
+#     dbDisconnect(receiverMotus)
+#   }
+# }
+```
+
 
 
 ```{r Explore a Single Table}
@@ -103,6 +173,7 @@ df.activity <- df.activity %>%
     hourBinEnd = as.POSIXct(hourBinEnd_ts)
   )
 ```
+
 ```{r Filter Activity By Station Name (non function version), echo=FALSE}
 # Select station by name
 #target_station_name <- "Curlew Point"

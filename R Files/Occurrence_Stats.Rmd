@@ -7,9 +7,25 @@ output: html_document
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
+knitr::opts_knit$set(root.dir = "C:/Users/callu/Documents/Shorebird Monitoring NSW")
+
+# ---- Load packages ----
+library(dplyr)
+library(forcats)
+library(ggplot2)
+library(rstatix)
+library(viridis)
+
+# ---- Load custom functions and variables
+source("R Files/shorebirdFunctions.R")
+source("R Files/plotDefaults.R")
+
+df.alltags <- readRDS("Data/df.alltags.rds")
+tagSummary <- readRDS("Data/tagSummary.rds")
+
 ```
 
-# Occurrence Stats 
+# ==== Occurrence Stats  ====
 ```{r Occurrence by Station and Tidal Category}
 ## Occurrence = (num days tag detected at station during tidal category)/(num days tag detected at station)
 
@@ -27,8 +43,8 @@ stationDetections$motusTagID <- stationDetections$motusTagID %>% as.factor()
 ## Add number of station detections to occurrenceStation data frame
 occurrenceStation <- left_join(occurrenceStation, dplyr::select(stationDetections,stationDays,motusTagID,recvDeployName),by=c("motusTagID","recvDeployName"))
 
-## Add species from tagInfo
-occurrenceStation <- left_join(occurrenceStation, dplyr::select(tagInfo,species,motusTagID),by="motusTagID")
+## Add species from tagSummary
+occurrenceStation <- left_join(occurrenceStation, dplyr::select(tagSummary,speciesEN,motusTagID),by="motusTagID")
 
 ## Proportion of detection days that each tag was detected in each tidal category
 occurrenceStation <- occurrenceStation %>% mutate(proportion = days/stationDays)
@@ -40,10 +56,10 @@ stationDaysProportion <- occurrenceStation %>% group_by(recvDeployName) %>% summ
 ```
 
 ```{r Single Species Plot}
-species.tmp <- "Pied Stilt"
+#species.tmp <- "Pied Stilt"
 #species.tmp <- "Red-necked Avocet"
-#species.tmp <- "Bar-tailed Godwit"
-occurrence.tmp <- occurrenceStation %>% filter(species == species.tmp)
+species.tmp <- "Bar-tailed Godwit"
+occurrence.tmp <- occurrenceStation %>% filter(speciesEN == species.tmp)
 
 ## Jitter
 p <- occurrence.tmp %>% ggplot(aes(x=tideCategory,y=proportion,color = motusTagID)) + 
@@ -91,10 +107,10 @@ p
 ```
 
 ```{r ANOVA}
-species.tmp <- "Pied Stilt"
+species.tmp <- "Pacific Golden-Plover"
 #receiver.tmp <- "Barry_Fullerton_cove"
-receiver.tmp <- "Curlew Point"
-modelData <- occurrenceStation %>% filter(recvDeployName == receiver.tmp & species == species.tmp)
+receiver.tmp <- "Hexham Swamp"
+modelData <- occurrenceStation %>% filter(recvDeployName == receiver.tmp & speciesEN == species.tmp)
 
 aov.res <- aov(proportion ~ tideCategory ,data = modelData)
 aov.res %>% summary()
@@ -108,7 +124,7 @@ species.tmp <- "Bar-tailed Godwit"
 #receiver.tmp <- "Barry_Fullerton_cove"
 #receiver.tmp <- "Curlew Point"
 #receiver.tmp <- "Tomago"
-modelData <- occurrenceStation %>% filter(recvDeployName == receiver.tmp & species == species.tmp)
+modelData <- occurrenceStation %>% filter(recvDeployName == receiver.tmp & speciesEN == species.tmp)
 modelData$motusTagID = factor(modelData$motusTagID, levels = unique(modelData$motusTagID))
 modelData$tideCategory = factor(modelData$tideCategory, levels = unique(modelData$tideCategory))
 
@@ -124,10 +140,10 @@ modelData %>% friedman_effsize(proportion ~ tideCategory | motusTagID)
 
 
 ```{r Andrea Linear Model Test}
-species.tmp <- "Pied Stilt"
-receiver.tmp <- "Barry_Fullerton_cove"
+species.tmp <- "Pacific Golden-Plover"
+receiver.tmp <- "Hexham Swamp"
 
-modelData <- occurrenceStation %>% filter(recvDeployName == receiver.tmp & species == species.tmp)
+modelData <- occurrenceStation %>% filter(recvDeployName == receiver.tmp & speciesEN == species.tmp)
 
 # Fit a linear model
 model <- lm(proportion ~ tideCategory, modelData)
@@ -154,14 +170,14 @@ ggplot() +
 # Jitter plot, facet by receiver
 p <- occurrenceStation %>% ggplot(aes(x=tideCategory,y=proportion,color = tideCategory)) + 
   geom_jitter(position=position_jitter(0.1)) +
-  stat_summary(fun.y = mean, geom = "point", shape = 18, size = 5,aes(color = tideCategory)) +
+  stat_summary(fun = mean, geom = "point", shape = 18, size = 5,aes(color = tideCategory)) +
   facet_grid(vars(recvDeployName))
 p
 ```
 
 ```{r Single Receiver Plot}
 ## Select receiver
-receiver.tmp <- "Barry_Fullerton_cove"
+receiver.tmp <- "Fullerton Entrance"
 
 ## Filter occurrence by receiver
 tmpOccurrence <- occurrenceStation %>% filter(recvDeployName == receiver.tmp)
@@ -170,7 +186,7 @@ tmpOccurrence <- occurrenceStation %>% filter(recvDeployName == receiver.tmp)
 p <- tmpOccurrence %>% ggplot(aes(x=tideCategory,y=proportion,color = tideCategory)) + 
   geom_jitter(position=position_jitter(0.1)) +
   stat_summary(fun.y = mean, geom = "point", shape = 18, size = 5,aes(color = tideCategory)) +
-  facet_grid(vars(species)) +
+  facet_grid(vars(speciesEN)) +
   ggtitle(paste("Occurrence for",receiver.tmp,"- By Species")) + theme(plot.title = element_text(hjust = 0.5))
 p
 ```
@@ -195,7 +211,7 @@ save.plot()
 p <- tmpOccurrence %>% ggplot(aes(x=tideCategory,y=proportion,color = tideCategory)) + 
   geom_jitter(position=position_jitter(0.1)) +
   stat_summary(fun.y = mean, geom = "point", shape = 18, size = 5,aes(color = tideCategory)) +
-  facet_grid(vars(species)) +
+  facet_grid(vars(speciesEN)) +
   ggtitle(paste("Occurrence for",tmpReceiver,"- By Species")) + theme(plot.title = element_text(hjust = 0.5))
 p
 
@@ -205,10 +221,11 @@ rm(tmpOccurrence)
 }
 
 ```
+
 ```{r Species-By-Station Plots}
-for (i in 1:nrow(occurrenceStation %>% select(species) %>% unique())) {
-  tmpSpecies <- unique(select(occurrenceStation,species))$species[i]
-  tmpOccurrence <- occurrenceStation %>% filter(species == tmpSpecies)
+for (i in 1:nrow(occurrenceStation %>% select(speciesEN) %>% unique())) {
+  tmpSpecies <- unique(select(occurrenceStation,speciesEN))$speciesEN[i]
+  tmpOccurrence <- occurrenceStation %>% filter(speciesEN == tmpSpecies)
   
   # Jitter plot, facet by receiver
 p <- tmpOccurrence %>% ggplot(aes(x=tideCategory,y=proportion,colour = as.factor(motusTagID))) + 
@@ -237,12 +254,8 @@ rm(tmpOccurrence)
 ```
 
 
+# ==== Old / unused code ====
 
-## Old / Unused Code
-```{r Misc}
-## On how many days has each tag been detected?
-df.alltags %>% count(dateAus,motusTagID) %>% count(motusTagID)
-```
 ```{r Test - Add Zero Values}
 # Change variables to factors
 df.alltags_factor <- df.alltags %>% mutate_at(vars(dateAus, motusTagID, tideCategory, recvDeployName),list(factor))
@@ -258,9 +271,9 @@ tmp4 <- tmp3 %>% complete(tideCategory, nesting(motusTagID, recvDeployName), fil
 ## Add number of station detections to occurrenceStation data frame
 occurrenceStation <- left_join(tmp4, select(stationDetections,stationDays,motusTagID,recvDeployName),by=c("motusTagID","recvDeployName"))
 
-## Add species from tagInfo
-tagInfo$motusTagID <- as.factor(tagInfo$motusTagID)
-occurrenceStation <- left_join(occurrenceStation, select(tagInfo,species,motusTagID),by="motusTagID")
+## Add species from tagSummary
+tagSummary$motusTagID <- as.factor(tagSummary$motusTagID)
+occurrenceStation <- left_join(occurrenceStation, select(tagSummary,speciesEN,motusTagID),by="motusTagID")
 
 ## Proportion of detection days that each tag was detected in each tidal category
 occurrenceStation <- occurrenceStation %>% mutate(proportion = days/stationDays)
@@ -268,18 +281,19 @@ occurrenceStation <- occurrenceStation %>% mutate(proportion = days/stationDays)
 ## Custom factor order for plot
 occurrenceStation <- occurrenceStation %>% mutate(tideCategory = fct_relevel(tideCategory,"Falling","Low","Rising","High"))
 ```
+
 ```{r All-Tag-Occurrence-No-Station}
 ## On how many days has each tag been detected?
 df.alltags %>% count(dateAus,motusTagID) %>% count(motusTagID)
 
 ## What proportion of days (between first and last detection) was each tag detected?
-tagInfo <- mutate(tagInfo, detectionProportion = detectionDays/numDays)
+tagSummary <- mutate(tagSummary, detectionProportion = detectionDays/numDays)
 
 ## How many days was each tag detected in each tidal category?
 occurrenceNoStation <- df.alltags %>% count(dateAus, motusTagID, tideCategory) %>% count(tideCategory, motusTagID) %>% rename("days"="n")
 
-## Add detectionDays and species from tagInfo
-occurrenceNoStation <- left_join(occurrenceNoStation, select(tagInfo,species,detectionDays,motusTagID),by="motusTagID")
+## Add detectionDays and species from tagSummary
+occurrenceNoStation <- left_join(occurrenceNoStation, select(tagSummary,speciesEN,detectionDays,motusTagID),by="motusTagID")
 
 ## Proportion of detection days that each tag was detected in each tidal category
 occurrenceNoStation <- occurrenceNoStation %>% mutate(proportion = days/detectionDays)
@@ -290,7 +304,7 @@ occurrenceNoStation <- occurrenceNoStation %>% mutate(tideCategory = fct_relevel
 # Boxplot, with individual tag as the repeated unit
 p <- occurrenceNoStation %>% ggplot(aes(tideCategory, proportion, fill = tideCategory)) + 
   geom_boxplot(alpha = 0.7) +
-  ggtitle(paste("Detection Proportion of",tmpSpecies,"Species at",tmpStation,"Station")) + theme(plot.title = element_text(hjust = 0.5), plot.subtitle = element_text(hjust = 0.5)) +
+  ggtitle(paste("Detection Proportion of",tmpSpecies,"Species at")) + theme(plot.title = element_text(hjust = 0.5), plot.subtitle = element_text(hjust = 0.5)) +
   scale_fill_viridis(discrete = TRUE) 
 p
 
@@ -307,7 +321,7 @@ save.plot()
 p <- occurrenceNoStation %>% ggplot(aes(x=tideCategory,y=proportion,color = tideCategory)) + 
   geom_jitter(position=position_jitter(0.1)) +
   stat_summary(fun.y = mean, geom = "point", shape = 18, size = 5,aes(color = tideCategory)) +
-  facet_grid(vars(species)) +
+  facet_grid(vars(speciesEN)) +
   ggtitle("Occurrence for Tidal Categories - By Species") + theme(plot.title = element_text(hjust = 0.5))
 p
 
@@ -321,7 +335,7 @@ save.plot()
 dateStart <- ymd("2023-08-29",tz="Australia/Sydney")
 dateEnd <- ymd("2023-09-20",tz="Australia/Sydney")
 tmpSpecies <- "Pied Stilt"
-tmpStation <- "Barry_Fullerton_cove"
+tmpStation <- "Fullerton Entrance"
 tmpTag <- "All"
 
 # Filter by date range
@@ -391,27 +405,4 @@ occurrenceDaysSpecies <- filter(df.alltags,dateAus >= dateStart, dateAus <= date
   count(speciesEN) %>%
   rename("days"="n") %>% 
   mutate(occurrence = days/numDays)
-```
-
-```{r old}
-# Boxplot for each tidal category
-ggplot(occurrenceDaysTide, aes(tideCategory, occurrence)) + geom_boxplot()
-
-# Boxplot for each tidal category - single species
-species <- "Pied Stilt"
-p <- df.alltags %>% 
-  filter(speciesEN == "Pied Stilt", timeAus >= timeStart, timeAus <= timeEnd) %>% 
-  count(dateAus, motusTagID,tideCategory) %>% 
-  rename("days" = "n") %>% 
-  mutate(occurrence = days/numDays) %>%
-  mutate(tideCategory = factor(tideCategory, levels = c("Falling","Low","Rising","High"))) %>% 
-  arrange(tideCategory) %>% 
-  
-  ggplot(aes(tideCategory, occurrence, fill = tideCategory)) + 
-  geom_boxplot(alpha = 0.6) +
-  ggtitle(paste("Presence of",species,"for Tidal Categories")) + theme(plot.title = element_text(hjust = 0.5)) +
-  scale_fill_viridis(discrete = TRUE)#, limits = c("Falling","Low","Rising","High"))
-  #scale_fill_manual (values = c("Rising" = "red", "Low" = "blue", "High" = "green", "Falling" = "purple"))
-
-p
 ```

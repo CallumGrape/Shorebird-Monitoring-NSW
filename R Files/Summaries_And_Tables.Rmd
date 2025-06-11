@@ -3,16 +3,34 @@ title: "Summaries_And_Tables"
 author: "Callum Gapes"
 date: "2023-11-10"
 output: html_document
+editor_options:
+  chunk_output_type: inline
 ---
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
+
+setwd("C:/Users/callu/Documents/Shorebird Monitoring NSW")
+knitr::opts_knit$set(root.dir = "C:/Users/callu/Documents/Shorebird Monitoring NSW")
+
+# ---- Load Packages ----
 library(dplyr)
-library(DT)
+library(DT) # Datatable for interactive tables
 library(sf)
 library(kableExtra)
-library(lubridate)
+library(lubridate) # Working with datetimes
 library(scales) # Display values as percentages
+library(purrr)
+
+# ---- Load Custom Functions ----
+source(here("R Files", "shorebirdFunctions.R"))
+
+# ---- Load Data ----
+df.alltags <- readRDS("Data/df.alltags.rds")
+tagSummary <- readRDS("Data/tagSummary.rds")
+receiverSummary <- readRDS("Data/receiverSummary.rds")
+df.recvDeps <- readRDS("Data/df.recvDeps.rds")
+speciesSummary <-readRDS("Data/speciesSummary.rds")
 ```
 
 ```{r Nicely Formatted Tag Summary}
@@ -167,6 +185,10 @@ kable(tmp.receiverSummary, align = "l") %>% kableExtra::kable_styling()
 ```
 
 ```{r Receiver Summary - Specific Date Range}
+# Note: not working
+# Need to first save df.activity to file (so that it can be read here)
+# in progress in "ExploreReceiverDatabase.Rmd"
+
 print("Generating detection summary for each receiver")
 
 start_date <- as.Date("2024-07-01")
@@ -295,6 +317,9 @@ speciesSummary %>%
 
 
 ```{r "StationDays" Summary}
+# NOT WORKING
+# Not sure where stationDaysProportion comes from - I think it was in occurrence_stats
+
 tmp.stationDays <- stationDaysProportion %>% dplyr::select(recvDeployName, proportion) %>% arrange(desc(proportion)) %>% mutate(proportion = percent(proportion)) %>% rename("Receiver" = "recvDeployName", "Sum of Station Days" = "proportion")
 # Manually add Hexham
 tmp.stationDays[7,1] <- "Hexham Swamp"

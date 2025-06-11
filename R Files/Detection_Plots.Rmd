@@ -3,10 +3,14 @@ title: "Detection_Plots"
 author: "Callum Gapes"
 date: "2023-10-10"
 output: html_document
+editor_options:
+  chunk_output_type: console
 ---
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE, eval = FALSE)
+knitr::opts_knit$set(root.dir = "C:/Users/callu/Documents/Shorebird Monitoring NSW")
+setwd("C:/Users/callu/Documents/Shorebird Monitoring NSW")
 
 library(dplyr)
 library(ggplot2)
@@ -14,11 +18,17 @@ library(lubridate)
 library(tidyr)
 library(ggeasy)
 
-source("R Scripts/shorebirdFunctions.R")
+library(terra) # For mapping
+library(raster)
+
+source("R Files/shorebirdFunctions.R")
+source("R Files/plotDefaults.R")
 
 df.alltags <- readRDS("Data/df.alltags.rds")
 tagSummary <- readRDS("Data/tagSummary.rds")
+receiverSummary <- readRDS("Data/receiverSummary.rds")
 tidalCurve <- readRDS("Data/tidalCurve.rds")
+
 ```
 
 ```{r Plot Detections for Single Tag - Long Time Period}
@@ -170,7 +180,7 @@ p
   
 ```
 
-```{r Plot Detections for Single Tag - Short Time Period}
+```{r BROKEN Plot Detections for Single Tag - Short Time Period - dont run this}
 # Choose tag to plot
 currentTagID <- 81133
 
@@ -189,7 +199,7 @@ completeTimeRange <- 1
 # Curlew Plot 3
 #timeStart <- "2023-04-20 00:00:00"
 #timeEnd <- "2023-04-23 24:00:00"
-sunReceiver <- "Curlew"
+sunReceiver <- "Curlew Point"
 
 # Graphical Options - General
 pointSize <- 1.5
@@ -362,7 +372,7 @@ completeTimeRange <- 0
 # Curlew Plot 1
 timeStart <- "2023-03-27 00:00:00"
 timeEnd <- "2023-03-29 24:00:00"
-sunReceiver <- "Milham's Pond"
+sunReceiver <- "Milhams Pond"
 # Curlew Plot 2
 #timeStart <- "2023-04-10 00:00:00"
 #timeEnd <- "2023-04-14 24:00:00"
@@ -1265,7 +1275,8 @@ currentSpecies <- "Pacific Golden-Plover"
 completeTimeRange <- 0 
 # User-defined start and end time
 timeStart <- "2024-11-24 00:00:00"
-timeEnd <- "2024-12-13 24:00:00"
+timeEnd <- "2024-12-01 24:00:00"
+#timeEnd <- "2024-12-13 24:00:00"
 
 # Graphical options
 plotTidalCurve <- 1
@@ -1339,7 +1350,7 @@ if (plotTidalCurve) {
 p
 ```  
 
-```{r Heatmap for Detections by Receiver}
+```{r BROKEN Heatmap for Detections by Receiver}
 currentTagID <- 60472
 burstInterval <- 7.0983
 
@@ -1603,7 +1614,7 @@ p2
 #facet_grid(rows = vars(recvDeployName)) +
 ```
 
-```{r Generate map for current detection period / plot}
+```{r BROKEN Generate map for current detection period / plot}
 # Import image
 r <- rast("data/StationMap.tif")
 
@@ -1615,7 +1626,7 @@ r <- crop(r, map.extent)
 plotRGB(aggregate(r,10))
 
 # Select information from receiver info
-receiver.map <- receiverInfo %>% dplyr::select(recvDeployName, uniqueTags, lat, lon, species) #%>% filter(is.na(uniqueTags) == FALSE)
+receiver.map <- receiverSummary %>% dplyr::select(recvDeployName, uniqueTags, lat, lon, species) #%>% filter(is.na(uniqueTags) == FALSE)
 
 ## TO FIX LATER - Download individual .motus files for each station so that the coordinates of stations with no detections can be included (without manual input)
 # Manual coordinate input for now

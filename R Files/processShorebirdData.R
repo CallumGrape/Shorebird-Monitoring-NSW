@@ -135,13 +135,13 @@ get.tideIndex <- function(time){
 print("Finding closest tide point to each detection - will take up to 10 minutes")
 ### THIS LINE TAKES ~8 MINUTES TO RUN ###
 # Add column for index of nearest tide point (in tideData) to df.alltags
-df.alltags <-   df.alltags %>% mutate(
+df.alltags <- df.alltags %>% mutate(
   tideIndex = map_dbl(timeAus, get.tideIndex)
 )
 
 # Add relevant data to df.alltags: tide time, high / low, diurnal / nocturnal
 ## Precompute columns using tideIndex
-tide_values <- tideData[df.alltags$tideIndex, c("tideDateTimeAus", "high_low", "day_night", "tideCategory", "tideID")]
+tide_values <- tideData[df.alltags$tideIndex, c("tideDateTimeAus", "high_low", "day_night", "tideCategory", "tideID", "tideHeight")]
 
 ## Add values to df.alltags
 df.alltags <- df.alltags %>%
@@ -150,6 +150,7 @@ df.alltags <- df.alltags %>%
     tideHighLow = as_factor(tide_values$high_low),
     tideDiel = as_factor(tide_values$day_night),
     tideCategory = as_factor(tide_values$tideCategory),
+    tideCategoryHeight = tide_values$tideHeight,
     tideID = as_factor(tide_values$tideID),
     # Calculate time difference between the detection and nearest tide point
     tideTimeDiff = abs(difftime(timeAus, tideDateTimeAus, units = "hours"))
