@@ -364,7 +364,7 @@ p
   
 ```
 
-```{r Curlew Plot 1}
+```{r FINAL NICE Curlew Plot 1}
 # Choose tag to plot
 currentTagID <- 60472
 
@@ -517,8 +517,28 @@ if (plotTide) {
 # Fill nights
 #p1 <- p1 + annotate(geom = "rect", xmin = sunset$sunset, xmax = sunrise$sunrise, ymin = -Inf, ymax = Inf, fill = sunsetColour, alpha = 0.5)
 
+date_seq <- seq(p$data$dateAus %>% min(), p$data$dateAus %>% max(), by = 'day')
+  plot_dates <- tibble(date = date_seq)
+  
+  plot_sun_data <- plot_dates %>% 
+    mutate(
+      sunriseNewcastle = sunrise(date, lon = LON_NEWCASTLE, lat = LAT_NEWCASTLE),
+      sunsetNewcastle = sunset(date, lon = LON_NEWCASTLE, lat = LAT_NEWCASTLE))
+  
+all_times <- sort(
+  unique(c(
+    timeStart, 
+    plot_sun_data$sunriseNewcastle,
+    plot_sun_data$sunsetNewcastle,
+    timeEnd)))
 
-if (plot.sunrise[1]<plot.sunset[1]){
+# Code to get x-axis limits from ggplot object:
+## NOTE: needs to be a BUILT ggplot
+## TO DO: read what building a ggplot object does
+#p1$layout$panel_scales_x[[1]]$range$range[1]
+#p1$layout$panel_scales_x[[1]]$range$range[2]
+  
+if (plot_sun_data$sunriseNewcastle[1]<plot_sun_data$sunsetNewcastle[1]){
   # Lower xlim to first sunrise
   p1 <- p1 + annotate(geom = "rect", xmin = timeStart, xmax = plot.sunrise[1], ymin = -Inf, ymax = Inf, fill = sunsetColour, alpha = sunFillAlpha)
   
@@ -1267,7 +1287,7 @@ p
   
 ```
 
-```{r Plot Detections for Single Species - Facet by Receiver}
+```{r WORKING HERE Plot Detections for Single Species - Facet by Receiver}
 # Choose species to plot
 #currentSpecies <- "Red-necked Avocet"
 currentSpecies <- "Bar-tailed Godwit"
