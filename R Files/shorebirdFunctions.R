@@ -215,6 +215,75 @@ plot.addSunriseSet <- function(p){
   return(p)
 }
 
+plot.addSunShading <- function(p) {
+  
+  # Get full sequence of dates within the range of the plot
+  date_seq <- seq(p$data$dateAus %>% min(), p$data$dateAus %>% max(), by = 'day')
+  
+  # Find sunrise and sunset time for all dates
+  plot_sun_data <- tibble(date = date_seq) %>% 
+    mutate(
+      sunriseNewcastle = sunrise(date, lon = LON_NEWCASTLE, lat = LAT_NEWCASTLE),
+      sunsetNewcastle = sunset(date, lon = LON_NEWCASTLE, lat = LAT_NEWCASTLE))
+  
+  # Convert to long format (each row = either a sunrise or a sunset)
+  plot_sun_events <-
+    bind_rows(
+      data.frame(time = plot_sun_data$sunriseNewcastle, event_type = "sunrise"),
+      data.frame(time = plot_sun_data$sunsetNewcastle, event_type = "sunset")
+    ) %>%
+    arrange(time)
+  
+  # Set the initial (relative to x / time axis) state of the plot based on whether
+  # the first sun event is sunrise or sunset.
+  ## If the first sun event is sunrise, it must come after a period of night
+  ## and vice versa
+  initial_state <- if (plot_sun_events$event_type[1] == "sunrise") {
+    "Night"
+  } else if (plot_sun_events$event_type[1] == "sunset") {
+    "Day"
+  }
+  
+  # Add start time and end time to the list of sunset/sunrise times
+  ## This handles the first and last period to shade (i.e. between a sunset/rise
+  ## and the y-axis rather than between a sunrise and a sunset)
+  sun_boundary_times <- c(timeStart, plot_sun_events$time, timeEnd)
+  
+  # Create alternating sequence of day / night states
+  if (initial_state == "Night") {
+    states_sequence <- rep(c("Night", "Day"), length.out = length(sun_boundary_times) - 1)
+  } else if (initial_state == "Day") {
+    states_sequence <- rep(c("Day", "Night"), length.out = length(sun_boundary_times) - 1)
+  }
+  
+  # Combine times and states into a dataframe representing day / night periods
+  ## Note: negative index removes value from a vector, i.e. sun_boundary_times[-1]
+  # is equal to sun_boundary_times with the first element removed
+  sun_period_data <- data.frame(
+    xmin = sun_boundary_times[-length(sun_boundary_times)],
+    xmax = sun_boundary_times[-1],
+    period_type = states_sequence
+  )
+  
+  p <- p +
+    # Add rectangles to represent day / night periods
+    geom_rect(
+      data = sun_period_data,
+      aes(xmin = xmin, xmax = xmax, ymin = -Inf, ymax = Inf, fill = period_type),
+      alpha = sunFillAlpha,
+      # This ensures the shading layer doesn't interfere with other aesthetics
+      inherit.aes = FALSE
+    ) +
+    # Manually define the colors for "Day" and "Night"
+    scale_fill_manual(
+      name = "Time of Day", # Legend title
+      values = c("Day" = sunriseColour, "Night" = sunsetColour),
+      guide = "none"
+    )
+  
+  return(p)
+}
+
 
 plot.addTideHighLow <- function(p){
   p <- p + ggnewscale::new_scale_colour() +
