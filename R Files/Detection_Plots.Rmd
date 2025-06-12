@@ -22,6 +22,7 @@ library(ggeasy)
 
 library(terra) # For mapping
 library(raster)
+library(bioRad) # sunrise/sunset by coordinates
 
 source("R Files/shorebirdFunctions.R")
 source("R Files/plotDefaults.R")
@@ -391,6 +392,7 @@ showPlotTitle <- 0
 
 # Sunrise and Sunset Graphical Options
 plotSun <- 1 # Sunrise and sunset vertical lines
+plotSunShading <- 1
 sunriseColour = "#ff9933"
 sunsetColour = "#530066"
 sunLineAlpha = 1
@@ -507,112 +509,9 @@ if (plotTide) {
   p1 <- plot.addTideHighLow(p1)
 }
   
-
-
-date_seq <- seq(p1$data$dateAus %>% min(), p1$data$dateAus %>% max(), by = 'day')
-  plot_dates <- tibble(date = date_seq)
-  
-  plot_sun_data <- plot_dates %>% 
-    mutate(
-      sunriseNewcastle = sunrise(date, lon = LON_NEWCASTLE, lat = LAT_NEWCASTLE),
-      sunsetNewcastle = sunset(date, lon = LON_NEWCASTLE, lat = LAT_NEWCASTLE))
-  
-# all_times <- sort(
-#   unique(c(
-#     timeStart,
-#     plot_sun_data$sunriseNewcastle,
-#     plot_sun_data$sunsetNewcastle,
-#     timeEnd)))
-
-# ==== Simply alternate for low / high tide periods ====
-# generated with gemini (under testing)
-all_events <-
-  bind_rows(
-    data.frame(time = plot_sun_data$sunriseNewcastle, event_type = "sunrise"),
-    data.frame(time = plot_sun_data$sunsetNewcastle, event_type = "sunset")
-  ) %>%
-  arrange(time)
-
-# 2. Determine the initial state at the beginning of the plot (timeStart).
-#    Find the last event that happened *before* the plot window started.
-last_sunrise_before_start <- max(c(-Inf, plot_sun_data$sunriseNewcastle[plot_sun_data$sunriseNewcastle < timeStart]))
-last_sunset_before_start <- max(c(-Inf, plot_sun_data$sunsetNewcastle[plot_sun_data$sunsetNewcastle < timeStart]))
-
-initial_state <- if (last_sunrise_before_start > last_sunset_before_start) {
-  "Day"
-} else {
-  "Night"
+if (plotSunShading) {
+  p1 <- plot.addSunShading(p1)
 }
-
-# 3. Build the final rectangle dataframe.
-#    The boundaries of our rectangles are the plot start/end and all event times.
-boundary_times <- c(timeStart, all_events$time, timeEnd)
-
-# The number of intervals is one less than the number of boundaries.
-num_intervals <- length(boundary_times) - 1
-
-# Create the alternating sequence of states, starting with the correct initial state.
-if (initial_state == "Night") {
-  states_sequence <- rep(c("Night", "Day"), length.out = num_intervals)
-} else {
-  states_sequence <- rep(c("Day", "Night"), length.out = num_intervals)
-}
-
-# Combine into the final, correct dataframe.
-rect_data <- data.frame(
-  xmin = boundary_times[-length(boundary_times)],
-  xmax = boundary_times[-1],
-  period_type = states_sequence
-)
-
-# Print the result to verify - it should now be correctly alternating.
-print(rect_data)
-
-p1 <- p1 +
-  geom_rect(
-    data = rect_data,
-    aes(xmin = xmin, xmax = xmax, ymin = -Inf, ymax = Inf, fill = period_type),
-    alpha = sunFillAlpha,
-    # This ensures the shading layer doesn't interfere with other aesthetics
-    inherit.aes = FALSE
-  ) +
-  # Manually define the colors for "Day" and "Night"
-  scale_fill_manual(
-    name = "Time of Day", # Legend title
-    values = c("Day" = sunriseColour, "Night" = sunsetColour)
-  )
-
-# ==== break ====
-# Code to get x-axis limits from ggplot object:
-## NOTE: needs to be a BUILT ggplot
-## TO DO: read what building a ggplot object does
-#p1$layout$panel_scales_x[[1]]$range$range[1]
-#p1$layout$panel_scales_x[[1]]$range$range[2]
-  
-# if (plot_sun_data$sunriseNewcastle[1]<plot_sun_data$sunsetNewcastle[1]){
-#   # Lower xlim to first sunrise
-#   p1 <- p1 + annotate(geom = "rect", xmin = timeStart, xmax = plot.sunrise[1], ymin = -Inf, ymax = Inf, fill = sunsetColour, alpha = sunFillAlpha)
-#   
-#   # Check if equal number of sunrises and sunsets
-#   if (length(plot.sunrise) == length(plot.sunset)){
-#     
-#     # All sunrise -> sunset
-#     p1 <- p1 + annotate(geom = "rect", xmin = plot.sunrise, xmax = plot.sunset, ymin = -Inf, ymax = Inf, fill = sunriseColour, alpha = sunFillAlpha)
-#     
-#     # Sunset -> sunrise (excluding last)
-#     p1 <- p1 + annotate(geom = "rect", xmin = plot.sunset[1:length(plot.sunset)-1], xmax = plot.sunrise[2:length(plot.sunrise)], ymin = -Inf, ymax = Inf, fill = sunsetColour, alpha = sunFillAlpha)
-#     
-#     # Last sunset -> upper xlim
-#     p1 <- p1 + annotate(geom = "rect", xmin = plot.sunset[length(plot.sunset)], xmax = timeEnd, ymin = -Inf, ymax = Inf, fill = sunsetColour, alpha = sunFillAlpha)
-#   }
-#   else{
-#     ### To Do
-#   }
-# }
-
-
-
-#p1 <- p1 + annotate(geom = "rect", xmin = tmp$sunrise[1], xmax = tmp$sunset[1], ymin = -Inf, ymax = Inf, fill = sunriseColour, alpha = 0.5)
   
 p1
   
@@ -1359,6 +1258,7 @@ timeEnd <- "2023-11-01 24:00:00"
 plotTidalCurve <- 1
 plotSun <- 1
 plotTide <- 0
+plotSunShading <- 1
 pointSize <- 1
 
 # Set start and end time for plot
@@ -1433,79 +1333,11 @@ p <- tmp %>%
   ## Custom title
   # ggtitle("Pied Stilt Detections") + theme(plot.title = element_text(hjust = 0.5)) # Plot title
 
-date_seq <- seq(p$data$dateAus %>% min(), p$data$dateAus %>% max(), by = 'day')
-  plot_dates <- tibble(date = date_seq)
-  
-  plot_sun_data <- plot_dates %>% 
-    mutate(
-      sunriseNewcastle = sunrise(date, lon = LON_NEWCASTLE, lat = LAT_NEWCASTLE),
-      sunsetNewcastle = sunset(date, lon = LON_NEWCASTLE, lat = LAT_NEWCASTLE))
-  
-# all_times <- sort(
-#   unique(c(
-#     timeStart,
-#     plot_sun_data$sunriseNewcastle,
-#     plot_sun_data$sunsetNewcastle,
-#     timeEnd)))
 
-# ==== Simply alternate for low / high tide periods ====
-# generated with gemini (under testing)
-all_events <-
-  bind_rows(
-    data.frame(time = plot_sun_data$sunriseNewcastle, event_type = "sunrise"),
-    data.frame(time = plot_sun_data$sunsetNewcastle, event_type = "sunset")
-  ) %>%
-  arrange(time)
 
-# 2. Determine the initial state at the beginning of the plot (timeStart).
-#    Find the last event that happened *before* the plot window started.
-last_sunrise_before_start <- max(c(-Inf, plot_sun_data$sunriseNewcastle[plot_sun_data$sunriseNewcastle < timeStart]))
-last_sunset_before_start <- max(c(-Inf, plot_sun_data$sunsetNewcastle[plot_sun_data$sunsetNewcastle < timeStart]))
 
-initial_state <- if (last_sunrise_before_start > last_sunset_before_start) {
-  "Day"
-} else {
-  "Night"
-}
 
-# 3. Build the final rectangle dataframe.
-#    The boundaries of our rectangles are the plot start/end and all event times.
-boundary_times <- c(timeStart, all_events$time, timeEnd)
 
-# The number of intervals is one less than the number of boundaries.
-num_intervals <- length(boundary_times) - 1
-
-# Create the alternating sequence of states, starting with the correct initial state.
-if (initial_state == "Night") {
-  states_sequence <- rep(c("Night", "Day"), length.out = num_intervals)
-} else {
-  states_sequence <- rep(c("Day", "Night"), length.out = num_intervals)
-}
-
-# Combine into the final, correct dataframe.
-rect_data <- data.frame(
-  xmin = boundary_times[-length(boundary_times)],
-  xmax = boundary_times[-1],
-  period_type = states_sequence
-)
-
-# Print the result to verify - it should now be correctly alternating.
-print(rect_data)
-
-p <- p +
-  geom_rect(
-    data = rect_data,
-    aes(xmin = xmin, xmax = xmax, ymin = -Inf, ymax = Inf, fill = period_type),
-    alpha = sunFillAlpha,
-    # This ensures the shading layer doesn't interfere with other aesthetics
-    inherit.aes = FALSE
-  ) +
-  # Manually define the colors for "Day" and "Night"
-  scale_fill_manual(
-    name = "Time of Day", # Legend title
-    values = c("Day" = sunriseColour, "Night" = sunsetColour),
-    guide = "none"
-  )
 
   
 # Add sunset and sunrise
@@ -1522,6 +1354,12 @@ if (plotTide) {
 # Add tidal curve
 if (plotTidalCurve) {
   p <- plot.addTidalCurve(p)
+}
+
+# Add sun shading
+if (plotSunShading) {
+  #p <- plot.addSunriseSet(p)
+  p <- plot.addSunShading(p)
 }
 
   
