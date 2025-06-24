@@ -1,4 +1,5 @@
 library(DBI)
+library(RSQLite)
 library(dplyr)
 library(lubridate)
 library(bioRad) # sunrise / sunset for coordinates
@@ -6,7 +7,7 @@ library(purrr) # For map_dbl
 library(motus)
 library(forcats) # Factor conversion and ordering
 
-source("./R Scripts/shorebirdFunctions.R")
+source("./R Files/shorebirdFunctions.R")
 
 ## Store start time to record how long processing takes
 start_time <- Sys.time()
