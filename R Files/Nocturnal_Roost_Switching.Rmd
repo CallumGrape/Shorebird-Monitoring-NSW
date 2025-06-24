@@ -108,7 +108,7 @@ p <- tmp %>%
   theme_gray(base_size = 14) +
   
   ## Automatic title 
-  #ggtitle(paste("Detections for",currentSpecies)) + theme(plot.title = element_text(hjust = 0.5), legend.justification = c("right","top"))+  # Plot title
+  ggtitle(paste("Detections for",currentSpecies)) + theme(plot.title = element_text(hjust = 0.5), legend.justification = c("right","top"))+  # Plot title
 
     ## Gridlines and background
   theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank()) +
