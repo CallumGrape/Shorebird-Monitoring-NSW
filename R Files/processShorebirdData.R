@@ -1,18 +1,35 @@
+# ---------------------------------------------------------------------------- #
+# Title: processShorebirdData.R
+# Author: Callum Gapes
+# Project: Shorebird Monitoring NSW
+# Description: TO DO
+# R Version (Last Tested): R version 4.5.1 (2025-06-13 ucrt)
+# Status:
+# Usage Notes:
+# To Do: 
+#   - Need to somewhere / somehow account for the case of multiple tags deployed on an individual
+#     (not necessarily in this script, but wanted to make note somewhere)
+# Resources: 
+# ---------------------------------------------------------------------------- #
+
+# ==== Load Packages ====
 library(DBI)
+library(RSQLite)
 library(dplyr)
 library(lubridate)
 library(bioRad) # sunrise / sunset for coordinates
 library(purrr) # For map_dbl
 library(motus)
 library(forcats) # Factor conversion and ordering
+library(here)
 
-source(here("R Files","shorebirdFunctions.R"))
+source(here("R Files", "shorebirdFunctions.R"))
 
 ## Store start time to record how long processing takes
 start_time <- Sys.time()
 
 ## Import Motus Data From SQL File ##
-project294.motus <- dbConnect(SQLite(), "Data/project-294.motus")
+project294.motus <- dbConnect(SQLite(), "Data/project-294-no-meta.motus")
 print("Motus Data Imported Succesfully")
 
 # Extract "alltags" table, which contains the detection data
@@ -22,7 +39,7 @@ tbl.alltags <- tbl(project294.motus, "alltags")
 # Note: From my understanding of the Motus documentation, the downside of 
 # converting to a data frame (rather than leaving it in # tbl form) is increased
 # processing time. The benefit is that it's easier to understand a data frame. 
-df.alltags <- tbl.alltags %>% collect() %>% as.data.frame()
+df.alltags <- tbl.alltags %>% dplyr::collect() %>% as.data.frame()
 rm(tbl.alltags)
 
 ## Filter to relevant tags ----
