@@ -27,12 +27,15 @@ proj.num <- 294
 # to other projects) 
 
 # Connect to the Motus server and download / update the local database
+start_time <- Sys.time()
+
 sql.motus <- tagme(
   projRecv = proj.num, 
   new = TRUE, 
   update = TRUE, 
   dir = "./Data/")
 
+cat("\nMotus data download took ",Sys.time()-start_time," seconds.\n")
 ## Note: If you are updating an existing motus database, there will be a warning
 ## "Database ./data//project-294.motus already exists so I'm ignoring the 
 ## 'new = TRUE' option". Ignore this; have left it so that this script can be 
@@ -45,12 +48,12 @@ sql.motus <- tagme(
 metadata(sql.motus, proj.num)
 
 # ==== Update entire Motus metadata ====
-# Should be run occasionally, but takes a while and is not integral so is 
-# commented out by default.
-start_time <- Sys.time()
-metadata(sql.motus)
-end_time <- Sys.time()
-cat("\nMetadata update took ",end_time-start_time," seconds.\n")
+# DO NOT UNCOMMENT THIS SECTION
+# I implemented this as I thought it would be good for completeness, but it turns out that adding the entire metadata prevents the conversion of the dataset from SQLite to a data frame in 'processShorebirdData.R 
+# start_time <- Sys.time()
+# metadata(sql.motus)
+# end_time <- Sys.time()
+# cat("\nMetadata update took ",end_time-start_time," seconds.\n")
 
 ## This adds metadata for the ENTIRE Motus network, i.e. including all tags
 ## registered to ANY project. This is necessary to get metadata about any
