@@ -40,7 +40,7 @@ tbl.alltags <- tbl(project294.motus, "alltags")
 # converting to a data frame (rather than leaving it in # tbl form) is increased
 # processing time. The benefit is that it's easier to understand a data frame. 
 df.alltags <- tbl.alltags %>% dplyr::collect() %>% as.data.frame()
-rm(tbl.alltags)
+#rm(tbl.alltags)
 
 ## Filter to relevant tags ----
 # Extract tag deployment table from motus database
@@ -123,7 +123,6 @@ df.alltags <- df.alltags %>% mutate(sigPositive = sig + abs(min(sig)))
 df.alltags$motusTagID <- df.alltags$motusTagID %>% as.factor()
 df.alltags <- df.alltags %>% mutate(
   motusTagID = as.factor(motusTagID),
-  
 )
 
 ## Import tide data and add to data frame
