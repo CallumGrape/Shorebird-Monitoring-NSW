@@ -1,4 +1,7 @@
 library(shiny)
+library(dplyr)
+library(ggplot2)
+library(plotly)
 
 # Define UI for app that draws a histogram ----
 ui <- fluidPage(
@@ -102,6 +105,7 @@ server <- function(input, output, session) {
     #  p <- plot.addSunriseSet(p)
     #}
     
+    #p <- p %>% ggplotly()
     p
     
   })

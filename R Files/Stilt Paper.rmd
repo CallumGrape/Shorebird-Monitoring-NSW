@@ -59,7 +59,6 @@ options(DT.options = list(
   # , pageLength = 10 # Example
 ))
 
-summ.species %>% datatable(filter = "top")
 ```
 
 # ==== Detection Duration by Tide Period ====
@@ -85,7 +84,7 @@ df.byTidePeriod <- df.detections %>%
   summarise(detectionCount = n(), .groups = "drop") %>% 
   # Add variables of interest from original data frame to the summarised result
   left_join(df.alltags %>% 
-              select(motusTagID, 
+              dplyr::select(motusTagID, 
                      recvDeployName, 
                      tideID, 
                      speciesEN, 
@@ -125,7 +124,7 @@ valid_tides <- tagSummary %>% mutate(
       pull(tideID)
   })
 ) %>% unnest(valid_tide_periods) %>% 
-  select(motusTagID, firstDetectionAus, recentDetectionAus, speciesEN, valid_tide_periods) %>% 
+  dplyr::select(motusTagID, firstDetectionAus, recentDetectionAus, speciesEN, valid_tide_periods) %>% 
   rename(tideID = valid_tide_periods)
 
 # Now want to expand for each receiver
@@ -152,13 +151,13 @@ tideData_renamed <- tideData_renamed %>%
 
 # Add tideCategory back to data frame (variable needed for summarising)
 valid_tides_stations <- valid_tides_stations %>% 
-  left_join(tideData_renamed %>% select(tideCategory, tideID, tideHighLow, tideDiel))
+  left_join(tideData_renamed %>% dplyr::select(tideCategory, tideID, tideHighLow, tideDiel))
 
 # Add data from tidal periods that have detections to the complete dataframe
 df.allTidePeriods <- valid_tides_stations %>% 
   left_join(df.byTidePeriod,
             by = c("motusTagID", "tideID", "recvDeployName", "tideCategory", "speciesEN", "tideHighLow", "tideDiel")) %>% 
-  select(motusTagID, tideID, recvDeployName, speciesEN, tideCategory, detectionDuration, tideHighLow, tideDiel)
+  dplyr::select(motusTagID, tideID, recvDeployName, speciesEN, tideCategory, detectionDuration, tideHighLow, tideDiel)
 
 # Add zeros 
 df.allTidePeriods <- df.allTidePeriods %>% mutate(
@@ -228,7 +227,7 @@ saveWidget(dtable, html)
 write.xlsx(summ.species, "Tables/MeanDetection_BySpecies.xlsx")
 
 # Filter to the max value for each combination of species / receiver
-summ.species_clean <- summ.species %>% group_by(speciesEN, recvDeployName) %>% filter(mean_species == max(mean_species)) %>% select(-c(tideHighLow, tideDiel, group_max_mean)) %>% ungroup()
+summ.species_clean <- summ.species %>% group_by(speciesEN, recvDeployName) %>% filter(mean_species == max(mean_species)) %>% dplyr::select(-c(tideHighLow, tideDiel, group_max_mean)) %>% ungroup()
 write.xlsx(summ.species_clean, "Tables/MeanDetection_BySpecies_Clean.xlsx")
 ```
 
