@@ -7,8 +7,6 @@ editor_options:
   chunk_output_type: console
 ---
 
-#### test merge branch
-
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE, eval = FALSE)
 setwd(dirname(rstudioapi::getSourceEditorContext()$path))
@@ -22,16 +20,6 @@ library(terra) # For mapping
 library(raster)
 library(bioRad) # sunrise/sunset by coordinates
 
-<<<<<<< HEAD
-source(here("R Files/shorebirdFunctions.R"))
-source(here("R Files/plotDefaults.R"))
-source(here("R Files/shorebirdGlobals.R"))
-
-df.alltags <- readRDS(here("Data/df.alltags.rds"))
-tagSummary <- readRDS(here("Data/tagSummary.rds"))
-receiverSummary <- readRDS(here("Data/receiverSummary.rds"))
-tidalCurve <- readRDS(here("Data/tidalCurve.rds"))
-=======
 source(here::here("R Files", "shorebirdFunctions.R"))
 source(here::here("R Files","plotDefaults.R"))
 source(here::here("R Files","shorebirdGlobals.R"))
@@ -40,7 +28,6 @@ df.alltags <- readRDS(here::here("Data", "df.alltags.rds"))
 tagSummary <- readRDS(here::here("Data", "tagSummary.rds"))
 receiverSummary <- readRDS(here::here("Data","receiverSummary.rds"))
 tidalCurve <- readRDS(here::here("Data","tidalCurve.rds"))
->>>>>>> maxime
 
 ```
 
