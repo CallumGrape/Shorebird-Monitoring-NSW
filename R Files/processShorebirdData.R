@@ -25,6 +25,7 @@ library(here)
 
 source(here("R Files", "shorebirdFunctions.R"))
 
+
 ## Store start time to record how long processing takes
 start_time <- Sys.time()
 
