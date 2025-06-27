@@ -7,7 +7,6 @@
 
 # Specific folders
 Backup/
-Data/
 Papers/
 Plots/
 Docs/
@@ -15,3 +14,4 @@ GIS Map/
 Maps/
 Presentations/
 Tables/
+Data/ 

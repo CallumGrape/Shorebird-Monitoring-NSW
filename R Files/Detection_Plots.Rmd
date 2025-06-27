@@ -7,9 +7,12 @@ editor_options:
   chunk_output_type: console
 ---
 
+<<<<<<< HEAD
 
 
 
+=======
+>>>>>>> d2eae0e46ba4100b3f256ac3e9741d3e55ecd0d6
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE, eval = FALSE)
 knitr::opts_knit$set(root.dir = "C:/Users/callu/Documents/Shorebird Monitoring NSW")
