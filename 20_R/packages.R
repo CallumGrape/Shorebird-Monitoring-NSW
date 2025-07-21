@@ -13,6 +13,7 @@ cran_packages <- c(
   # Tools
   "devtools",           # Package development tools
   "rstudioapi",         # RStudio API interface
+  "DBI",                # Communicate with relational database systems
   
   # Plot and Visualization
   "ggplot2",            # Core plotting package
@@ -54,6 +55,7 @@ cran_packages <- c(
   "gdata",              # Various R programming tools
   "here",               # File path management
   "readr",              # Read rectangular data
+  "bioRad",             # Sunset-rise & coordinates
   
   # Inferential Statistics and Modeling
   "glmmTMB",            # Generalized Linear Mixed Models
