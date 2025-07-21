@@ -23,7 +23,9 @@
 # but the file exemple.gpkg
 #!data/exemple.gpkg
 
-# do not upload the folder 'resources'
-#/resources/
+# do not upload the folder 
+/00_Callum_07.2025/
+/10_data/
+
 # but the file exemple.html
 #!/resources/exemple.html
