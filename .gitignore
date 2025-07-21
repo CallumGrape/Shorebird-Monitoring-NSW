@@ -7,7 +7,7 @@
 
 
 
-# do not upload local session state
+# do not upload local session state 
 .Rproj.user
 # do not upload personal command history
 .Rhistory
