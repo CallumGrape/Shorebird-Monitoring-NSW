@@ -27,5 +27,10 @@
 /00_Callum_07.2025/
 /10_data/
 
+# do not upload this type of files
+*.rds
+*.motus
+*.zip
+
 # but the file exemple.html
 #!/resources/exemple.html
