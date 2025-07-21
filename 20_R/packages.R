@@ -8,7 +8,7 @@
 cat("\nNow loading and calling the packages that are used in this study.\n")
 
 #-- CRAN packages vector --# Pour les package sur le CRAN
-cran_packages <- c(
+cran_packages <- c( 
    
   # Tools
   "devtools",           # Package development tools
