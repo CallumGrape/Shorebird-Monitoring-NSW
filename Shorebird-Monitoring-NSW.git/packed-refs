@@ -1,0 +1,7 @@
+# pack-refs with: peeled fully-peeled sorted 
+da914d6990da640463060741b65ce3eafd4a3345 refs/heads/callum
+45a7ad549a23ba5999aa1253eeab7ffe93ca5b8f refs/heads/main
+9f0602483dfcb61d175b7ee4ea7ca1cbed1d575d refs/heads/maxime
+45a7ad549a23ba5999aa1253eeab7ffe93ca5b8f refs/remotes/origin/HEAD
+da914d6990da640463060741b65ce3eafd4a3345 refs/remotes/origin/callum
+45a7ad549a23ba5999aa1253eeab7ffe93ca5b8f refs/remotes/origin/main
