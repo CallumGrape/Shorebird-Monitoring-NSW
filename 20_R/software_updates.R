@@ -119,12 +119,12 @@
 ## -----------------------------------------------------------------------------------------------------------------------------------------
 
     ## Set project path (current_wd is provided in analysis.rmd to getwd as the .rmd location)
-    path_project <- current_wd
+    #path_project <- current_wd
     
     ## Set other paths
-    path_data <- here::here("data")
-    path_outputs <- here::here("outputs")
-    path_plots <- here::here("plots")
+    #path_data <- here::here("data")
+    #path_outputs <- here::here("outputs")
+    #path_plots <- here::here("plots")
     
     ## Function to source packages with progress bar
     source_packages <- function(path_package) {
@@ -172,10 +172,10 @@
     tryCatch(
       {
         # Source packages.R to define package lists
-        source(here::here("R", "packages.R"))
+        source(here::here("20_R", "packages.R"))
         
         # Source functions
-        source(here::here("R", "functions.R"))
+        #source(here::here("20_R", "functions.R"))
         
         # Load packages using the source_packages function
         source_packages(here::here("packages.R"))
