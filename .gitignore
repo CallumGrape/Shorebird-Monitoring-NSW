@@ -1,17 +1,22 @@
+
+
+# do not upload local session state
 .Rproj.user
+# do not upload personal command history
 .Rhistory
+# do not upload current objects in workspace
 .RData
+# do not upload preferences/local config
 .Ruserdata
+#	 do not upload temporary files on workspace save
 .RDataTmp*
 
+# do not upload the files of type .gpkg
+data/*.gpkg        
+# but the file exemple.gpkg
+!data/exemple.gpkg
 
-# Specific folders
-Backup/
-Data/
-Papers/
-Plots/
-Docs/
-GIS Map/
-Maps/
-Presentations/
-Tables/
+# do not upload the folder 'resources'
+/resources/
+# but the file exemple.html
+!/resources/exemple.html
