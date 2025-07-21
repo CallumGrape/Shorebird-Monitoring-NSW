@@ -1,4 +1,11 @@
 
+## Type   :  PhD Project
+## Auteur :  Maxime Marini, Callum Gapes
+## Topic  :  Habitat selection from migratory shorebirds within and across Hunter & Port Stephen estuaries
+## Main   :  Prevent files, folders and more to be uploaded online to the Git Lab
+## Created:  2025 July 
+
+
 
 # do not upload local session state
 .Rproj.user
@@ -12,11 +19,11 @@
 .RDataTmp*
 
 # do not upload the files of type .gpkg
-data/*.gpkg        
+#data/*.gpkg        
 # but the file exemple.gpkg
-!data/exemple.gpkg
+#!data/exemple.gpkg
 
 # do not upload the folder 'resources'
-/resources/
+#/resources/
 # but the file exemple.html
-!/resources/exemple.html
+#!/resources/exemple.html
