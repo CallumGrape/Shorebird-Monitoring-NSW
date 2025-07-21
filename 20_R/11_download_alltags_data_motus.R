@@ -2,8 +2,11 @@
 ## Type   :  PhD Project
 ## Auteur :  Callum Gapes, Maxime Marini
 ## Topic  :  Habitat selection from migratory shorebirds within and across Hunter & Port Stephen estuaries
-## Main   :  Download and process MOTUS data
+## Main   :  Download and process MOTUS data, alltags
 ## Created:  2025 July 
+
+# MOTUS Username: c3541851@uon.edu.au
+# MOTUS Password: C**********2*![****]
 
 
 # 1 - Packages ----
@@ -24,47 +27,20 @@ library(purrr)
 
 # 2 - Settings ----
 
+setwd(dirname(rstudioapi::getSourceEditorContext()$path)) #setwd where the file is
 Sys.setenv(TZ="UTC") 
 motusLogout()
-proj.num <- 294  # Motus project number        
+proj.num <- 294  # Motus project ID (all data) OR receiver code (receiver specific data)        
 
 
-# 3 - TAG: Download data ----
+# 3 - Download all data per Project ----
 
-# Tag data (tags & receivers)
 sql.motus <- tagme(projRecv = proj.num, 
                    new = FALSE, # TRUE overwrites existing (large data takes a while)
                    update = TRUE, 
                    dir = here("10_data"))
 
-# Tag meta-data (a lot!)
-metadata(sql.motus, 
-         proj.num)
-start_time <- Sys.time()
-metadata(sql.motus)
-end_time <- Sys.time()
-cat("\nMetadata update took ",end_time-start_time," seconds.\n")
-
-# 4 - Receivers: Download data ----
-
-# Receiver array info
-df.recvDeps <- tbl(sql.motus, "recvDeps") %>% 
-  collect() %>% 
-  as.data.frame()
-df.serno <- tbl(sql.motus, "recvDeps") %>%
-  filter(projectID == 294) %>%
-  select(serno) %>%
-  distinct() %>%
-  collect() %>% as.data.frame()
-
-# Receivers data & meta-data
-for(row in 1:nrow(df.serno)) {
-  sql_motus <- tagme(df.serno[row, "serno"],
-                     new = FALSE, # TRUE overwrites existing (large data takes a while)
-                     update = TRUE, 
-                     dir = here("10_data"))
-  metadata(sql_motus)
-}
+# 4 - Process data ----
 
 # Rename receivers
 station_rename_map <- list(
@@ -72,24 +48,15 @@ station_rename_map <- list(
   "North Swann Pond"      = "Swan Pond" ,
   "Ramsar Road Floodgate" = "Ramsar Road",
   "Milham's Pond"         = "Milhams Pond")
-
 df.recvDeps <- df.recvDeps %>% 
   mutate(stationName = recode(stationName,
                               !!!station_rename_map))
-# Correct receivers time
-df.recvDeps <- df.recvDeps %>% 
-  mutate(timeStart = as_datetime(tsStart),
-         timeStartAus = as_datetime(tsStart, tz = "Australia/Sydney"),
-         timeEnd = as_datetime(tsEnd),
-         timeEndAus = as_datetime(tsEnd, tz = "Australia/Sydney"))
-
-
-# 5 - TAG: Process data ----
 
 # Extract a manageable data frame
 df.alltags <- tbl(sql.motus, "alltags") %>% 
   collect() %>% 
   as.data.frame()
+
 tagIDs <- (sql.motus %>% 
   tbl("tagdeps") %>% 
   as.data.frame() %>% 
@@ -100,8 +67,7 @@ tagIDs <- (sql.motus %>%
 # Remove NA & undesired receivers
 df.alltags <- df.alltags %>% 
   filter(!is.na(recvDeployName)) %>% 
-  filter(!(recvDeployName %in% c("Throsby Creek Test Site")))
-df.alltags <- df.alltags %>% 
+  filter(!(recvDeployName %in% c("Throsby Creek Test Site"))) %>% 
   mutate(recvDeployName = recode(recvDeployName, 
                                  !!!station_rename_map))
 # Filtering data for tags
