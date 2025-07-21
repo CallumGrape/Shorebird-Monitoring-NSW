@@ -33,7 +33,7 @@ proj.num <- 294  # Motus project number
 
 # Tag data (tags & receivers)
 sql.motus <- tagme(projRecv = proj.num, 
-                   new = TRUE, # TRUE overwrites existing (large data takes a while)
+                   new = FALSE, # TRUE overwrites existing (large data takes a while)
                    update = TRUE, 
                    dir = here("10_data"))
 
@@ -60,7 +60,7 @@ df.serno <- tbl(sql.motus, "recvDeps") %>%
 # Receivers data & meta-data
 for(row in 1:nrow(df.serno)) {
   sql_motus <- tagme(df.serno[row, "serno"],
-                     new = TRUE, # TRUE overwrites existing (large data takes a while)
+                     new = FALSE, # TRUE overwrites existing (large data takes a while)
                      update = TRUE, 
                      dir = here("10_data"))
   metadata(sql_motus)
