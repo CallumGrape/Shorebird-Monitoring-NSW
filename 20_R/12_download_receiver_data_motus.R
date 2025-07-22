@@ -2,12 +2,11 @@
 ## Type   :  PhD Project
 ## Auteur :  Callum Gapes, Maxime Marini
 ## Topic  :  Habitat selection from migratory shorebirds within and across Hunter & Port Stephen estuaries
-## Main   :  Download and process MOTUS data, going separately by each receivers
+## Main   :  Download MOTUS data locally recorded, going separately by each local receivers (get anyone’s tags by my receivers)
 ## Created:  2025 July 
 
 # MOTUS Username: c3541851@uon.edu.au
 # MOTUS Password: C**********2*![****]
-
 
 # 1 - Packages ----
 
@@ -27,10 +26,13 @@ library(purrr)
 
 # 2 - Settings ----
 
+# Global
 setwd(dirname(rstudioapi::getSourceEditorContext()$path)) #setwd where the file is
 Sys.setenv(TZ="UTC") 
 motusLogout()
-proj.num <- 294  # Motus project ID (all data) OR receiver code (receiver specific data)        
+
+# Project Number
+proj.num <- 294         
 
 
 # 3 - Download all data per Project ----
@@ -38,7 +40,7 @@ proj.num <- 294  # Motus project ID (all data) OR receiver code (receiver specif
 sql.motus <- tagme(projRecv = proj.num, 
                    new = FALSE, # TRUE overwrites existing (large data takes a while)
                    update = TRUE, 
-                   dir = here("10_data"))
+                   dir = here("10_data", "motus.sql"))
 
 # 4 - Download data per Receivers ----
 
@@ -63,7 +65,7 @@ for(row in 1:nrow(df.serno)) {
   sql_motus <- tagme(df.serno[row, "serno"],
                      new = FALSE, # TRUE overwrites existing (large data takes a while)
                      update = TRUE, 
-                     dir = here("10_data", "receivers"))
+                     dir = here("10_data", "motus.sql", "receivers"))
   metadata(sql_motus)
 }
 
@@ -78,6 +80,13 @@ station_rename_map <- list(
 df.recvDeps <- df.recvDeps %>% 
   mutate(stationName = recode(stationName,
                               !!!station_rename_map))
+
+# Remove NA & undesired receivers
+df.recvDeps <- df.recvDeps %>% 
+  filter(!is.na(recvDeployName)) %>% 
+  filter(!(recvDeployName %in% c("Throsby Creek Test Site"))) %>% 
+  mutate(recvDeployName = recode(recvDeployName, 
+                                 !!!station_rename_map))
 # Correct receivers time
 df.recvDeps <- df.recvDeps %>% 
   mutate(timeStart = as_datetime(tsStart),
