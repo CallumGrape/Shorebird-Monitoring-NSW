@@ -27,7 +27,7 @@ library(purrr)
 # 2 - Settings ----
 
 # Global
-setwd(dirname(rstudioapi::getSourceEditorContext()$path)) #setwd where the file is
+setwd(dirname(rstudioapi::getSourceEditorContext()$path)) 
 Sys.setenv(TZ="UTC") 
 motusLogout()
 
@@ -44,7 +44,13 @@ proj.num <- 294
 # metadata(sql.motus, proj.num)
 
 # Load local data
-sql.motus <- dbConnect(SQLite(), here::here("10_data", "motus.sql", "project-294.motus"))
+sql.motus <- dbConnect(SQLite(), here::here("10_data", "alltags", "project-294.motus"))
+
+# Load tide (Callum work 01_import_tide_data.R)
+tidalCurve <- readRDS(here::here("10_data", "tides", "tidalCurve.rds"))
+tideData <- readRDS(here::here("10_data", "tides", "tideData.rds"))
+tidalCurveFunc <- splinefun(tideData$tideDateTimeAus, tideData$tideHeight, method = "natural")
+get.tideIndex <- function(time){ return(which.min(abs(tideData$tideDateTimeAus-time)))}
 
 # 4 - Extract data ----
 
@@ -88,14 +94,18 @@ df.alltags$motusTagID[is.na(df.alltags$tagDeployID)] #... different to those one
 ##################################################################################################
 
 # Wrong tags
-# df.alltags <- df.alltags %>% 
-#   filter(motusTagID == c("81121", "60470"))
+df.alltags <- df.alltags %>% 
+#   filter(motusTagID == c("81121", "60470")) %>%
+
+# Wrong receivers
+   filter(!is.na(recvDeployLat),
+          recvDeployName != c("Throsby Creek Test Site"),
+          recv != c("SG-62A5RPI36710") ) # test_station
   
 # False positive
 df.alltags <- df.alltags %>% 
   filter(motusFilter == 1, # 0 is invalid data
-         runLen >= 3, # value to be further thought
-         recv != c("SG-62A5RPI36710") ) # test_station
+         runLen >= 3) # value to be further thought
 
 # Ambiguous (if != 0 then refer to https://motuswts.github.io/motus/articles/05-data-cleaning.html)
 clarify(sql.motus)
@@ -107,11 +117,12 @@ df.alltags <- df.alltags %>%
 # Time
   mutate(time = as_datetime(ts),
          timeAus = as_datetime(ts, tz = "Australia/Sydney"),
-         dateAus = as_date(timeAus)) %>%
+         dateAus = as_date(timeAus),
+         year = year(time), # extract year from time
+         doy = yday(time)) %>%
   
 # Sunrise/set
-  sunRiseSet(df.alltags, 
-             lat = "recvDeployLat", 
+  sunRiseSet(lat = "recvDeployLat", 
              lon = "recvDeployLon", 
              ts = "ts") %>% 
   mutate(sunriseNewc = sunrise(dateAus, 151.7833, -32.9167, elev = -0.268, tz = "Australia/Sydney", force_tz = TRUE),
@@ -121,11 +132,54 @@ df.alltags <- df.alltags %>%
   mutate(sigPositive = sig + abs(min(sig))) %>%
   
 # As Factor
-  mutate(motusTagID = as.factor())
+  mutate(motusTagID = as.factor(motusTagID))
 
-# 7 - Save
+# Tide
+df.alltags <- df.alltags %>% 
+  mutate(tideHeight = tidalCurveFunc(timeAus),
+         tideIndex = map_dbl(timeAus, get.tideIndex))
 
-saveRDS(df.alltags, here::here("10_data", "data.rds"))
+tide_values <- tideData[df.alltags$tideIndex, 
+                        c("tideDateTimeAus",
+                          "high_low",
+                          "day_night",
+                          "tideCategory",
+                          "tideID",
+                          "tideHeight")]
+
+df.alltags <- df.alltags %>%
+  mutate(tideDateTimeAus = tide_values$tideDateTimeAus,
+         tideHighLow = as_factor(tide_values$high_low),
+         tideDiel = as_factor(tide_values$day_night),
+         tideCategory = as_factor(tide_values$tideCategory),
+         tideCategoryHeight = tide_values$tideHeight,
+         tideID = as_factor(tide_values$tideID),
+         tideTimeDiff = abs(difftime(timeAus, tideDateTimeAus, units = "hours")) ) # Time diff btw detect. & nearest tide pts
+
+# 7 - Receivers ----
+
+# Get summary
+df.recvDeps <- tbl(sql.motus, "recvDeps") %>% 
+  collect() %>% 
+  as.data.frame()
+
+# Rename stations
+station_rename <- list(
+   "Barry_Fullerton_cove"  = "Fullerton Entrance",
+   "North Swann Pond"      = "Swan Pond" ,
+   "Ramsar Road Floodgate" = "Ramsar Road",
+   "Milham's Pond"         = "Milhams Pond")
+df.recvDeps <- df.recvDeps %>% 
+   mutate(recvDeployName = recode(stationName,
+                            !!!station_rename))
+df.alltags <- df.alltags %>% 
+  mutate(recvDeployName = recode(recvDeployName,
+                                 !!!station_rename))
+  
+# 8 - Save
+
+saveRDS(df.alltags, here::here("10_data", "alltags", "motus.rds", paste0(Sys.Date(), "-data", ".rds" )))
+saveRDS(df.recvDeps, here::here("10_data", "alltags", "motus.rds", paste0(Sys.Date(), "-recv-info", ".rds" )))
 
 
 

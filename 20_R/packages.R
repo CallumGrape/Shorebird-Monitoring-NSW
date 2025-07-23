@@ -38,6 +38,7 @@ cran_packages <- c(
   "trip",               # Handling spatial data with timestamps
   "mapview",            # Interactive viewing of spatial data
   "tidyterra",          # Tidy methods for terra objects
+  "rnaturalearth",      # World maps and more
   
   # Data Manipulation and Processing
   "tidyverse",          # Collection of data manipulation packages
@@ -70,7 +71,8 @@ cran_packages <- c(
 github_packages <- c(
   "rlesur/klippy",      # For outputs options
   "SebastianSosa/ANTs", # Deal with spatial manipulations and habitat selection models
-  "smthfrmn/mixedSSA"   # Deal with ISSA functions to model individual variability in habitat selection and movement parameters
+  "smthfrmn/mixedSSA",  # Deal with ISSA functions to model individual variability in habitat selection and movement parameters
+  "MotusWTS/motus"      # Motus wildlife tracking system tools
 )    
 
 ## non installed package list 

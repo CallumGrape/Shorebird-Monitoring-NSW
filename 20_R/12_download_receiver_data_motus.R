@@ -40,7 +40,7 @@ proj.num <- 294
 sql.motus <- tagme(projRecv = proj.num, 
                    new = FALSE, # TRUE overwrites existing (large data takes a while)
                    update = TRUE, 
-                   dir = here("10_data", "motus.sql"))
+                   dir = here("10_data", "receivers", "motus.sql"))
 
 # 4 - Download data per Receivers ----
 
