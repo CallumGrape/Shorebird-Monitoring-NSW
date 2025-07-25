@@ -59,6 +59,8 @@ tag_summary2 <- data_all %>%
   group_by(recvDeployName, tideCategory, speciesEN) %>%
   summarise(nTags = n_distinct(motusTagID), .groups = "drop")
 
+# 3 - Arranging the data ----
+
 # Selecting variables
 data <- data_all %>%
   select(
@@ -89,20 +91,42 @@ data <- data_all %>%
     tagDepComments
     )
 
+# Color codes
+species_colors <- c(
+  "Bar-tailed Godwit"      = "#1b9e77",  
+  "Far Eastern Curlew"     = "#d95f02",  
+  "Masked Lapwing"         = "#7570b3", 
+  "Pacific Golden-Plover"  = "#e7298a", 
+  "Pied Stilt"             = "#66a61e", 
+  "Red-necked Avocet"      = "#e6ab02"   
+)
+
+
 # 4 - Summarizing plots ----
 
-ggplot() +
-  facet_grid(~ recvDeployName) +
-  geom_bar(aes(data, x = tideCategory, y = n_distinct(motusTagID), fill = speciesEN)) +
-  theme_bw() + 
-  labs(x = "Tide category", y = "Detections", fill = "Species") 
-
-ggplot(tag_summary2, aes(x = tideCategory, y = nTags, fill = speciesEN)) +
+tag_summary2 %>%
+  ggplot(aes(x = tideCategory, y = nTags, fill = speciesEN)) +
   geom_col(position = "stack") +   
   facet_wrap(~ recvDeployName) +   
   theme_bw() +
-  labs(x = "Tide Category", y = "Number of detection", fill = "Species")
+  labs(x = "Tide Category", y = "Number of individual detected", fill = "Species") +
+  scale_fill_manual(values = species_colors)
 
+tag_summary2 %>%
+  split(.$recvDeployName) %>%
+  walk2(names(.), ~{
+    p <- ggplot(.x, aes(x = tideCategory, y = nTags, fill = speciesEN)) +
+      geom_col(position = "stack") +
+      facet_wrap(~ speciesEN) +
+      scale_fill_manual(values = species_colors) +
+      theme_bw() +
+      labs(
+        title = .y,
+        x = "Tide Category", 
+        y = "Number of individual detected", 
+        fill = "Species")
+    print(p)
+  })
 
 
 
