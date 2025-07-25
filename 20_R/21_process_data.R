@@ -43,6 +43,8 @@ recv <- readRDS(
     pattern = "-recv-info\\.rds$", full.names = TRUE
   )), 1)) 
 
+# 3 - Arranging the data ----
+
 # Data summary (To be edited still...)
 tagSummary1 <- data_all %>%
   group_by(motusTagID, recvDeployName) %>% 
@@ -54,12 +56,9 @@ tagSummary1 <- data_all %>%
             species = first(speciesEN),
             .groups = "drop") %>%
   relocate(motusTagID, species)
-
 tag_summary2 <- data_all %>%
   group_by(recvDeployName, tideCategory, speciesEN) %>%
   summarise(nTags = n_distinct(motusTagID), .groups = "drop")
-
-# 3 - Arranging the data ----
 
 # Selecting variables
 data <- data_all %>%
