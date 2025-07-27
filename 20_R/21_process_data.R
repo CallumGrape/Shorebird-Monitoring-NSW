@@ -56,6 +56,7 @@ tagSummary1 <- data_all %>%
             species = first(speciesEN),
             .groups = "drop") %>%
   relocate(motusTagID, species)
+
 tag_summary2 <- data_all %>%
   group_by(recvDeployName, tideCategory, speciesEN) %>%
   summarise(nTags = n_distinct(motusTagID), .groups = "drop")

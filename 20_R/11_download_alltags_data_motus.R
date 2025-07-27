@@ -70,17 +70,24 @@ df.tagdeps <- tbl(sql.motus, "tagdeps") %>%
   dplyr::collect() %>%
   as.data.frame()
 
-# 5 - Filtering data ----
+# 5 - Filtering tag data ----
 
 ############################################ ??????????? #########################################
+
+# STATIONS ?
+
 df.alltags %>%
   filter(is.na(recvDeployLat) | is.na(recvDeployName)) %>%
   select(motusTagID, motusFilter, recvDeployLat, recvDeployLon, recvDeployName, recvDeployID, recv, recvProjID, recvProjName, speciesEN, recvSiteName, tagDepComments) %>%
   count(motusTagID, recv, recvDeployLat, recvDeployLon, recvDeployName, recvDeployID, motusFilter, speciesEN, recvSiteName, tagDepComments) %>%
   distinct() # What are those stations?
 
+# RUN LENGTH VALUE ?
+
 df.alltags %>%
   count(runLen) # What value to choose?
+
+# DEPLOYED/UNDEPLOYED TAG ?
 
 full_join(as.data.frame(table(df.tags$tagID)), 
           as.data.frame(table(df.tagdeps$tagID)), 
@@ -91,6 +98,35 @@ full_join(as.data.frame(table(df.tags$tagID)),
   rename(tagID = Var1, df.tags = Freq.x, df.tagdeps = Freq.y) # Those tags are not referenced into deployed tags BUT...
 
 df.alltags$motusTagID[is.na(df.alltags$tagDeployID)] #... different to those ones (from all tags)
+
+teams <- read.csv( here::here("10_data", "teams.sheet.28.07.25.csv")) 
+
+table(df.tagdeps$tagID)
+table(unique(df.alltags$tagDeployID))
+table(df.alltags$motusTagID)
+table(teams$Motus.tag.ID)
+
+table(
+(df.tagdeps %>% rename(ID = "tagID") %>%
+  semi_join(df.alltags %>% rename(ID = "motusTagID"), by = "ID") %>%
+  semi_join(teams %>% rename(ID = "Motus.tag.ID"), by = "ID"))$ID
+)
+
+# SPECIES NA ?
+table(is.na(df.alltags$speciesEN), df.alltags$motusTagID)
+
+df.alltags.corr <- df.alltags %>% # 6 tags might be just a lack of information but the same bird and then the same specie
+  group_by(motusTagID) %>%
+  filter(any(is.na(speciesEN)) & any(!is.na(speciesEN))) %>%
+  ungroup() %>%
+  select(motusTagID, speciesEN, ts, tagDeployID, recv, recvDeployName) %>%
+  mutate(ts = as_date(as_datetime(ts, tz = "Australia/Sydney")),
+         year = year(ts) )
+table(df.alltags.corr$motusTagID,  df.alltags.corr$year, df.alltags.corr$speciesEN)  
+
+table(df.alltags$motusTagID[is.na(df.alltags$speciesEN)]) # Tag with NA for speciesEN
+
+
 ##################################################################################################
 
 # Wrong tags
@@ -156,7 +192,7 @@ df.alltags <- df.alltags %>%
          tideID = as_factor(tide_values$tideID),
          tideTimeDiff = abs(difftime(timeAus, tideDateTimeAus, units = "hours")) ) # Time diff btw detect. & nearest tide pts
 
-# 7 - Receivers ----
+# 7 - Filtering receivers data ----
 
 # Get summary
 df.recvDeps <- tbl(sql.motus, "recvDeps") %>% 
