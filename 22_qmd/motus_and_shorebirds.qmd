@@ -1,0 +1,427 @@
+---
+title: "MOTUS telemetry array to access habitat selection from migratory shorebirds within and across Hunter and Port Stephen estuaries, NSW"
+date:  last-modified
+date-format: "MMMM D, YYYY"
+css: styles.css
+format: html
+---
+
+<p style="font-size: 0.9em; color: gray;">
+
+Created on July 28, 2025
+
+</p>
+
+## [*Maxime Marini, Callum Gapes, Andrea S. Griffin*]{style="font-size: 0.8em;"}
+
+\
+
+# [Material]{.smallcaps}
+
+Multiple variables might influence the movement of migratory shorebirds, selecting different areas whether to roost or forage. Those variables might vary across species and individuals. Within such an interdependent system, we try to suggest an approach that takes into account the tidal and circadian cycles as the main factor for the habitat selection.
+
+> Navigate the three different tabs below to get deeper into the [material]{.smallcaps} used.
+
+::: panel-tabset
+## Close tabs
+
+## 1. MOTUS telemetry technology
+
+To be continued ...
+
+## 2. The local MOTUS array
+
+To be continued ...
+
+## 3. The deployed tags
+
+To be continued ...
+:::
+
+# [Method]{.smallcaps}
+
+This following aims to describe the analysis ran with VHF Motus data set that tries to access the complex articulation of habitat selection from migratory shorebirds across and within estuaries habitats. The analysis tackles several key points before properly studying migratory shorebirds spatial ecology as described as below:
+
+1.  **Filtering the data**
+
+<p style="font-size: 0.9em; color: gray;">
+
+*Aims to clean out, simplify and format the raw data set from Motus network (.sql) to an easier table (.rds). Remove false positive signals, clarify ambiguous detection and add useful variables (ie. tide cycle, circadian cycle, etc.).*
+
+</p>
+
+2.  **Relative site usage**
+
+<p style="font-size: 0.9em; color: gray;">
+
+*The local deployed Motus array is composed of 8 receivers that suppose to 7/24 'listen' the tag signals, sent by the devices settled on birds, potentially within their range of reception. However, all the receivers did not 'listen' the same amount of time for multiple reasons (ie. date of networked, temporary out of servicing, etc.). Hence, the temporal coverage is unequal across the receivers meaning the survey effort -7/24 'listening'- is not comparable. This chapter access this bias by suggesting a site usage from bird, relative to the station effort survey.*
+
+</p>
+
+3.  **Motus array suitability**
+
+<p style="font-size: 0.9em; color: gray;">
+
+*All the bird we are focused on do not share the same land-use. That means the built-up array can not be suitable at the best for every species since the receivers are permanently settled at specific sites across the estuaries. Among all the deployed tags, which ones are the best surveyed within the local Motus array?*
+
+</p>
+
+4.  **Habitat selection**
+
+<p style="font-size: 0.9em; color: gray;">
+
+*Depending two main factors -tide and circadian cycles- how the migratory shorebirds select their habitat.*
+
+</p>
+
+> Navigate the four different tabs below to get deeper into the [method]{.smallcaps} used.
+
+:::: panel-tabset
+## Close tabs
+
+## 1. Filtering the data
+
+### Packages
+
+```{r 1 packages, message = FALSE, warning = FALSE, eval = TRUE, echo = TRUE}
+
+# install.packages("motus", 
+#                  repos = c(birdscanada = 'https://birdscanada.r-universe.dev',
+#                            CRAN = 'https://cloud.r-project.org'))
+library(motus)
+library(dplyr)
+library(here)
+library(DBI)
+library(RSQLite)
+library(forcats) 
+library(lubridate)
+library(bioRad) 
+library(purrr) 
+```
+
+### Download the data from Motus network
+
+```{r 1 settings, message = FALSE, warning = FALSE, eval = FALSE, echo = TRUE}
+
+# Global settings
+setwd(dirname(rstudioapi::getSourceEditorContext()$path)) 
+Sys.setenv(TZ="UTC") 
+proj.num <- 294  
+motusLogout()
+```
+
+Set general settings first as working directory, Time Zone, Motus project number. And make sure the environment is free from any connection to any other networked project or from any other Motus user account (avoid undesired mistakes).
+
+```{r 1 download data, message = FALSE, warning = FALSE, eval = FALSE, echo = TRUE}
+sql.motus <- tagme(projRecv = proj.num,
+                   new = FALSE, # TRUE overwrites existing (large data takes a while) FALSE used to update existing file
+                   update = TRUE,
+                   dir = here("data"))
+
+metadata(sql.motus, proj.num)
+
+sql.motus <- dbConnect(SQLite(), here::here("data", "project-294.motus"))
+
+df.alltags <- tbl(sql.motus, "alltags") %>%
+  dplyr::collect() %>%
+  as.data.frame()
+```
+
+`motus::tagme()`gets the data from the online Motus network, the ones part of your project (ie. ID = 294) only. Make sure you set your own directory. A file of type .sql is automatically created.
+
+`motus::metadata()` downloads the metadata from the online Motus network (receiver information and more).
+
+`motus::dbConnect()` links your .sql to your environment. Avoid to use high memory as .sql is a *lazy* table and not yet hardly written on your hardware.
+
+`motus::tbl()` extracts all the tags fat into your environment. Then formatted into a classic dataframe.
+
+### Filter the data
+
+```{r 1 filter the data, message = FALSE, warning = FALSE, eval = FALSE, echo = TRUE}
+# Wrong tags
+df.alltags <- df.alltags %>% 
+  #   filter(motusTagID == c("81121", "60470")) %>%
+
+# Wrong receivers
+   filter(!is.na(recvDeployLat),
+          recvDeployName != c("Throsby Creek Test Site"),
+          recv != c("SG-62A5RPI36710") ) # test_station
+  
+# False positive
+df.alltags <- df.alltags %>% 
+  filter(motusFilter == 1, # 0 is invalid data
+         runLen >= 3) # value to be further thought
+
+# Ambiguous 
+clarify(sql.motus)
+```
+
+Here are cleaned-out the data recorded from undesired tags and/or receivers.
+
+Then the False Positive signals are put away (ie. noise coming from external device, or any kind of external radio activity happening within the area) thanks to pre-made Motus filter and \`runLen\` threshold value, here set at 3. This value defines the number of bursts recorded from one tag and received at once, too low amount of burst are suspected for not being True Positif so not reliable.
+
+`motus::clarify()` checks whether the combination of two tag signals emitting at the mean time could generate the detection of a third tag signal, which would be a False Positive on its own, but also hidding the two True Positives. If the table generated by this code has rows resulting, please go to [Motus documentation.](https://motuswts.github.io/motus/articles/05-data-cleaning.html).
+
+### Adding variables
+
+```{r 1 Tide data, message = FALSE, warning = FALSE, eval = FALSE, echo = TRUE}
+# Load tide (Callum work 01_import_tide_data.R)
+tidalCurve <- readRDS(here::here("10_data", "tides", "tidalCurve.rds"))
+tideData <- readRDS(here::here("10_data", "tides", "tideData.rds"))
+tidalCurveFunc <- splinefun(tideData$tideDateTimeAus, tideData$tideHeight, method = "natural")
+get.tideIndex <- function(time){ return(which.min(abs(tideData$tideDateTimeAus-time)))}
+```
+
+Note that the raw Tide data-set is not provided here. Since it has been manually extracted from [New South Wales government resources](https://www.nsw.gov.au/sites/default/files/2024-06/tide-tables-24-25-nsw.pdf) and formatted by [Callum Gapes](https://www.linkedin.com/in/callum-g/?originalSubdomain=au) through this [method](https://uoneduau-my.sharepoint.com/:u:/g/personal/c3541851_uon_edu_au/EWOk05RFs1xJhAWLBddbf-kB_H2xRuz0XPUWtPVfcju_-Q?e=P6WzOT).
+
+```{r 1 variable, message = FALSE, warning = FALSE, eval = FALSE, echo = TRUE}
+df.alltags <- df.alltags %>% 
+  
+# Time
+  mutate(time = as_datetime(ts),
+         timeAus = as_datetime(ts, tz = "Australia/Sydney"),
+         dateAus = as_date(timeAus),
+         year = year(time), # extract year from time
+         doy = yday(time)) %>%
+  
+# Sunrise/set
+  sunRiseSet(lat = "recvDeployLat", 
+             lon = "recvDeployLon", 
+             ts = "ts") %>% 
+  mutate(sunriseNewc = sunrise(dateAus, 151.7833, -32.9167, elev = -0.268, tz = "Australia/Sydney", force_tz = TRUE),
+         sunsetNewc = sunset(dateAus, 151.7833, -32.9167, elev = -0.268, tz = "Australia/Sydney", force_tz = TRUE)) %>%
+  
+# Positive signal strength (min. = 0) for plotting
+  mutate(sigPositive = sig + abs(min(sig))) %>%
+  
+# As Factor
+  mutate(motusTagID = as.factor(motusTagID))
+
+# Tide
+df.alltags <- df.alltags %>% 
+  mutate(tideHeight = tidalCurveFunc(timeAus),
+         tideIndex = map_dbl(timeAus, get.tideIndex))
+
+tide_values <- tideData[df.alltags$tideIndex, 
+                        c("tideDateTimeAus",
+                          "high_low",
+                          "day_night",
+                          "tideCategory",
+                          "tideID",
+                          "tideHeight")]
+
+df.alltags <- df.alltags %>%
+  mutate(tideDateTimeAus = tide_values$tideDateTimeAus,
+         tideHighLow = as_factor(tide_values$high_low),
+         tideDiel = as_factor(tide_values$day_night),
+         tideCategory = as_factor(tide_values$tideCategory),
+         tideCategoryHeight = tide_values$tideHeight,
+         tideID = as_factor(tide_values$tideID),
+         tideTimeDiff = abs(difftime(timeAus, tideDateTimeAus, units = "hours")) ) # Time diff btw detect. & nearest tide pts
+
+```
+
+Several variables are added as some are formatted and/or renamed for the aims of the study.
+
+```{r 1 recv, message = FALSE, warning = FALSE, eval = FALSE, echo = TRUE}
+# Get summary
+df.recvDeps <- tbl(sql.motus, "recvDeps") %>% 
+  collect() %>% 
+  as.data.frame()
+
+# Rename stations
+station_rename <- list(
+   "Barry_Fullerton_cove"  = "Fullerton Entrance",
+   "North Swann Pond"      = "Swan Pond" ,
+   "Ramsar Road Floodgate" = "Ramsar Road",
+   "Milham's Pond"         = "Milhams Pond")
+df.recvDeps <- df.recvDeps %>% 
+   mutate(recvDeployName = recode(stationName,
+                            !!!station_rename))
+df.alltags <- df.alltags %>% 
+  mutate(recvDeployName = recode(recvDeployName,
+                                 !!!station_rename))
+```
+
+Rename here the receiver of your array for a better comprehension.
+
+```{r 1 save .rds, message = FALSE, warning = FALSE, eval = FALSE, echo = TRUE}
+saveRDS(df.alltags, here::here("data", paste0(Sys.Date(), "-data", ".rds" )))
+saveRDS(df.recvDeps, here::here("data", paste0(Sys.Date(), "-recv-info", ".rds" )))
+```
+
+Save your now formatted data, ready for use. Automatically named with the date of your saving.
+
+## 2. Relative site usage
+
+## 3. Motus array suitability
+
+## 4. Habitat selection
+
+### Packages
+
+```{r 4 packages, message = FALSE, warning = FALSE, eval = TRUE}
+library(motus)
+library(dplyr)
+library(here)
+library(DBI)
+library(RSQLite)
+library(forcats) 
+library(lubridate)
+library(bioRad) 
+library(purrr) 
+library(sf)
+library(lubridate)
+library(rnaturalearth)
+library(ggplot2)
+```
+
+### Load the data
+
+Either load your own data generated across the previous chapters (.rds format), or download the data up to the-last document-update date provided here below:
+
+-   Receiver information: [recv-info.rds](https://uoneduau-my.sharepoint.com/:u:/g/personal/c3541851_uon_edu_au/ESvl2B4fx7FCsKMiEXrgnyABGycGYU0RV-PfOftI0wsTbA?e=OdR3ag)
+
+-   Bird data: [data.rds](https://uoneduau-my.sharepoint.com/:u:/g/personal/c3541851_uon_edu_au/EbZbqh6eidVMksDUyl-J6UcBV8skhQXsjmL5f5nBw1pnwg?e=fJcygo)
+
+To properly load the data into your environment, make sure to set the working directory and the path as yours.
+
+```{r 4 load data 1, eval = FALSE}
+# Set WD
+setwd(dirname(rstudioapi::getSourceEditorContext()$path)) 
+# Birds
+data_all <- readRDS(here::here("data", "recv.info.rds"))
+# Receivers info
+recv <- readRDS(here::here("data", "data.rds")) 
+```
+
+```{r 4 load data 2, echo = FALSE, eval = TRUE}
+
+# Birds
+data_all <- readRDS(
+  tail(sort(list.files(
+  here::here("10_data", "alltags", "motus.rds"),
+  pattern = "-data\\.rds$", full.names = TRUE
+  )), 1)) # pick up the most recent .rds file
+
+# Receivers info
+recv <- readRDS(
+  tail(sort(list.files(
+    here::here("10_data", "alltags", "motus.rds"),
+    pattern = "-recv-info\\.rds$", full.names = TRUE
+  )), 1)) 
+```
+
+### Summarise the data
+
+```{r 4 summarise data, echo = TRUE, eval = TRUE}
+# Data summary (To be edited still...)
+tagSummary1 <- data_all %>%
+  group_by(motusTagID, recvDeployName) %>% 
+  summarize(nDet = n(),
+            nRecv = n_distinct(recvDeployName),
+            timeMin = min(time),
+            timeMax = max(time),
+            totDay = length(unique(doy)), 
+            species = first(speciesEN),
+            .groups = "drop") %>%
+  relocate(motusTagID, species)
+
+tag_summary2 <- data_all %>%
+  group_by(recvDeployName, tideCategory, speciesEN) %>%
+  summarise(nTags = n_distinct(motusTagID), .groups = "drop")
+
+# Selecting variables
+data <- data_all %>%
+  select(
+    # Project ID
+    recvProjID,
+    tagProjID,
+    # Tag
+    motusTagID,
+    # Time
+    time,
+    timeAus,
+    year,
+    # Receiver
+    recv,
+    recvDeployName,
+    # Tide cycle
+    tideHeight,
+    tideCategory,
+    # Circadian cycle
+    sunriseNewc,
+    sunsetNewc,
+    # Signal strengh
+    sigPositive,
+    # Bird info
+    speciesID, speciesEN, speciesFR, speciesSci,
+    speciesGroup,
+    # Comment
+    tagDepComments
+    )
+
+# Color codes
+species_colors <- c(
+  "Bar-tailed Godwit"      = "#1b9e77",  
+  "Far Eastern Curlew"     = "#d95f02",  
+  "Masked Lapwing"         = "#7570b3", 
+  "Pacific Golden-Plover"  = "#e7298a", 
+  "Pied Stilt"             = "#66a61e", 
+  "Red-necked Avocet"      = "#e6ab02"   
+)
+```
+
+#### Habitat selection
+
+##### Depending Tide & Circadian cycles
+
+-   **Over the Motus array**
+
+    ```{r 4 Habitat selection across sites, echo = TRUE, eval = TRUE}
+    tag_summary2 %>%
+      mutate(tideCategory  = case_when(
+      tideCategory == "Nocturnal_High" ~ "NH",
+      tideCategory == "Diurnal_Low"    ~ "DL",
+      tideCategory == "Diurnal_High"   ~ "DH",
+      tideCategory == "Nocturnal_Low"  ~ "NL",
+      TRUE ~ tideCategory )) %>%
+      ggplot(aes(x = as.factor(tideCategory), y = nTags, fill = speciesEN)) +
+      geom_col(position = "stack") +   
+      facet_wrap(~ recvDeployName) +   
+      theme_bw() +
+      labs(x = "Tide Category", y = "Number of individual detected", fill = "Species") +
+      scale_fill_manual(values = species_colors)
+    ```
+
+-   **Over each Motus stations**
+
+::: panel-tabset
+```{r 4 Habitat selection across sites 2, echo = FALSE, eval = TRUE, results = 'asis'}
+plots <- tag_summary2 %>%
+      split(.$recvDeployName) %>%
+      map(~ ggplot(.x, aes(x = tideCategory, y = nTags, fill = speciesEN)) +
+            geom_col(position = "stack") +
+            facet_wrap(~ speciesEN) +
+            scale_fill_manual(values = species_colors) +
+            theme_bw() +
+            labs(x = "Tide Category",
+                 y = "Number of individuals detected",
+                 fill = "Species"))
+```
+
+```{r 4 Plot 2, echo = FALSE, eval = TRUE, results = 'asis'}
+  for (recvDeployName in names(plots)) {
+    cat("\n\n## ", recvDeployName, "\n\n") 
+    print(plots[[recvDeployName]]) 
+    flush.console() #force immediate output
+  }
+```
+:::
+
+Reminder: Using the term *habitat selection* report in fact to Motus receiver area coverage selection.
+::::
+
+***Availability***
+
+*The analysis are ran through R version 4.5.1 (2025-06-13 ucrt) -- "Great Square Root" and the platform: x86_64-w64-mingw32/x64.*
