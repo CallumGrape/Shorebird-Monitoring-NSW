@@ -4,6 +4,9 @@ date:  last-modified
 date-format: "MMMM D, YYYY"
 css: styles.css
 format: html
+project:
+  type: website
+  output-dir: 22_qmd
 ---
 
 <p style="font-size: 0.9em; color: gray;">
@@ -313,6 +316,8 @@ recv <- readRDS(
 ```
 
 ### Summarise the data
+
+For the aim of the analysis and generate readable figures, let's simplify the table to keep useful information only.
 
 ```{r 4 summarise data, echo = TRUE, eval = TRUE}
 # Data summary (To be edited still...)
