@@ -14,6 +14,7 @@ cran_packages <- c(
   "devtools",           # Package development tools
   "rstudioapi",         # RStudio API interface
   "DBI",                # Communicate with relational database systems
+  "staticryptR",        # Crypting URL and password stuff
   
   # Plot and Visualization
   "ggplot2",            # Core plotting package

@@ -175,46 +175,52 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 
 </div>
 <div id="tabset-3-2" class="tab-pane" role="tabpanel" aria-labelledby="tabset-3-2-tab">
+<ul>
+<li><a href="#packages">Packages</a></li>
+<li><a href="#download-the-data-from-motus-network">Download the data from Motus network</a></li>
+<li><a href="#filter-the-data">Filter the data</a></li>
+<li><a href="#adding-variables">Adding variables</a></li>
+</ul>
 <section id="packages" class="level3">
 <h3 class="anchored" data-anchor-id="packages">Packages</h3>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb1"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="co"># install.packages("motus", </span></span>
-<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="co">#                  repos = c(birdscanada = 'https://birdscanada.r-universe.dev',</span></span>
-<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a><span class="co">#                            CRAN = 'https://cloud.r-project.org'))</span></span>
-<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(motus)</span>
-<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(dplyr)</span>
-<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(here)</span>
-<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(DBI)</span>
-<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(RSQLite)</span>
-<span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(forcats) </span>
-<span id="cb1-10"><a href="#cb1-10" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(lubridate)</span>
-<span id="cb1-11"><a href="#cb1-11" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(bioRad) </span>
-<span id="cb1-12"><a href="#cb1-12" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(purrr) </span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb1"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1"></a><span class="co"># install.packages("motus", </span></span>
+<span id="cb1-2"><a href="#cb1-2"></a><span class="co">#                  repos = c(birdscanada = 'https://birdscanada.r-universe.dev',</span></span>
+<span id="cb1-3"><a href="#cb1-3"></a><span class="co">#                            CRAN = 'https://cloud.r-project.org'))</span></span>
+<span id="cb1-4"><a href="#cb1-4"></a><span class="fu">library</span>(motus)</span>
+<span id="cb1-5"><a href="#cb1-5"></a><span class="fu">library</span>(dplyr)</span>
+<span id="cb1-6"><a href="#cb1-6"></a><span class="fu">library</span>(here)</span>
+<span id="cb1-7"><a href="#cb1-7"></a><span class="fu">library</span>(DBI)</span>
+<span id="cb1-8"><a href="#cb1-8"></a><span class="fu">library</span>(RSQLite)</span>
+<span id="cb1-9"><a href="#cb1-9"></a><span class="fu">library</span>(forcats) </span>
+<span id="cb1-10"><a href="#cb1-10"></a><span class="fu">library</span>(lubridate)</span>
+<span id="cb1-11"><a href="#cb1-11"></a><span class="fu">library</span>(bioRad) </span>
+<span id="cb1-12"><a href="#cb1-12"></a><span class="fu">library</span>(purrr) </span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 </section>
 <section id="download-the-data-from-motus-network" class="level3">
 <h3 class="anchored" data-anchor-id="download-the-data-from-motus-network">Download the data from Motus network</h3>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb2"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Global settings</span></span>
-<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a><span class="fu">setwd</span>(<span class="fu">dirname</span>(rstudioapi<span class="sc">::</span><span class="fu">getSourceEditorContext</span>()<span class="sc">$</span>path)) </span>
-<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a><span class="fu">Sys.setenv</span>(<span class="at">TZ=</span><span class="st">"UTC"</span>) </span>
-<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a>proj.num <span class="ot">&lt;-</span> <span class="dv">294</span>  </span>
-<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a><span class="fu">motusLogout</span>()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb2"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb2-1"><a href="#cb2-1"></a><span class="co"># Global settings</span></span>
+<span id="cb2-2"><a href="#cb2-2"></a><span class="fu">setwd</span>(<span class="fu">dirname</span>(rstudioapi<span class="sc">::</span><span class="fu">getSourceEditorContext</span>()<span class="sc">$</span>path)) </span>
+<span id="cb2-3"><a href="#cb2-3"></a><span class="fu">Sys.setenv</span>(<span class="at">TZ=</span><span class="st">"UTC"</span>) </span>
+<span id="cb2-4"><a href="#cb2-4"></a>proj.num <span class="ot">&lt;-</span> <span class="dv">294</span>  </span>
+<span id="cb2-5"><a href="#cb2-5"></a><span class="fu">motusLogout</span>()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 <p>Set general settings first as working directory, Time Zone, Motus project number. And make sure the environment is free from any connection to any other networked project or from any other Motus user account (avoid undesired mistakes).</p>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb3"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a>sql.motus <span class="ot">&lt;-</span> <span class="fu">tagme</span>(<span class="at">projRecv =</span> proj.num,</span>
-<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a>                   <span class="at">new =</span> <span class="cn">FALSE</span>, <span class="co"># TRUE overwrites existing (large data takes a while) FALSE used to update existing file</span></span>
-<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a>                   <span class="at">update =</span> <span class="cn">TRUE</span>,</span>
-<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a>                   <span class="at">dir =</span> <span class="fu">here</span>(<span class="st">"data"</span>))</span>
-<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a><span class="fu">metadata</span>(sql.motus, proj.num)</span>
-<span id="cb3-7"><a href="#cb3-7" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb3-8"><a href="#cb3-8" aria-hidden="true" tabindex="-1"></a>sql.motus <span class="ot">&lt;-</span> <span class="fu">dbConnect</span>(<span class="fu">SQLite</span>(), here<span class="sc">::</span><span class="fu">here</span>(<span class="st">"data"</span>, <span class="st">"project-294.motus"</span>))</span>
-<span id="cb3-9"><a href="#cb3-9" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb3-10"><a href="#cb3-10" aria-hidden="true" tabindex="-1"></a>df.alltags <span class="ot">&lt;-</span> <span class="fu">tbl</span>(sql.motus, <span class="st">"alltags"</span>) <span class="sc">%&gt;%</span></span>
-<span id="cb3-11"><a href="#cb3-11" aria-hidden="true" tabindex="-1"></a>  dplyr<span class="sc">::</span><span class="fu">collect</span>() <span class="sc">%&gt;%</span></span>
-<span id="cb3-12"><a href="#cb3-12" aria-hidden="true" tabindex="-1"></a>  <span class="fu">as.data.frame</span>()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb3"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb3-1"><a href="#cb3-1"></a>sql.motus <span class="ot">&lt;-</span> <span class="fu">tagme</span>(<span class="at">projRecv =</span> proj.num,</span>
+<span id="cb3-2"><a href="#cb3-2"></a>                   <span class="at">new =</span> <span class="cn">FALSE</span>, <span class="co"># TRUE overwrites existing (large data takes a while) FALSE used to update existing file</span></span>
+<span id="cb3-3"><a href="#cb3-3"></a>                   <span class="at">update =</span> <span class="cn">TRUE</span>,</span>
+<span id="cb3-4"><a href="#cb3-4"></a>                   <span class="at">dir =</span> <span class="fu">here</span>(<span class="st">"data"</span>))</span>
+<span id="cb3-5"><a href="#cb3-5"></a></span>
+<span id="cb3-6"><a href="#cb3-6"></a><span class="fu">metadata</span>(sql.motus, proj.num)</span>
+<span id="cb3-7"><a href="#cb3-7"></a></span>
+<span id="cb3-8"><a href="#cb3-8"></a>sql.motus <span class="ot">&lt;-</span> <span class="fu">dbConnect</span>(<span class="fu">SQLite</span>(), here<span class="sc">::</span><span class="fu">here</span>(<span class="st">"data"</span>, <span class="st">"project-294.motus"</span>))</span>
+<span id="cb3-9"><a href="#cb3-9"></a></span>
+<span id="cb3-10"><a href="#cb3-10"></a>df.alltags <span class="ot">&lt;-</span> <span class="fu">tbl</span>(sql.motus, <span class="st">"alltags"</span>) <span class="sc">%&gt;%</span></span>
+<span id="cb3-11"><a href="#cb3-11"></a>  dplyr<span class="sc">::</span><span class="fu">collect</span>() <span class="sc">%&gt;%</span></span>
+<span id="cb3-12"><a href="#cb3-12"></a>  <span class="fu">as.data.frame</span>()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 <p><code>motus::tagme()</code>gets the data from the online Motus network, the ones part of your project (ie. ID = 294) only. Make sure you set your own directory. A file of type .sql is automatically created.</p>
 <p><code>motus::metadata()</code> downloads the metadata from the online Motus network (receiver information and more).</p>
@@ -224,22 +230,22 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <section id="filter-the-data" class="level3">
 <h3 class="anchored" data-anchor-id="filter-the-data">Filter the data</h3>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb4"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Wrong tags</span></span>
-<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a>df.alltags <span class="ot">&lt;-</span> df.alltags <span class="sc">%&gt;%</span> </span>
-<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a>  <span class="co">#   filter(motusTagID == c("81121", "60470")) %&gt;%</span></span>
-<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a><span class="co"># Wrong receivers</span></span>
-<span id="cb4-6"><a href="#cb4-6" aria-hidden="true" tabindex="-1"></a>   <span class="fu">filter</span>(<span class="sc">!</span><span class="fu">is.na</span>(recvDeployLat),</span>
-<span id="cb4-7"><a href="#cb4-7" aria-hidden="true" tabindex="-1"></a>          recvDeployName <span class="sc">!=</span> <span class="fu">c</span>(<span class="st">"Throsby Creek Test Site"</span>),</span>
-<span id="cb4-8"><a href="#cb4-8" aria-hidden="true" tabindex="-1"></a>          recv <span class="sc">!=</span> <span class="fu">c</span>(<span class="st">"SG-62A5RPI36710"</span>) ) <span class="co"># test_station</span></span>
-<span id="cb4-9"><a href="#cb4-9" aria-hidden="true" tabindex="-1"></a>  </span>
-<span id="cb4-10"><a href="#cb4-10" aria-hidden="true" tabindex="-1"></a><span class="co"># False positive</span></span>
-<span id="cb4-11"><a href="#cb4-11" aria-hidden="true" tabindex="-1"></a>df.alltags <span class="ot">&lt;-</span> df.alltags <span class="sc">%&gt;%</span> </span>
-<span id="cb4-12"><a href="#cb4-12" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter</span>(motusFilter <span class="sc">==</span> <span class="dv">1</span>, <span class="co"># 0 is invalid data</span></span>
-<span id="cb4-13"><a href="#cb4-13" aria-hidden="true" tabindex="-1"></a>         runLen <span class="sc">&gt;=</span> <span class="dv">3</span>) <span class="co"># value to be further thought</span></span>
-<span id="cb4-14"><a href="#cb4-14" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb4-15"><a href="#cb4-15" aria-hidden="true" tabindex="-1"></a><span class="co"># Ambiguous </span></span>
-<span id="cb4-16"><a href="#cb4-16" aria-hidden="true" tabindex="-1"></a><span class="fu">clarify</span>(sql.motus)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb4"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb4-1"><a href="#cb4-1"></a><span class="co"># Wrong tags</span></span>
+<span id="cb4-2"><a href="#cb4-2"></a>df.alltags <span class="ot">&lt;-</span> df.alltags <span class="sc">%&gt;%</span> </span>
+<span id="cb4-3"><a href="#cb4-3"></a>  <span class="co">#   filter(motusTagID == c("81121", "60470")) %&gt;%</span></span>
+<span id="cb4-4"><a href="#cb4-4"></a></span>
+<span id="cb4-5"><a href="#cb4-5"></a><span class="co"># Wrong receivers</span></span>
+<span id="cb4-6"><a href="#cb4-6"></a>   <span class="fu">filter</span>(<span class="sc">!</span><span class="fu">is.na</span>(recvDeployLat),</span>
+<span id="cb4-7"><a href="#cb4-7"></a>          recvDeployName <span class="sc">!=</span> <span class="fu">c</span>(<span class="st">"Throsby Creek Test Site"</span>),</span>
+<span id="cb4-8"><a href="#cb4-8"></a>          recv <span class="sc">!=</span> <span class="fu">c</span>(<span class="st">"SG-62A5RPI36710"</span>) ) <span class="co"># test_station</span></span>
+<span id="cb4-9"><a href="#cb4-9"></a>  </span>
+<span id="cb4-10"><a href="#cb4-10"></a><span class="co"># False positive</span></span>
+<span id="cb4-11"><a href="#cb4-11"></a>df.alltags <span class="ot">&lt;-</span> df.alltags <span class="sc">%&gt;%</span> </span>
+<span id="cb4-12"><a href="#cb4-12"></a>  <span class="fu">filter</span>(motusFilter <span class="sc">==</span> <span class="dv">1</span>, <span class="co"># 0 is invalid data</span></span>
+<span id="cb4-13"><a href="#cb4-13"></a>         runLen <span class="sc">&gt;=</span> <span class="dv">3</span>) <span class="co"># value to be further thought</span></span>
+<span id="cb4-14"><a href="#cb4-14"></a></span>
+<span id="cb4-15"><a href="#cb4-15"></a><span class="co"># Ambiguous </span></span>
+<span id="cb4-16"><a href="#cb4-16"></a><span class="fu">clarify</span>(sql.motus)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 <p>Here are cleaned-out the data recorded from undesired tags and/or receivers.</p>
 <p>Then the False Positive signals are put away (ie. noise coming from external device, or any kind of external radio activity happening within the area) thanks to pre-made Motus filter and `runLen` threshold value, here set at 3. This value defines the number of bursts recorded from one tag and received at once, too low amount of burst are suspected for not being True Positif so not reliable.</p>
@@ -248,82 +254,82 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <section id="adding-variables" class="level3">
 <h3 class="anchored" data-anchor-id="adding-variables">Adding variables</h3>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb5"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Load tide (Callum work 01_import_tide_data.R)</span></span>
-<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a>tidalCurve <span class="ot">&lt;-</span> <span class="fu">readRDS</span>(here<span class="sc">::</span><span class="fu">here</span>(<span class="st">"10_data"</span>, <span class="st">"tides"</span>, <span class="st">"tidalCurve.rds"</span>))</span>
-<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a>tideData <span class="ot">&lt;-</span> <span class="fu">readRDS</span>(here<span class="sc">::</span><span class="fu">here</span>(<span class="st">"10_data"</span>, <span class="st">"tides"</span>, <span class="st">"tideData.rds"</span>))</span>
-<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a>tidalCurveFunc <span class="ot">&lt;-</span> <span class="fu">splinefun</span>(tideData<span class="sc">$</span>tideDateTimeAus, tideData<span class="sc">$</span>tideHeight, <span class="at">method =</span> <span class="st">"natural"</span>)</span>
-<span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a>get.tideIndex <span class="ot">&lt;-</span> <span class="cf">function</span>(time){ <span class="fu">return</span>(<span class="fu">which.min</span>(<span class="fu">abs</span>(tideData<span class="sc">$</span>tideDateTimeAus<span class="sc">-</span>time)))}</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb5"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb5-1"><a href="#cb5-1"></a><span class="co"># Load tide (Callum work 01_import_tide_data.R)</span></span>
+<span id="cb5-2"><a href="#cb5-2"></a>tidalCurve <span class="ot">&lt;-</span> <span class="fu">readRDS</span>(here<span class="sc">::</span><span class="fu">here</span>(<span class="st">"10_data"</span>, <span class="st">"tides"</span>, <span class="st">"tidalCurve.rds"</span>))</span>
+<span id="cb5-3"><a href="#cb5-3"></a>tideData <span class="ot">&lt;-</span> <span class="fu">readRDS</span>(here<span class="sc">::</span><span class="fu">here</span>(<span class="st">"10_data"</span>, <span class="st">"tides"</span>, <span class="st">"tideData.rds"</span>))</span>
+<span id="cb5-4"><a href="#cb5-4"></a>tidalCurveFunc <span class="ot">&lt;-</span> <span class="fu">splinefun</span>(tideData<span class="sc">$</span>tideDateTimeAus, tideData<span class="sc">$</span>tideHeight, <span class="at">method =</span> <span class="st">"natural"</span>)</span>
+<span id="cb5-5"><a href="#cb5-5"></a>get.tideIndex <span class="ot">&lt;-</span> <span class="cf">function</span>(time){ <span class="fu">return</span>(<span class="fu">which.min</span>(<span class="fu">abs</span>(tideData<span class="sc">$</span>tideDateTimeAus<span class="sc">-</span>time)))}</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 <p>Note that the raw Tide data-set is not provided here. Since it has been manually extracted from <a href="https://www.nsw.gov.au/sites/default/files/2024-06/tide-tables-24-25-nsw.pdf">New South Wales government resources</a> and formatted by <a href="https://www.linkedin.com/in/callum-g/?originalSubdomain=au">Callum Gapes</a> through this <a href="https://uoneduau-my.sharepoint.com/:u:/g/personal/c3541851_uon_edu_au/EWOk05RFs1xJhAWLBddbf-kB_H2xRuz0XPUWtPVfcju_-Q?e=P6WzOT">method</a>.</p>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb6"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a>df.alltags <span class="ot">&lt;-</span> df.alltags <span class="sc">%&gt;%</span> </span>
-<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a>  </span>
-<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a><span class="co"># Time</span></span>
-<span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">time =</span> <span class="fu">as_datetime</span>(ts),</span>
-<span id="cb6-5"><a href="#cb6-5" aria-hidden="true" tabindex="-1"></a>         <span class="at">timeAus =</span> <span class="fu">as_datetime</span>(ts, <span class="at">tz =</span> <span class="st">"Australia/Sydney"</span>),</span>
-<span id="cb6-6"><a href="#cb6-6" aria-hidden="true" tabindex="-1"></a>         <span class="at">dateAus =</span> <span class="fu">as_date</span>(timeAus),</span>
-<span id="cb6-7"><a href="#cb6-7" aria-hidden="true" tabindex="-1"></a>         <span class="at">year =</span> <span class="fu">year</span>(time), <span class="co"># extract year from time</span></span>
-<span id="cb6-8"><a href="#cb6-8" aria-hidden="true" tabindex="-1"></a>         <span class="at">doy =</span> <span class="fu">yday</span>(time)) <span class="sc">%&gt;%</span></span>
-<span id="cb6-9"><a href="#cb6-9" aria-hidden="true" tabindex="-1"></a>  </span>
-<span id="cb6-10"><a href="#cb6-10" aria-hidden="true" tabindex="-1"></a><span class="co"># Sunrise/set</span></span>
-<span id="cb6-11"><a href="#cb6-11" aria-hidden="true" tabindex="-1"></a>  <span class="fu">sunRiseSet</span>(<span class="at">lat =</span> <span class="st">"recvDeployLat"</span>, </span>
-<span id="cb6-12"><a href="#cb6-12" aria-hidden="true" tabindex="-1"></a>             <span class="at">lon =</span> <span class="st">"recvDeployLon"</span>, </span>
-<span id="cb6-13"><a href="#cb6-13" aria-hidden="true" tabindex="-1"></a>             <span class="at">ts =</span> <span class="st">"ts"</span>) <span class="sc">%&gt;%</span> </span>
-<span id="cb6-14"><a href="#cb6-14" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">sunriseNewc =</span> <span class="fu">sunrise</span>(dateAus, <span class="fl">151.7833</span>, <span class="sc">-</span><span class="fl">32.9167</span>, <span class="at">elev =</span> <span class="sc">-</span><span class="fl">0.268</span>, <span class="at">tz =</span> <span class="st">"Australia/Sydney"</span>, <span class="at">force_tz =</span> <span class="cn">TRUE</span>),</span>
-<span id="cb6-15"><a href="#cb6-15" aria-hidden="true" tabindex="-1"></a>         <span class="at">sunsetNewc =</span> <span class="fu">sunset</span>(dateAus, <span class="fl">151.7833</span>, <span class="sc">-</span><span class="fl">32.9167</span>, <span class="at">elev =</span> <span class="sc">-</span><span class="fl">0.268</span>, <span class="at">tz =</span> <span class="st">"Australia/Sydney"</span>, <span class="at">force_tz =</span> <span class="cn">TRUE</span>)) <span class="sc">%&gt;%</span></span>
-<span id="cb6-16"><a href="#cb6-16" aria-hidden="true" tabindex="-1"></a>  </span>
-<span id="cb6-17"><a href="#cb6-17" aria-hidden="true" tabindex="-1"></a><span class="co"># Positive signal strength (min. = 0) for plotting</span></span>
-<span id="cb6-18"><a href="#cb6-18" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">sigPositive =</span> sig <span class="sc">+</span> <span class="fu">abs</span>(<span class="fu">min</span>(sig))) <span class="sc">%&gt;%</span></span>
-<span id="cb6-19"><a href="#cb6-19" aria-hidden="true" tabindex="-1"></a>  </span>
-<span id="cb6-20"><a href="#cb6-20" aria-hidden="true" tabindex="-1"></a><span class="co"># As Factor</span></span>
-<span id="cb6-21"><a href="#cb6-21" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">motusTagID =</span> <span class="fu">as.factor</span>(motusTagID))</span>
-<span id="cb6-22"><a href="#cb6-22" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb6-23"><a href="#cb6-23" aria-hidden="true" tabindex="-1"></a><span class="co"># Tide</span></span>
-<span id="cb6-24"><a href="#cb6-24" aria-hidden="true" tabindex="-1"></a>df.alltags <span class="ot">&lt;-</span> df.alltags <span class="sc">%&gt;%</span> </span>
-<span id="cb6-25"><a href="#cb6-25" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">tideHeight =</span> <span class="fu">tidalCurveFunc</span>(timeAus),</span>
-<span id="cb6-26"><a href="#cb6-26" aria-hidden="true" tabindex="-1"></a>         <span class="at">tideIndex =</span> <span class="fu">map_dbl</span>(timeAus, get.tideIndex))</span>
-<span id="cb6-27"><a href="#cb6-27" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb6-28"><a href="#cb6-28" aria-hidden="true" tabindex="-1"></a>tide_values <span class="ot">&lt;-</span> tideData[df.alltags<span class="sc">$</span>tideIndex, </span>
-<span id="cb6-29"><a href="#cb6-29" aria-hidden="true" tabindex="-1"></a>                        <span class="fu">c</span>(<span class="st">"tideDateTimeAus"</span>,</span>
-<span id="cb6-30"><a href="#cb6-30" aria-hidden="true" tabindex="-1"></a>                          <span class="st">"high_low"</span>,</span>
-<span id="cb6-31"><a href="#cb6-31" aria-hidden="true" tabindex="-1"></a>                          <span class="st">"day_night"</span>,</span>
-<span id="cb6-32"><a href="#cb6-32" aria-hidden="true" tabindex="-1"></a>                          <span class="st">"tideCategory"</span>,</span>
-<span id="cb6-33"><a href="#cb6-33" aria-hidden="true" tabindex="-1"></a>                          <span class="st">"tideID"</span>,</span>
-<span id="cb6-34"><a href="#cb6-34" aria-hidden="true" tabindex="-1"></a>                          <span class="st">"tideHeight"</span>)]</span>
-<span id="cb6-35"><a href="#cb6-35" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb6-36"><a href="#cb6-36" aria-hidden="true" tabindex="-1"></a>df.alltags <span class="ot">&lt;-</span> df.alltags <span class="sc">%&gt;%</span></span>
-<span id="cb6-37"><a href="#cb6-37" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">tideDateTimeAus =</span> tide_values<span class="sc">$</span>tideDateTimeAus,</span>
-<span id="cb6-38"><a href="#cb6-38" aria-hidden="true" tabindex="-1"></a>         <span class="at">tideHighLow =</span> <span class="fu">as_factor</span>(tide_values<span class="sc">$</span>high_low),</span>
-<span id="cb6-39"><a href="#cb6-39" aria-hidden="true" tabindex="-1"></a>         <span class="at">tideDiel =</span> <span class="fu">as_factor</span>(tide_values<span class="sc">$</span>day_night),</span>
-<span id="cb6-40"><a href="#cb6-40" aria-hidden="true" tabindex="-1"></a>         <span class="at">tideCategory =</span> <span class="fu">as_factor</span>(tide_values<span class="sc">$</span>tideCategory),</span>
-<span id="cb6-41"><a href="#cb6-41" aria-hidden="true" tabindex="-1"></a>         <span class="at">tideCategoryHeight =</span> tide_values<span class="sc">$</span>tideHeight,</span>
-<span id="cb6-42"><a href="#cb6-42" aria-hidden="true" tabindex="-1"></a>         <span class="at">tideID =</span> <span class="fu">as_factor</span>(tide_values<span class="sc">$</span>tideID),</span>
-<span id="cb6-43"><a href="#cb6-43" aria-hidden="true" tabindex="-1"></a>         <span class="at">tideTimeDiff =</span> <span class="fu">abs</span>(<span class="fu">difftime</span>(timeAus, tideDateTimeAus, <span class="at">units =</span> <span class="st">"hours"</span>)) ) <span class="co"># Time diff btw detect. &amp; nearest tide pts</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb6"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb6-1"><a href="#cb6-1"></a>df.alltags <span class="ot">&lt;-</span> df.alltags <span class="sc">%&gt;%</span> </span>
+<span id="cb6-2"><a href="#cb6-2"></a>  </span>
+<span id="cb6-3"><a href="#cb6-3"></a><span class="co"># Time</span></span>
+<span id="cb6-4"><a href="#cb6-4"></a>  <span class="fu">mutate</span>(<span class="at">time =</span> <span class="fu">as_datetime</span>(ts),</span>
+<span id="cb6-5"><a href="#cb6-5"></a>         <span class="at">timeAus =</span> <span class="fu">as_datetime</span>(ts, <span class="at">tz =</span> <span class="st">"Australia/Sydney"</span>),</span>
+<span id="cb6-6"><a href="#cb6-6"></a>         <span class="at">dateAus =</span> <span class="fu">as_date</span>(timeAus),</span>
+<span id="cb6-7"><a href="#cb6-7"></a>         <span class="at">year =</span> <span class="fu">year</span>(time), <span class="co"># extract year from time</span></span>
+<span id="cb6-8"><a href="#cb6-8"></a>         <span class="at">doy =</span> <span class="fu">yday</span>(time)) <span class="sc">%&gt;%</span></span>
+<span id="cb6-9"><a href="#cb6-9"></a>  </span>
+<span id="cb6-10"><a href="#cb6-10"></a><span class="co"># Sunrise/set</span></span>
+<span id="cb6-11"><a href="#cb6-11"></a>  <span class="fu">sunRiseSet</span>(<span class="at">lat =</span> <span class="st">"recvDeployLat"</span>, </span>
+<span id="cb6-12"><a href="#cb6-12"></a>             <span class="at">lon =</span> <span class="st">"recvDeployLon"</span>, </span>
+<span id="cb6-13"><a href="#cb6-13"></a>             <span class="at">ts =</span> <span class="st">"ts"</span>) <span class="sc">%&gt;%</span> </span>
+<span id="cb6-14"><a href="#cb6-14"></a>  <span class="fu">mutate</span>(<span class="at">sunriseNewc =</span> <span class="fu">sunrise</span>(dateAus, <span class="fl">151.7833</span>, <span class="sc">-</span><span class="fl">32.9167</span>, <span class="at">elev =</span> <span class="sc">-</span><span class="fl">0.268</span>, <span class="at">tz =</span> <span class="st">"Australia/Sydney"</span>, <span class="at">force_tz =</span> <span class="cn">TRUE</span>),</span>
+<span id="cb6-15"><a href="#cb6-15"></a>         <span class="at">sunsetNewc =</span> <span class="fu">sunset</span>(dateAus, <span class="fl">151.7833</span>, <span class="sc">-</span><span class="fl">32.9167</span>, <span class="at">elev =</span> <span class="sc">-</span><span class="fl">0.268</span>, <span class="at">tz =</span> <span class="st">"Australia/Sydney"</span>, <span class="at">force_tz =</span> <span class="cn">TRUE</span>)) <span class="sc">%&gt;%</span></span>
+<span id="cb6-16"><a href="#cb6-16"></a>  </span>
+<span id="cb6-17"><a href="#cb6-17"></a><span class="co"># Positive signal strength (min. = 0) for plotting</span></span>
+<span id="cb6-18"><a href="#cb6-18"></a>  <span class="fu">mutate</span>(<span class="at">sigPositive =</span> sig <span class="sc">+</span> <span class="fu">abs</span>(<span class="fu">min</span>(sig))) <span class="sc">%&gt;%</span></span>
+<span id="cb6-19"><a href="#cb6-19"></a>  </span>
+<span id="cb6-20"><a href="#cb6-20"></a><span class="co"># As Factor</span></span>
+<span id="cb6-21"><a href="#cb6-21"></a>  <span class="fu">mutate</span>(<span class="at">motusTagID =</span> <span class="fu">as.factor</span>(motusTagID))</span>
+<span id="cb6-22"><a href="#cb6-22"></a></span>
+<span id="cb6-23"><a href="#cb6-23"></a><span class="co"># Tide</span></span>
+<span id="cb6-24"><a href="#cb6-24"></a>df.alltags <span class="ot">&lt;-</span> df.alltags <span class="sc">%&gt;%</span> </span>
+<span id="cb6-25"><a href="#cb6-25"></a>  <span class="fu">mutate</span>(<span class="at">tideHeight =</span> <span class="fu">tidalCurveFunc</span>(timeAus),</span>
+<span id="cb6-26"><a href="#cb6-26"></a>         <span class="at">tideIndex =</span> <span class="fu">map_dbl</span>(timeAus, get.tideIndex))</span>
+<span id="cb6-27"><a href="#cb6-27"></a></span>
+<span id="cb6-28"><a href="#cb6-28"></a>tide_values <span class="ot">&lt;-</span> tideData[df.alltags<span class="sc">$</span>tideIndex, </span>
+<span id="cb6-29"><a href="#cb6-29"></a>                        <span class="fu">c</span>(<span class="st">"tideDateTimeAus"</span>,</span>
+<span id="cb6-30"><a href="#cb6-30"></a>                          <span class="st">"high_low"</span>,</span>
+<span id="cb6-31"><a href="#cb6-31"></a>                          <span class="st">"day_night"</span>,</span>
+<span id="cb6-32"><a href="#cb6-32"></a>                          <span class="st">"tideCategory"</span>,</span>
+<span id="cb6-33"><a href="#cb6-33"></a>                          <span class="st">"tideID"</span>,</span>
+<span id="cb6-34"><a href="#cb6-34"></a>                          <span class="st">"tideHeight"</span>)]</span>
+<span id="cb6-35"><a href="#cb6-35"></a></span>
+<span id="cb6-36"><a href="#cb6-36"></a>df.alltags <span class="ot">&lt;-</span> df.alltags <span class="sc">%&gt;%</span></span>
+<span id="cb6-37"><a href="#cb6-37"></a>  <span class="fu">mutate</span>(<span class="at">tideDateTimeAus =</span> tide_values<span class="sc">$</span>tideDateTimeAus,</span>
+<span id="cb6-38"><a href="#cb6-38"></a>         <span class="at">tideHighLow =</span> <span class="fu">as_factor</span>(tide_values<span class="sc">$</span>high_low),</span>
+<span id="cb6-39"><a href="#cb6-39"></a>         <span class="at">tideDiel =</span> <span class="fu">as_factor</span>(tide_values<span class="sc">$</span>day_night),</span>
+<span id="cb6-40"><a href="#cb6-40"></a>         <span class="at">tideCategory =</span> <span class="fu">as_factor</span>(tide_values<span class="sc">$</span>tideCategory),</span>
+<span id="cb6-41"><a href="#cb6-41"></a>         <span class="at">tideCategoryHeight =</span> tide_values<span class="sc">$</span>tideHeight,</span>
+<span id="cb6-42"><a href="#cb6-42"></a>         <span class="at">tideID =</span> <span class="fu">as_factor</span>(tide_values<span class="sc">$</span>tideID),</span>
+<span id="cb6-43"><a href="#cb6-43"></a>         <span class="at">tideTimeDiff =</span> <span class="fu">abs</span>(<span class="fu">difftime</span>(timeAus, tideDateTimeAus, <span class="at">units =</span> <span class="st">"hours"</span>)) ) <span class="co"># Time diff btw detect. &amp; nearest tide pts</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 <p>Several variables are added as some are formatted and/or renamed for the aims of the study.</p>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb7"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Get summary</span></span>
-<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a>df.recvDeps <span class="ot">&lt;-</span> <span class="fu">tbl</span>(sql.motus, <span class="st">"recvDeps"</span>) <span class="sc">%&gt;%</span> </span>
-<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">collect</span>() <span class="sc">%&gt;%</span> </span>
-<span id="cb7-4"><a href="#cb7-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">as.data.frame</span>()</span>
-<span id="cb7-5"><a href="#cb7-5" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb7-6"><a href="#cb7-6" aria-hidden="true" tabindex="-1"></a><span class="co"># Rename stations</span></span>
-<span id="cb7-7"><a href="#cb7-7" aria-hidden="true" tabindex="-1"></a>station_rename <span class="ot">&lt;-</span> <span class="fu">list</span>(</span>
-<span id="cb7-8"><a href="#cb7-8" aria-hidden="true" tabindex="-1"></a>   <span class="st">"Barry_Fullerton_cove"</span>  <span class="ot">=</span> <span class="st">"Fullerton Entrance"</span>,</span>
-<span id="cb7-9"><a href="#cb7-9" aria-hidden="true" tabindex="-1"></a>   <span class="st">"North Swann Pond"</span>      <span class="ot">=</span> <span class="st">"Swan Pond"</span> ,</span>
-<span id="cb7-10"><a href="#cb7-10" aria-hidden="true" tabindex="-1"></a>   <span class="st">"Ramsar Road Floodgate"</span> <span class="ot">=</span> <span class="st">"Ramsar Road"</span>,</span>
-<span id="cb7-11"><a href="#cb7-11" aria-hidden="true" tabindex="-1"></a>   <span class="st">"Milham's Pond"</span>         <span class="ot">=</span> <span class="st">"Milhams Pond"</span>)</span>
-<span id="cb7-12"><a href="#cb7-12" aria-hidden="true" tabindex="-1"></a>df.recvDeps <span class="ot">&lt;-</span> df.recvDeps <span class="sc">%&gt;%</span> </span>
-<span id="cb7-13"><a href="#cb7-13" aria-hidden="true" tabindex="-1"></a>   <span class="fu">mutate</span>(<span class="at">recvDeployName =</span> <span class="fu">recode</span>(stationName,</span>
-<span id="cb7-14"><a href="#cb7-14" aria-hidden="true" tabindex="-1"></a>                            <span class="sc">!!!</span>station_rename))</span>
-<span id="cb7-15"><a href="#cb7-15" aria-hidden="true" tabindex="-1"></a>df.alltags <span class="ot">&lt;-</span> df.alltags <span class="sc">%&gt;%</span> </span>
-<span id="cb7-16"><a href="#cb7-16" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">recvDeployName =</span> <span class="fu">recode</span>(recvDeployName,</span>
-<span id="cb7-17"><a href="#cb7-17" aria-hidden="true" tabindex="-1"></a>                                 <span class="sc">!!!</span>station_rename))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb7"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb7-1"><a href="#cb7-1"></a><span class="co"># Get summary</span></span>
+<span id="cb7-2"><a href="#cb7-2"></a>df.recvDeps <span class="ot">&lt;-</span> <span class="fu">tbl</span>(sql.motus, <span class="st">"recvDeps"</span>) <span class="sc">%&gt;%</span> </span>
+<span id="cb7-3"><a href="#cb7-3"></a>  <span class="fu">collect</span>() <span class="sc">%&gt;%</span> </span>
+<span id="cb7-4"><a href="#cb7-4"></a>  <span class="fu">as.data.frame</span>()</span>
+<span id="cb7-5"><a href="#cb7-5"></a></span>
+<span id="cb7-6"><a href="#cb7-6"></a><span class="co"># Rename stations</span></span>
+<span id="cb7-7"><a href="#cb7-7"></a>station_rename <span class="ot">&lt;-</span> <span class="fu">list</span>(</span>
+<span id="cb7-8"><a href="#cb7-8"></a>   <span class="st">"Barry_Fullerton_cove"</span>  <span class="ot">=</span> <span class="st">"Fullerton Entrance"</span>,</span>
+<span id="cb7-9"><a href="#cb7-9"></a>   <span class="st">"North Swann Pond"</span>      <span class="ot">=</span> <span class="st">"Swan Pond"</span> ,</span>
+<span id="cb7-10"><a href="#cb7-10"></a>   <span class="st">"Ramsar Road Floodgate"</span> <span class="ot">=</span> <span class="st">"Ramsar Road"</span>,</span>
+<span id="cb7-11"><a href="#cb7-11"></a>   <span class="st">"Milham's Pond"</span>         <span class="ot">=</span> <span class="st">"Milhams Pond"</span>)</span>
+<span id="cb7-12"><a href="#cb7-12"></a>df.recvDeps <span class="ot">&lt;-</span> df.recvDeps <span class="sc">%&gt;%</span> </span>
+<span id="cb7-13"><a href="#cb7-13"></a>   <span class="fu">mutate</span>(<span class="at">recvDeployName =</span> <span class="fu">recode</span>(stationName,</span>
+<span id="cb7-14"><a href="#cb7-14"></a>                            <span class="sc">!!!</span>station_rename))</span>
+<span id="cb7-15"><a href="#cb7-15"></a>df.alltags <span class="ot">&lt;-</span> df.alltags <span class="sc">%&gt;%</span> </span>
+<span id="cb7-16"><a href="#cb7-16"></a>  <span class="fu">mutate</span>(<span class="at">recvDeployName =</span> <span class="fu">recode</span>(recvDeployName,</span>
+<span id="cb7-17"><a href="#cb7-17"></a>                                 <span class="sc">!!!</span>station_rename))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 <p>Rename here the receiver of your array for a better comprehension.</p>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb8"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="fu">saveRDS</span>(df.alltags, here<span class="sc">::</span><span class="fu">here</span>(<span class="st">"data"</span>, <span class="fu">paste0</span>(<span class="fu">Sys.Date</span>(), <span class="st">"-data"</span>, <span class="st">".rds"</span> )))</span>
-<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a><span class="fu">saveRDS</span>(df.recvDeps, here<span class="sc">::</span><span class="fu">here</span>(<span class="st">"data"</span>, <span class="fu">paste0</span>(<span class="fu">Sys.Date</span>(), <span class="st">"-recv-info"</span>, <span class="st">".rds"</span> )))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb8"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb8-1"><a href="#cb8-1"></a><span class="fu">saveRDS</span>(df.alltags, here<span class="sc">::</span><span class="fu">here</span>(<span class="st">"data"</span>, <span class="fu">paste0</span>(<span class="fu">Sys.Date</span>(), <span class="st">"-data"</span>, <span class="st">".rds"</span> )))</span>
+<span id="cb8-2"><a href="#cb8-2"></a><span class="fu">saveRDS</span>(df.recvDeps, here<span class="sc">::</span><span class="fu">here</span>(<span class="st">"data"</span>, <span class="fu">paste0</span>(<span class="fu">Sys.Date</span>(), <span class="st">"-recv-info"</span>, <span class="st">".rds"</span> )))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 <p>Save your now formatted data, ready for use. Automatically named with the date of your saving.</p>
 </section>
@@ -335,121 +341,144 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 
 </div>
 <div id="tabset-3-5" class="tab-pane" role="tabpanel" aria-labelledby="tabset-3-5-tab">
+<ul>
+<li><a href="#packages">Packages</a></li>
+<li><a href="#load-the-data">Load the data</a></li>
+<li><a href="#summarise-the-data">Summarise the data</a></li>
+<li><a href="#habitat-selection-descriptive-analysis">Habitat selection: descriptive analysis</a></li>
+<li><a href="#tide--circadian%20cycles">Tide &amp; Circadian cycles</a></li>
+</ul>
 <section id="packages-1" class="level3">
 <h3 class="anchored" data-anchor-id="packages-1">Packages</h3>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb9"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(motus)</span>
-<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(dplyr)</span>
-<span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(here)</span>
-<span id="cb9-4"><a href="#cb9-4" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(DBI)</span>
-<span id="cb9-5"><a href="#cb9-5" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(RSQLite)</span>
-<span id="cb9-6"><a href="#cb9-6" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(forcats) </span>
-<span id="cb9-7"><a href="#cb9-7" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(lubridate)</span>
-<span id="cb9-8"><a href="#cb9-8" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(bioRad) </span>
-<span id="cb9-9"><a href="#cb9-9" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(purrr) </span>
-<span id="cb9-10"><a href="#cb9-10" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(sf)</span>
-<span id="cb9-11"><a href="#cb9-11" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(lubridate)</span>
-<span id="cb9-12"><a href="#cb9-12" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(rnaturalearth)</span>
-<span id="cb9-13"><a href="#cb9-13" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(ggplot2)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb9"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb9-1"><a href="#cb9-1"></a><span class="fu">library</span>(motus)</span>
+<span id="cb9-2"><a href="#cb9-2"></a><span class="fu">library</span>(dplyr)</span>
+<span id="cb9-3"><a href="#cb9-3"></a><span class="fu">library</span>(here)</span>
+<span id="cb9-4"><a href="#cb9-4"></a><span class="fu">library</span>(DBI)</span>
+<span id="cb9-5"><a href="#cb9-5"></a><span class="fu">library</span>(RSQLite)</span>
+<span id="cb9-6"><a href="#cb9-6"></a><span class="fu">library</span>(forcats) </span>
+<span id="cb9-7"><a href="#cb9-7"></a><span class="fu">library</span>(lubridate)</span>
+<span id="cb9-8"><a href="#cb9-8"></a><span class="fu">library</span>(bioRad) </span>
+<span id="cb9-9"><a href="#cb9-9"></a><span class="fu">library</span>(purrr) </span>
+<span id="cb9-10"><a href="#cb9-10"></a><span class="fu">library</span>(sf)</span>
+<span id="cb9-11"><a href="#cb9-11"></a><span class="fu">library</span>(lubridate)</span>
+<span id="cb9-12"><a href="#cb9-12"></a><span class="fu">library</span>(rnaturalearth)</span>
+<span id="cb9-13"><a href="#cb9-13"></a><span class="fu">library</span>(ggplot2)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 </section>
 <section id="load-the-data" class="level3">
 <h3 class="anchored" data-anchor-id="load-the-data">Load the data</h3>
 <p>Either load your own data generated across the previous chapters (.rds format), or download the data up to the-last document-update date provided here below:</p>
-<ul>
-<li><p>Receiver information: <a href="https://uoneduau-my.sharepoint.com/:u:/g/personal/c3541851_uon_edu_au/ESvl2B4fx7FCsKMiEXrgnyABGycGYU0RV-PfOftI0wsTbA?e=OdR3ag">recv-info.rds</a></p></li>
-<li><p>Bird data: <a href="https://uoneduau-my.sharepoint.com/:u:/g/personal/c3541851_uon_edu_au/EbZbqh6eidVMksDUyl-J6UcBV8skhQXsjmL5f5nBw1pnwg?e=fJcygo">data.rds</a></p></li>
-</ul>
+<p>Receiver information: <a href="#" onclick="return checkPassword('recv')">recv-info.rds</a><br> Bird data: <a href="#" onclick="return checkPassword('bird')">data.rds</a></p>
+<script>
+  function checkPassword(type) {
+    var correctPasswords = {
+      recv: "provence13",
+      bird: "provence13"
+    };
+    var urlLinks = {
+      recv: "https://uoneduau-my.sharepoint.com/:u:/g/personal/c3541851_uon_edu_au/ESvl2B4fx7FCsKMiEXrgnyABGycGYU0RV-PfOftI0wsTbA?e=OdR3ag",
+      bird: "https://uoneduau-my.sharepoint.com/:u:/g/personal/c3541851_uon_edu_au/EbZbqh6eidVMksDUyl-J6UcBV8skhQXsjmL5f5nBw1pnwg?e=fJcygo"
+    };
+    var userPassword = prompt("Please enter the password to access the link:");
+    if (userPassword === correctPasswords[type]) {
+      window.open(urlLinks[type], '_blank');
+    } else {
+      alert("Incorrect password. Access denied.");
+    }
+    return false; // prevent default link behavior
+  }
+</script>
 <p>To properly load the data into your environment, make sure to set the working directory and the path as yours.</p>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb10"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Set WD</span></span>
-<span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a><span class="fu">setwd</span>(<span class="fu">dirname</span>(rstudioapi<span class="sc">::</span><span class="fu">getSourceEditorContext</span>()<span class="sc">$</span>path)) </span>
-<span id="cb10-3"><a href="#cb10-3" aria-hidden="true" tabindex="-1"></a><span class="co"># Birds</span></span>
-<span id="cb10-4"><a href="#cb10-4" aria-hidden="true" tabindex="-1"></a>data_all <span class="ot">&lt;-</span> <span class="fu">readRDS</span>(here<span class="sc">::</span><span class="fu">here</span>(<span class="st">"data"</span>, <span class="st">"recv.info.rds"</span>))</span>
-<span id="cb10-5"><a href="#cb10-5" aria-hidden="true" tabindex="-1"></a><span class="co"># Receivers info</span></span>
-<span id="cb10-6"><a href="#cb10-6" aria-hidden="true" tabindex="-1"></a>recv <span class="ot">&lt;-</span> <span class="fu">readRDS</span>(here<span class="sc">::</span><span class="fu">here</span>(<span class="st">"data"</span>, <span class="st">"data.rds"</span>)) </span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb10"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb10-1"><a href="#cb10-1"></a><span class="co"># Set WD</span></span>
+<span id="cb10-2"><a href="#cb10-2"></a><span class="fu">setwd</span>(<span class="fu">dirname</span>(rstudioapi<span class="sc">::</span><span class="fu">getSourceEditorContext</span>()<span class="sc">$</span>path)) </span>
+<span id="cb10-3"><a href="#cb10-3"></a><span class="co"># Birds</span></span>
+<span id="cb10-4"><a href="#cb10-4"></a>data_all <span class="ot">&lt;-</span> <span class="fu">readRDS</span>(here<span class="sc">::</span><span class="fu">here</span>(<span class="st">"data"</span>, <span class="st">"recv.info.rds"</span>))</span>
+<span id="cb10-5"><a href="#cb10-5"></a><span class="co"># Receivers info</span></span>
+<span id="cb10-6"><a href="#cb10-6"></a>recv <span class="ot">&lt;-</span> <span class="fu">readRDS</span>(here<span class="sc">::</span><span class="fu">here</span>(<span class="st">"data"</span>, <span class="st">"data.rds"</span>)) </span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 </section>
 <section id="summarise-the-data" class="level3">
 <h3 class="anchored" data-anchor-id="summarise-the-data">Summarise the data</h3>
 <p>For the aim of the analysis and generate readable figures, let’s simplify the table to keep useful information only.</p>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb11"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Data summary (To be edited still...)</span></span>
-<span id="cb11-2"><a href="#cb11-2" aria-hidden="true" tabindex="-1"></a>tagSummary1 <span class="ot">&lt;-</span> data_all <span class="sc">%&gt;%</span></span>
-<span id="cb11-3"><a href="#cb11-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">group_by</span>(motusTagID, recvDeployName) <span class="sc">%&gt;%</span> </span>
-<span id="cb11-4"><a href="#cb11-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">summarize</span>(<span class="at">nDet =</span> <span class="fu">n</span>(),</span>
-<span id="cb11-5"><a href="#cb11-5" aria-hidden="true" tabindex="-1"></a>            <span class="at">nRecv =</span> <span class="fu">n_distinct</span>(recvDeployName),</span>
-<span id="cb11-6"><a href="#cb11-6" aria-hidden="true" tabindex="-1"></a>            <span class="at">timeMin =</span> <span class="fu">min</span>(time),</span>
-<span id="cb11-7"><a href="#cb11-7" aria-hidden="true" tabindex="-1"></a>            <span class="at">timeMax =</span> <span class="fu">max</span>(time),</span>
-<span id="cb11-8"><a href="#cb11-8" aria-hidden="true" tabindex="-1"></a>            <span class="at">totDay =</span> <span class="fu">length</span>(<span class="fu">unique</span>(doy)), </span>
-<span id="cb11-9"><a href="#cb11-9" aria-hidden="true" tabindex="-1"></a>            <span class="at">species =</span> <span class="fu">first</span>(speciesEN),</span>
-<span id="cb11-10"><a href="#cb11-10" aria-hidden="true" tabindex="-1"></a>            <span class="at">.groups =</span> <span class="st">"drop"</span>) <span class="sc">%&gt;%</span></span>
-<span id="cb11-11"><a href="#cb11-11" aria-hidden="true" tabindex="-1"></a>  <span class="fu">relocate</span>(motusTagID, species)</span>
-<span id="cb11-12"><a href="#cb11-12" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb11-13"><a href="#cb11-13" aria-hidden="true" tabindex="-1"></a>tag_summary2 <span class="ot">&lt;-</span> data_all <span class="sc">%&gt;%</span></span>
-<span id="cb11-14"><a href="#cb11-14" aria-hidden="true" tabindex="-1"></a>  <span class="fu">group_by</span>(recvDeployName, tideCategory, speciesEN) <span class="sc">%&gt;%</span></span>
-<span id="cb11-15"><a href="#cb11-15" aria-hidden="true" tabindex="-1"></a>  <span class="fu">summarise</span>(<span class="at">nTags =</span> <span class="fu">n_distinct</span>(motusTagID), <span class="at">.groups =</span> <span class="st">"drop"</span>)</span>
-<span id="cb11-16"><a href="#cb11-16" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb11-17"><a href="#cb11-17" aria-hidden="true" tabindex="-1"></a><span class="co"># Selecting variables</span></span>
-<span id="cb11-18"><a href="#cb11-18" aria-hidden="true" tabindex="-1"></a>data <span class="ot">&lt;-</span> data_all <span class="sc">%&gt;%</span></span>
-<span id="cb11-19"><a href="#cb11-19" aria-hidden="true" tabindex="-1"></a>  <span class="fu">select</span>(</span>
-<span id="cb11-20"><a href="#cb11-20" aria-hidden="true" tabindex="-1"></a>    <span class="co"># Project ID</span></span>
-<span id="cb11-21"><a href="#cb11-21" aria-hidden="true" tabindex="-1"></a>    recvProjID,</span>
-<span id="cb11-22"><a href="#cb11-22" aria-hidden="true" tabindex="-1"></a>    tagProjID,</span>
-<span id="cb11-23"><a href="#cb11-23" aria-hidden="true" tabindex="-1"></a>    <span class="co"># Tag</span></span>
-<span id="cb11-24"><a href="#cb11-24" aria-hidden="true" tabindex="-1"></a>    motusTagID,</span>
-<span id="cb11-25"><a href="#cb11-25" aria-hidden="true" tabindex="-1"></a>    <span class="co"># Time</span></span>
-<span id="cb11-26"><a href="#cb11-26" aria-hidden="true" tabindex="-1"></a>    time,</span>
-<span id="cb11-27"><a href="#cb11-27" aria-hidden="true" tabindex="-1"></a>    timeAus,</span>
-<span id="cb11-28"><a href="#cb11-28" aria-hidden="true" tabindex="-1"></a>    year,</span>
-<span id="cb11-29"><a href="#cb11-29" aria-hidden="true" tabindex="-1"></a>    <span class="co"># Receiver</span></span>
-<span id="cb11-30"><a href="#cb11-30" aria-hidden="true" tabindex="-1"></a>    recv,</span>
-<span id="cb11-31"><a href="#cb11-31" aria-hidden="true" tabindex="-1"></a>    recvDeployName,</span>
-<span id="cb11-32"><a href="#cb11-32" aria-hidden="true" tabindex="-1"></a>    <span class="co"># Tide cycle</span></span>
-<span id="cb11-33"><a href="#cb11-33" aria-hidden="true" tabindex="-1"></a>    tideHeight,</span>
-<span id="cb11-34"><a href="#cb11-34" aria-hidden="true" tabindex="-1"></a>    tideCategory,</span>
-<span id="cb11-35"><a href="#cb11-35" aria-hidden="true" tabindex="-1"></a>    <span class="co"># Circadian cycle</span></span>
-<span id="cb11-36"><a href="#cb11-36" aria-hidden="true" tabindex="-1"></a>    sunriseNewc,</span>
-<span id="cb11-37"><a href="#cb11-37" aria-hidden="true" tabindex="-1"></a>    sunsetNewc,</span>
-<span id="cb11-38"><a href="#cb11-38" aria-hidden="true" tabindex="-1"></a>    <span class="co"># Signal strengh</span></span>
-<span id="cb11-39"><a href="#cb11-39" aria-hidden="true" tabindex="-1"></a>    sigPositive,</span>
-<span id="cb11-40"><a href="#cb11-40" aria-hidden="true" tabindex="-1"></a>    <span class="co"># Bird info</span></span>
-<span id="cb11-41"><a href="#cb11-41" aria-hidden="true" tabindex="-1"></a>    speciesID, speciesEN, speciesFR, speciesSci,</span>
-<span id="cb11-42"><a href="#cb11-42" aria-hidden="true" tabindex="-1"></a>    speciesGroup,</span>
-<span id="cb11-43"><a href="#cb11-43" aria-hidden="true" tabindex="-1"></a>    <span class="co"># Comment</span></span>
-<span id="cb11-44"><a href="#cb11-44" aria-hidden="true" tabindex="-1"></a>    tagDepComments</span>
-<span id="cb11-45"><a href="#cb11-45" aria-hidden="true" tabindex="-1"></a>    )</span>
-<span id="cb11-46"><a href="#cb11-46" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb11-47"><a href="#cb11-47" aria-hidden="true" tabindex="-1"></a><span class="co"># Color codes</span></span>
-<span id="cb11-48"><a href="#cb11-48" aria-hidden="true" tabindex="-1"></a>species_colors <span class="ot">&lt;-</span> <span class="fu">c</span>(</span>
-<span id="cb11-49"><a href="#cb11-49" aria-hidden="true" tabindex="-1"></a>  <span class="st">"Bar-tailed Godwit"</span>      <span class="ot">=</span> <span class="st">"#1b9e77"</span>,  </span>
-<span id="cb11-50"><a href="#cb11-50" aria-hidden="true" tabindex="-1"></a>  <span class="st">"Far Eastern Curlew"</span>     <span class="ot">=</span> <span class="st">"#d95f02"</span>,  </span>
-<span id="cb11-51"><a href="#cb11-51" aria-hidden="true" tabindex="-1"></a>  <span class="st">"Masked Lapwing"</span>         <span class="ot">=</span> <span class="st">"#7570b3"</span>, </span>
-<span id="cb11-52"><a href="#cb11-52" aria-hidden="true" tabindex="-1"></a>  <span class="st">"Pacific Golden-Plover"</span>  <span class="ot">=</span> <span class="st">"#e7298a"</span>, </span>
-<span id="cb11-53"><a href="#cb11-53" aria-hidden="true" tabindex="-1"></a>  <span class="st">"Pied Stilt"</span>             <span class="ot">=</span> <span class="st">"#66a61e"</span>, </span>
-<span id="cb11-54"><a href="#cb11-54" aria-hidden="true" tabindex="-1"></a>  <span class="st">"Red-necked Avocet"</span>      <span class="ot">=</span> <span class="st">"#e6ab02"</span>   </span>
-<span id="cb11-55"><a href="#cb11-55" aria-hidden="true" tabindex="-1"></a>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb11"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb11-1"><a href="#cb11-1"></a><span class="co"># Data summary (To be edited still...)</span></span>
+<span id="cb11-2"><a href="#cb11-2"></a>tagSummary1 <span class="ot">&lt;-</span> data_all <span class="sc">%&gt;%</span></span>
+<span id="cb11-3"><a href="#cb11-3"></a>  <span class="fu">group_by</span>(motusTagID, recvDeployName) <span class="sc">%&gt;%</span> </span>
+<span id="cb11-4"><a href="#cb11-4"></a>  <span class="fu">summarize</span>(<span class="at">nDet =</span> <span class="fu">n</span>(),</span>
+<span id="cb11-5"><a href="#cb11-5"></a>            <span class="at">nRecv =</span> <span class="fu">n_distinct</span>(recvDeployName),</span>
+<span id="cb11-6"><a href="#cb11-6"></a>            <span class="at">timeMin =</span> <span class="fu">min</span>(time),</span>
+<span id="cb11-7"><a href="#cb11-7"></a>            <span class="at">timeMax =</span> <span class="fu">max</span>(time),</span>
+<span id="cb11-8"><a href="#cb11-8"></a>            <span class="at">totDay =</span> <span class="fu">length</span>(<span class="fu">unique</span>(doy)), </span>
+<span id="cb11-9"><a href="#cb11-9"></a>            <span class="at">species =</span> <span class="fu">first</span>(speciesEN),</span>
+<span id="cb11-10"><a href="#cb11-10"></a>            <span class="at">.groups =</span> <span class="st">"drop"</span>) <span class="sc">%&gt;%</span></span>
+<span id="cb11-11"><a href="#cb11-11"></a>  <span class="fu">relocate</span>(motusTagID, species)</span>
+<span id="cb11-12"><a href="#cb11-12"></a></span>
+<span id="cb11-13"><a href="#cb11-13"></a>tag_summary2 <span class="ot">&lt;-</span> data_all <span class="sc">%&gt;%</span></span>
+<span id="cb11-14"><a href="#cb11-14"></a>  <span class="fu">group_by</span>(recvDeployName, tideCategory, speciesEN) <span class="sc">%&gt;%</span></span>
+<span id="cb11-15"><a href="#cb11-15"></a>  <span class="fu">summarise</span>(<span class="at">nTags =</span> <span class="fu">n_distinct</span>(motusTagID), <span class="at">.groups =</span> <span class="st">"drop"</span>)</span>
+<span id="cb11-16"><a href="#cb11-16"></a></span>
+<span id="cb11-17"><a href="#cb11-17"></a><span class="co"># Selecting variables</span></span>
+<span id="cb11-18"><a href="#cb11-18"></a>data <span class="ot">&lt;-</span> data_all <span class="sc">%&gt;%</span></span>
+<span id="cb11-19"><a href="#cb11-19"></a>  <span class="fu">select</span>(</span>
+<span id="cb11-20"><a href="#cb11-20"></a>    <span class="co"># Project ID</span></span>
+<span id="cb11-21"><a href="#cb11-21"></a>    recvProjID,</span>
+<span id="cb11-22"><a href="#cb11-22"></a>    tagProjID,</span>
+<span id="cb11-23"><a href="#cb11-23"></a>    <span class="co"># Tag</span></span>
+<span id="cb11-24"><a href="#cb11-24"></a>    motusTagID,</span>
+<span id="cb11-25"><a href="#cb11-25"></a>    <span class="co"># Time</span></span>
+<span id="cb11-26"><a href="#cb11-26"></a>    time,</span>
+<span id="cb11-27"><a href="#cb11-27"></a>    timeAus,</span>
+<span id="cb11-28"><a href="#cb11-28"></a>    year,</span>
+<span id="cb11-29"><a href="#cb11-29"></a>    <span class="co"># Receiver</span></span>
+<span id="cb11-30"><a href="#cb11-30"></a>    recv,</span>
+<span id="cb11-31"><a href="#cb11-31"></a>    recvDeployName,</span>
+<span id="cb11-32"><a href="#cb11-32"></a>    <span class="co"># Tide cycle</span></span>
+<span id="cb11-33"><a href="#cb11-33"></a>    tideHeight,</span>
+<span id="cb11-34"><a href="#cb11-34"></a>    tideCategory,</span>
+<span id="cb11-35"><a href="#cb11-35"></a>    <span class="co"># Circadian cycle</span></span>
+<span id="cb11-36"><a href="#cb11-36"></a>    sunriseNewc,</span>
+<span id="cb11-37"><a href="#cb11-37"></a>    sunsetNewc,</span>
+<span id="cb11-38"><a href="#cb11-38"></a>    <span class="co"># Signal strengh</span></span>
+<span id="cb11-39"><a href="#cb11-39"></a>    sigPositive,</span>
+<span id="cb11-40"><a href="#cb11-40"></a>    <span class="co"># Bird info</span></span>
+<span id="cb11-41"><a href="#cb11-41"></a>    speciesID, speciesEN, speciesFR, speciesSci,</span>
+<span id="cb11-42"><a href="#cb11-42"></a>    speciesGroup,</span>
+<span id="cb11-43"><a href="#cb11-43"></a>    <span class="co"># Comment</span></span>
+<span id="cb11-44"><a href="#cb11-44"></a>    tagDepComments</span>
+<span id="cb11-45"><a href="#cb11-45"></a>    )</span>
+<span id="cb11-46"><a href="#cb11-46"></a></span>
+<span id="cb11-47"><a href="#cb11-47"></a><span class="co"># Color codes</span></span>
+<span id="cb11-48"><a href="#cb11-48"></a>species_colors <span class="ot">&lt;-</span> <span class="fu">c</span>(</span>
+<span id="cb11-49"><a href="#cb11-49"></a>  <span class="st">"Bar-tailed Godwit"</span>      <span class="ot">=</span> <span class="st">"#1b9e77"</span>,  </span>
+<span id="cb11-50"><a href="#cb11-50"></a>  <span class="st">"Far Eastern Curlew"</span>     <span class="ot">=</span> <span class="st">"#d95f02"</span>,  </span>
+<span id="cb11-51"><a href="#cb11-51"></a>  <span class="st">"Masked Lapwing"</span>         <span class="ot">=</span> <span class="st">"#7570b3"</span>, </span>
+<span id="cb11-52"><a href="#cb11-52"></a>  <span class="st">"Pacific Golden-Plover"</span>  <span class="ot">=</span> <span class="st">"#e7298a"</span>, </span>
+<span id="cb11-53"><a href="#cb11-53"></a>  <span class="st">"Pied Stilt"</span>             <span class="ot">=</span> <span class="st">"#66a61e"</span>, </span>
+<span id="cb11-54"><a href="#cb11-54"></a>  <span class="st">"Red-necked Avocet"</span>      <span class="ot">=</span> <span class="st">"#e6ab02"</span>   </span>
+<span id="cb11-55"><a href="#cb11-55"></a>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
-<section id="habitat-selection-1" class="level4">
-<h4 class="anchored" data-anchor-id="habitat-selection-1">Habitat selection</h4>
-<section id="depending-tide-circadian-cycles" class="level5">
-<h5 class="anchored" data-anchor-id="depending-tide-circadian-cycles">Depending Tide &amp; Circadian cycles</h5>
+<section id="habitat-selection-descriptive-analysis" class="level4">
+<h4 class="anchored" data-anchor-id="habitat-selection-descriptive-analysis">Habitat selection: descriptive analysis</h4>
+<section id="tide-circadian-cycles" class="level5">
+<h5 class="anchored" data-anchor-id="tide-circadian-cycles">Tide &amp; Circadian cycles</h5>
 <ul>
 <li><p><strong>Over the Motus array</strong></p>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb12"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a>tag_summary2 <span class="sc">%&gt;%</span></span>
-<span id="cb12-2"><a href="#cb12-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">tideCategory  =</span> <span class="fu">case_when</span>(</span>
-<span id="cb12-3"><a href="#cb12-3" aria-hidden="true" tabindex="-1"></a>  tideCategory <span class="sc">==</span> <span class="st">"Nocturnal_High"</span> <span class="sc">~</span> <span class="st">"NH"</span>,</span>
-<span id="cb12-4"><a href="#cb12-4" aria-hidden="true" tabindex="-1"></a>  tideCategory <span class="sc">==</span> <span class="st">"Diurnal_Low"</span>    <span class="sc">~</span> <span class="st">"DL"</span>,</span>
-<span id="cb12-5"><a href="#cb12-5" aria-hidden="true" tabindex="-1"></a>  tideCategory <span class="sc">==</span> <span class="st">"Diurnal_High"</span>   <span class="sc">~</span> <span class="st">"DH"</span>,</span>
-<span id="cb12-6"><a href="#cb12-6" aria-hidden="true" tabindex="-1"></a>  tideCategory <span class="sc">==</span> <span class="st">"Nocturnal_Low"</span>  <span class="sc">~</span> <span class="st">"NL"</span>,</span>
-<span id="cb12-7"><a href="#cb12-7" aria-hidden="true" tabindex="-1"></a>  <span class="cn">TRUE</span> <span class="sc">~</span> tideCategory )) <span class="sc">%&gt;%</span></span>
-<span id="cb12-8"><a href="#cb12-8" aria-hidden="true" tabindex="-1"></a>  <span class="fu">ggplot</span>(<span class="fu">aes</span>(<span class="at">x =</span> <span class="fu">as.factor</span>(tideCategory), <span class="at">y =</span> nTags, <span class="at">fill =</span> speciesEN)) <span class="sc">+</span></span>
-<span id="cb12-9"><a href="#cb12-9" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_col</span>(<span class="at">position =</span> <span class="st">"stack"</span>) <span class="sc">+</span>   </span>
-<span id="cb12-10"><a href="#cb12-10" aria-hidden="true" tabindex="-1"></a>  <span class="fu">facet_wrap</span>(<span class="sc">~</span> recvDeployName) <span class="sc">+</span>   </span>
-<span id="cb12-11"><a href="#cb12-11" aria-hidden="true" tabindex="-1"></a>  <span class="fu">theme_bw</span>() <span class="sc">+</span></span>
-<span id="cb12-12"><a href="#cb12-12" aria-hidden="true" tabindex="-1"></a>  <span class="fu">labs</span>(<span class="at">x =</span> <span class="st">"Tide Category"</span>, <span class="at">y =</span> <span class="st">"Number of individual detected"</span>, <span class="at">fill =</span> <span class="st">"Species"</span>) <span class="sc">+</span></span>
-<span id="cb12-13"><a href="#cb12-13" aria-hidden="true" tabindex="-1"></a>  <span class="fu">scale_fill_manual</span>(<span class="at">values =</span> species_colors)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb12"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb12-1"><a href="#cb12-1"></a>tag_summary2 <span class="sc">%&gt;%</span></span>
+<span id="cb12-2"><a href="#cb12-2"></a>  <span class="fu">mutate</span>(<span class="at">tideCategory  =</span> <span class="fu">case_when</span>(</span>
+<span id="cb12-3"><a href="#cb12-3"></a>  tideCategory <span class="sc">==</span> <span class="st">"Nocturnal_High"</span> <span class="sc">~</span> <span class="st">"NH"</span>,</span>
+<span id="cb12-4"><a href="#cb12-4"></a>  tideCategory <span class="sc">==</span> <span class="st">"Diurnal_Low"</span>    <span class="sc">~</span> <span class="st">"DL"</span>,</span>
+<span id="cb12-5"><a href="#cb12-5"></a>  tideCategory <span class="sc">==</span> <span class="st">"Diurnal_High"</span>   <span class="sc">~</span> <span class="st">"DH"</span>,</span>
+<span id="cb12-6"><a href="#cb12-6"></a>  tideCategory <span class="sc">==</span> <span class="st">"Nocturnal_Low"</span>  <span class="sc">~</span> <span class="st">"NL"</span>,</span>
+<span id="cb12-7"><a href="#cb12-7"></a>  <span class="cn">TRUE</span> <span class="sc">~</span> tideCategory )) <span class="sc">%&gt;%</span></span>
+<span id="cb12-8"><a href="#cb12-8"></a>  <span class="fu">ggplot</span>(<span class="fu">aes</span>(<span class="at">x =</span> <span class="fu">as.factor</span>(tideCategory), <span class="at">y =</span> nTags, <span class="at">fill =</span> speciesEN)) <span class="sc">+</span></span>
+<span id="cb12-9"><a href="#cb12-9"></a>  <span class="fu">geom_col</span>(<span class="at">position =</span> <span class="st">"stack"</span>) <span class="sc">+</span>   </span>
+<span id="cb12-10"><a href="#cb12-10"></a>  <span class="fu">facet_wrap</span>(<span class="sc">~</span> recvDeployName) <span class="sc">+</span>   </span>
+<span id="cb12-11"><a href="#cb12-11"></a>  <span class="fu">theme_bw</span>() <span class="sc">+</span></span>
+<span id="cb12-12"><a href="#cb12-12"></a>  <span class="fu">labs</span>(<span class="at">x =</span> <span class="st">"Tide Category"</span>, <span class="at">y =</span> <span class="st">"Number of individual detected"</span>, <span class="at">fill =</span> <span class="st">"Species"</span>) <span class="sc">+</span></span>
+<span id="cb12-13"><a href="#cb12-13"></a>  <span class="fu">scale_fill_manual</span>(<span class="at">values =</span> species_colors)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output-display">
 <div>
 <figure class="figure">

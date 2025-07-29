@@ -3,7 +3,9 @@ title: "MOTUS telemetry array to access habitat selection from migratory shorebi
 date:  last-modified
 date-format: "MMMM D, YYYY"
 css: styles.css
-format: html
+format:
+  html:
+    code-line-numbers: true
 project:
   type: website
   output-dir: 22_qmd
@@ -84,7 +86,12 @@ This following aims to describe the analysis ran with VHF Motus data set that tr
 
 ## 1. Filtering the data
 
-### Packages
+-   [Packages](#packages)
+-   [Download the data from Motus network](#download-the-data-from-motus-network)
+-   [Filter the data](#filter-the-data)
+-   [Adding variables](#adding-variables)
+
+### Packages {#packages}
 
 ```{r 1 packages, message = FALSE, warning = FALSE, eval = TRUE, echo = TRUE}
 
@@ -261,6 +268,12 @@ Save your now formatted data, ready for use. Automatically named with the date o
 
 ## 4. Habitat selection
 
+-   [Packages](#packages)
+-   [Load the data](#load-the-data)
+-   [Summarise the data](#summarise-the-data)
+-   [Habitat selection: descriptive analysis](#habitat-selection-descriptive-analysis)
+-   [Tide & Circadian cycles](#tide--circadian cycles)
+
 ### Packages
 
 ```{r 4 packages, message = FALSE, warning = FALSE, eval = TRUE}
@@ -283,9 +296,29 @@ library(ggplot2)
 
 Either load your own data generated across the previous chapters (.rds format), or download the data up to the-last document-update date provided here below:
 
--   Receiver information: [recv-info.rds](https://uoneduau-my.sharepoint.com/:u:/g/personal/c3541851_uon_edu_au/ESvl2B4fx7FCsKMiEXrgnyABGycGYU0RV-PfOftI0wsTbA?e=OdR3ag)
+Receiver information: <a href="#" onclick="return checkPassword('recv')">recv-info.rds</a><br> Bird data: <a href="#" onclick="return checkPassword('bird')">data.rds</a>
 
--   Bird data: [data.rds](https://uoneduau-my.sharepoint.com/:u:/g/personal/c3541851_uon_edu_au/EbZbqh6eidVMksDUyl-J6UcBV8skhQXsjmL5f5nBw1pnwg?e=fJcygo)
+```{=html}
+<script>
+  function checkPassword(type) {
+    var correctPasswords = {
+      recv: "provence13",
+      bird: "provence13"
+    };
+    var urlLinks = {
+      recv: "https://uoneduau-my.sharepoint.com/:u:/g/personal/c3541851_uon_edu_au/ESvl2B4fx7FCsKMiEXrgnyABGycGYU0RV-PfOftI0wsTbA?e=OdR3ag",
+      bird: "https://uoneduau-my.sharepoint.com/:u:/g/personal/c3541851_uon_edu_au/EbZbqh6eidVMksDUyl-J6UcBV8skhQXsjmL5f5nBw1pnwg?e=fJcygo"
+    };
+    var userPassword = prompt("Please enter the password to access the link:");
+    if (userPassword === correctPasswords[type]) {
+      window.open(urlLinks[type], '_blank');
+    } else {
+      alert("Incorrect password. Access denied.");
+    }
+    return false; // prevent default link behavior
+  }
+</script>
+```
 
 To properly load the data into your environment, make sure to set the working directory and the path as yours.
 
@@ -377,9 +410,9 @@ species_colors <- c(
 )
 ```
 
-#### Habitat selection
+#### Habitat selection: descriptive analysis
 
-##### Depending Tide & Circadian cycles
+##### Tide & Circadian cycles
 
 -   **Over the Motus array**
 
@@ -404,6 +437,12 @@ species_colors <- c(
 ::: panel-tabset
 ```{r 4 Habitat selection across sites 2, echo = FALSE, eval = TRUE, results = 'asis'}
 plots <- tag_summary2 %>%
+      mutate(tideCategory  = case_when(
+      tideCategory == "Nocturnal_High" ~ "NH",
+      tideCategory == "Diurnal_Low"    ~ "DL",
+      tideCategory == "Diurnal_High"   ~ "DH",
+      tideCategory == "Nocturnal_Low"  ~ "NL",
+      TRUE ~ tideCategory )) %>%
       split(.$recvDeployName) %>%
       map(~ ggplot(.x, aes(x = tideCategory, y = nTags, fill = speciesEN)) +
             geom_col(position = "stack") +
