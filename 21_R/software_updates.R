@@ -8,6 +8,14 @@
 
 
 
+source(here::here("21_R", "software_updates.R", echo = FALSE))
+
+
+
+
+
+
+
 
 ## UPDATE R AND RSTUDIO
 ## -----------------------------------------------------------------------------------------------------------------------------------------
@@ -174,9 +182,6 @@
         # Source packages.R to define package lists
         source(here::here("21_R", "packages.R"))
         
-        # Source functions
-        #source(here::here("20_R", "functions.R"))
-        
         # Load packages using the source_packages function
         source_packages(here::here("packages.R"))
         
@@ -190,10 +195,30 @@
         cat("\nOne of the scripts ran with warnings, see below:\n")
         print(paste("Warning message:", w$message))
         cat("\nBeing aware of the warnings above, you are ready to start mate! ;)\n")
+        stop()
       }
     )
-   
-  
-  
-  
+    
+## CLEAN UP ENVIRONMENT & MEMORY                                                                                                                    
+## -----------------------------------------------------------------------------------------------------------------------------------------
+
+    rm(list = ls())
+    rm(list = ls(all.names = TRUE))
+    gc()
+    
+## LOAD FUNCTIONS INTO YOUR ENVIRONMENT                                                                                                                   
+## -----------------------------------------------------------------------------------------------------------------------------------------
+    
+    # Source functions
+    #source(here::here("20_R", "functions.R"))
+    
+    cat("\014")
+    cat("R version: ", R.version.string, "\n")
+    cat("RStudio version: ", print(as.character(RStudio.Version()$version)), "\n")
+    info <- sessionInfo()
+    cat("Platform: ", info$platform, "\n")
+    cat("Running under: ", info$running, "\n")    
+    
+    cat("\n\n     Alrighty mate, you're ready to start! ;)\n")
+    
   
