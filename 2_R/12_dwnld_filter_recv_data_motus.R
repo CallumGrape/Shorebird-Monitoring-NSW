@@ -40,7 +40,7 @@ proj.num <- 294
 sql.motus <- tagme(projRecv = proj.num, 
                    new = FALSE, # TRUE overwrites existing (large data takes a while)
                    update = TRUE, 
-                   dir = here("10_data", "receivers", "motus.sql"))
+                   dir = here("1_data", "receivers", "motus.sql"))
 
 # 4 - Download data per Receivers ----
 
@@ -65,7 +65,7 @@ for(row in 1:nrow(df.serno)) {
   sql_motus <- tagme(df.serno[row, "serno"],
                      new = FALSE, # TRUE overwrites existing (large data takes a while)
                      update = TRUE, 
-                     dir = here("10_data", "motus.sql", "receivers"))
+                     dir = here("1_data", "motus.sql", "receivers"))
   metadata(sql_motus)
 }
 

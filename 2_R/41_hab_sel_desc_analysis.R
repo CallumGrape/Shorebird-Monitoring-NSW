@@ -32,14 +32,14 @@ setwd(dirname(rstudioapi::getSourceEditorContext()$path))
 # Birds
 data_all <- readRDS(
   tail(sort(list.files(
-  here::here("10_data", "alltags", "motus.rds"),
+  here::here("1_data", "alltags", "motus.rds"),
   pattern = "-data\\.rds$", full.names = TRUE
   )), 1)) # pick up the most recent .rds file
 
 # Receivers info
 recv <- readRDS(
   tail(sort(list.files(
-    here::here("10_data", "alltags", "motus.rds"),
+    here::here("1_data", "alltags", "motus.rds"),
     pattern = "-recv-info\\.rds$", full.names = TRUE
   )), 1)) 
 

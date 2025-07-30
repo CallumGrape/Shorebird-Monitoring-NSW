@@ -40,15 +40,15 @@ proj.num <- 294
 # sql.motus <- tagme(projRecv = proj.num, 
 #                    new = FALSE, # TRUE overwrites existing (large data takes a while)
 #                    update = TRUE, 
-#                    dir = here("10_data", "motus.sql"))
+#                    dir = here("1_data", "motus.sql"))
 # metadata(sql.motus, proj.num)
 
 # Load local data
-sql.motus <- dbConnect(SQLite(), here::here("10_data", "alltags", "project-294.motus"))
+sql.motus <- dbConnect(SQLite(), here::here("1_data", "alltags", "project-294.motus"))
 
 # Load tide (Callum work 01_import_tide_data.R)
-tidalCurve <- readRDS(here::here("10_data", "tides", "tidalCurve.rds"))
-tideData <- readRDS(here::here("10_data", "tides", "tideData.rds"))
+tidalCurve <- readRDS(here::here("1_data", "tides", "tidalCurve.rds"))
+tideData <- readRDS(here::here("1_data", "tides", "tideData.rds"))
 tidalCurveFunc <- splinefun(tideData$tideDateTimeAus, tideData$tideHeight, method = "natural")
 get.tideIndex <- function(time){ return(which.min(abs(tideData$tideDateTimeAus-time)))}
 
@@ -99,7 +99,7 @@ full_join(as.data.frame(table(df.tags$tagID)),
 
 df.alltags$motusTagID[is.na(df.alltags$tagDeployID)] #... different to those ones (from all tags)
 
-teams <- read.csv( here::here("10_data", "teams.sheet.28.07.25.csv")) 
+teams <- read.csv( here::here("1_data", "teams.sheet.28.07.25.csv")) 
 
 table(df.tagdeps$tagID)
 table(unique(df.alltags$tagDeployID))
@@ -214,8 +214,8 @@ df.alltags <- df.alltags %>%
   
 # 8 - Save
 
-saveRDS(df.alltags, here::here("10_data", "alltags", "motus.rds", paste0(Sys.Date(), "-data", ".rds" )))
-saveRDS(df.recvDeps, here::here("10_data", "alltags", "motus.rds", paste0(Sys.Date(), "-recv-info", ".rds" )))
+saveRDS(df.alltags, here::here("1_data", "alltags", "motus.rds", paste0(Sys.Date(), "-data", ".rds" )))
+saveRDS(df.recvDeps, here::here("1_data", "alltags", "motus.rds", paste0(Sys.Date(), "-recv-info", ".rds" )))
 
 
 

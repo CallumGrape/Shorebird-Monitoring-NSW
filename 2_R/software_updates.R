@@ -169,7 +169,7 @@
     tryCatch(
       {
         # Source packages.R to define package lists
-        source(here::here("21_R", "packages.R"))
+        source(here::here("2_R", "packages.R"))
         
         # Load packages using the source_packages function
         source_packages(here::here("packages.R"))
@@ -199,7 +199,7 @@
 ## -----------------------------------------------------------------------------------------------------------------------------------------
     
     # Source functions
-    #source(here::here("20_R", "functions.R"))
+    #source(here::here("2_R", "functions.R"))
     
     cat("\014")
     cat("\n",
