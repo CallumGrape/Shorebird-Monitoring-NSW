@@ -6,7 +6,7 @@
 
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
 
-<meta name="dcterms.date" content="2025-07-29">
+<meta name="dcterms.date" content="2025-07-30">
 
 <title>MOTUS telemetry array to access habitat selection from migratory shorebirds within and across Hunter and Port Stephen estuaries, NSW</title>
 <style>
@@ -94,7 +94,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
     <div>
     <div class="quarto-title-meta-heading">Published</div>
     <div class="quarto-title-meta-contents">
-      <p class="date">July 29, 2025</p>
+      <p class="date">July 30, 2025</p>
     </div>
   </div>
   
@@ -106,9 +106,9 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </header>
 
 
-<p style="font-size: 0.9em; color: gray;">
-</p><p>Created on July 28, 2025</p>
-<p></p>
+<p style="font-size: 0.7em; color: gray;">
+Created on July 28, 2025
+</p>
 <section id="maxime-marini-callum-gapes-andrea-s.-griffin" class="level2">
 <h2 class="anchored" data-anchor-id="maxime-marini-callum-gapes-andrea-s.-griffin"><span style="font-size: 0.8em;"><em>Maxime Marini, Callum Gapes, Andrea S. Griffin</em></span></h2>
 <p><br>
@@ -116,7 +116,25 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </section>
 <section id="material" class="level1">
 <h1><span class="smallcaps">Material</span></h1>
-<p>Multiple variables might influence the movement of migratory shorebirds, selecting different areas whether to roost or forage. Those variables might vary across species and individuals. Within such an interdependent system, we try to suggest an approach that takes into account the tidal and circadian cycles as the main factor for the habitat selection.</p>
+<p>Multiple variables might influence the movement of migratory shorebirds within there foraging ground (ie. Hunter &amp; Port Stephen estuaries), selecting different areas at different times whether to roost or forage. Those variables might vary across species and individuals, therefore their selected habitat. Within such an interdependent system, we try to suggest an approach that takes into account the tidal and circadian cycles as the main drivers to the habitat selection.</p>
+<ol type="1">
+<li><strong>MOTUS telemetry technology</strong></li>
+</ol>
+<p style="font-size: 0.9em; color: gray;">
+</p><p><em>Overview about the MOTUS array and its combination with Lotek VHF devices used within the study. How does this work?</em></p>
+<p></p>
+<ol start="2" type="1">
+<li><strong>The local MOTUS array</strong></li>
+</ol>
+<p style="font-size: 0.9em; color: gray;">
+</p><p><em>See how, where and where our array is set-up.</em></p>
+<p></p>
+<ol start="3" type="1">
+<li><strong>The deployed tags</strong></li>
+</ol>
+<p style="font-size: 0.9em; color: gray;">
+</p><p><em>Keep track on what tags are deployed over our migratory shorebirds.</em></p>
+<p></p>
 <blockquote class="blockquote">
 <p>Navigate the three different tabs below to get deeper into the <span class="smallcaps">material</span> used.</p>
 </blockquote>
@@ -163,7 +181,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <li><strong>Habitat selection</strong></li>
 </ol>
 <p style="font-size: 0.9em; color: gray;">
-</p><p><em>Depending two main factors -tide and circadian cycles- how the migratory shorebirds select their habitat.</em></p>
+</p><p><em>Descriptive &amp; inferential analysis are conducted.</em> <em>First is visually compared the spatial occupancy from birds and over our Motus array depending two main factors: tide and circadian cycles.</em></p>
 <p></p>
 <blockquote class="blockquote">
 <p>Navigate the four different tabs below to get deeper into the <span class="smallcaps">method</span> used.</p>
@@ -175,12 +193,15 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 
 </div>
 <div id="tabset-3-2" class="tab-pane" role="tabpanel" aria-labelledby="tabset-3-2-tab">
+<section id="contents" class="level3">
+<h3 class="anchored" data-anchor-id="contents"><span style="color: grey; font-size: smaller;">Contents</span></h3>
 <ul>
 <li><a href="#packages">Packages</a></li>
 <li><a href="#download-the-data-from-motus-network">Download the data from Motus network</a></li>
 <li><a href="#filter-the-data">Filter the data</a></li>
 <li><a href="#adding-variables">Adding variables</a></li>
 </ul>
+</section>
 <section id="packages" class="level3">
 <h3 class="anchored" data-anchor-id="packages">Packages</h3>
 <div class="cell">
@@ -207,7 +228,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span id="cb2-4"><a href="#cb2-4"></a>proj.num <span class="ot">&lt;-</span> <span class="dv">294</span>  </span>
 <span id="cb2-5"><a href="#cb2-5"></a><span class="fu">motusLogout</span>()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
-<p>Set general settings first as working directory, Time Zone, Motus project number. And make sure the environment is free from any connection to any other networked project or from any other Motus user account (avoid undesired mistakes).</p>
+<p>Set general settings first as working directory, Time Zone, Motus project number (ie. ours is 294). And make sure the environment is free from any connection to any other networked project or from any other Motus user account (avoid undesired mistakes).</p>
 <div class="cell">
 <div class="sourceCode cell-code" id="cb3"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb3-1"><a href="#cb3-1"></a>sql.motus <span class="ot">&lt;-</span> <span class="fu">tagme</span>(<span class="at">projRecv =</span> proj.num,</span>
 <span id="cb3-2"><a href="#cb3-2"></a>                   <span class="at">new =</span> <span class="cn">FALSE</span>, <span class="co"># TRUE overwrites existing (large data takes a while) FALSE used to update existing file</span></span>
@@ -341,13 +362,15 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 
 </div>
 <div id="tabset-3-5" class="tab-pane" role="tabpanel" aria-labelledby="tabset-3-5-tab">
+<section id="contents-1" class="level3">
+<h3 class="anchored" data-anchor-id="contents-1"><span style="color: grey; font-size: smaller;">Contents</span></h3>
 <ul>
-<li><a href="#packages">Packages</a></li>
+<li><a href="#packages2">Packages</a></li>
 <li><a href="#load-the-data">Load the data</a></li>
 <li><a href="#summarise-the-data">Summarise the data</a></li>
-<li><a href="#habitat-selection-descriptive-analysis">Habitat selection: descriptive analysis</a></li>
-<li><a href="#tide--circadian%20cycles">Tide &amp; Circadian cycles</a></li>
+<li><a href="#descriptive-analysis">Descriptive analysis</a></li>
 </ul>
+</section>
 <section id="packages-1" class="level3">
 <h3 class="anchored" data-anchor-id="packages-1">Packages</h3>
 <div class="cell">
@@ -422,49 +445,51 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span id="cb11-17"><a href="#cb11-17"></a><span class="co"># Selecting variables</span></span>
 <span id="cb11-18"><a href="#cb11-18"></a>data <span class="ot">&lt;-</span> data_all <span class="sc">%&gt;%</span></span>
 <span id="cb11-19"><a href="#cb11-19"></a>  <span class="fu">select</span>(</span>
-<span id="cb11-20"><a href="#cb11-20"></a>    <span class="co"># Project ID</span></span>
-<span id="cb11-21"><a href="#cb11-21"></a>    recvProjID,</span>
-<span id="cb11-22"><a href="#cb11-22"></a>    tagProjID,</span>
-<span id="cb11-23"><a href="#cb11-23"></a>    <span class="co"># Tag</span></span>
-<span id="cb11-24"><a href="#cb11-24"></a>    motusTagID,</span>
-<span id="cb11-25"><a href="#cb11-25"></a>    <span class="co"># Time</span></span>
-<span id="cb11-26"><a href="#cb11-26"></a>    time,</span>
-<span id="cb11-27"><a href="#cb11-27"></a>    timeAus,</span>
-<span id="cb11-28"><a href="#cb11-28"></a>    year,</span>
-<span id="cb11-29"><a href="#cb11-29"></a>    <span class="co"># Receiver</span></span>
-<span id="cb11-30"><a href="#cb11-30"></a>    recv,</span>
-<span id="cb11-31"><a href="#cb11-31"></a>    recvDeployName,</span>
-<span id="cb11-32"><a href="#cb11-32"></a>    <span class="co"># Tide cycle</span></span>
-<span id="cb11-33"><a href="#cb11-33"></a>    tideHeight,</span>
-<span id="cb11-34"><a href="#cb11-34"></a>    tideCategory,</span>
-<span id="cb11-35"><a href="#cb11-35"></a>    <span class="co"># Circadian cycle</span></span>
-<span id="cb11-36"><a href="#cb11-36"></a>    sunriseNewc,</span>
-<span id="cb11-37"><a href="#cb11-37"></a>    sunsetNewc,</span>
-<span id="cb11-38"><a href="#cb11-38"></a>    <span class="co"># Signal strengh</span></span>
-<span id="cb11-39"><a href="#cb11-39"></a>    sigPositive,</span>
-<span id="cb11-40"><a href="#cb11-40"></a>    <span class="co"># Bird info</span></span>
-<span id="cb11-41"><a href="#cb11-41"></a>    speciesID, speciesEN, speciesFR, speciesSci,</span>
-<span id="cb11-42"><a href="#cb11-42"></a>    speciesGroup,</span>
-<span id="cb11-43"><a href="#cb11-43"></a>    <span class="co"># Comment</span></span>
-<span id="cb11-44"><a href="#cb11-44"></a>    tagDepComments</span>
-<span id="cb11-45"><a href="#cb11-45"></a>    )</span>
-<span id="cb11-46"><a href="#cb11-46"></a></span>
-<span id="cb11-47"><a href="#cb11-47"></a><span class="co"># Color codes</span></span>
-<span id="cb11-48"><a href="#cb11-48"></a>species_colors <span class="ot">&lt;-</span> <span class="fu">c</span>(</span>
-<span id="cb11-49"><a href="#cb11-49"></a>  <span class="st">"Bar-tailed Godwit"</span>      <span class="ot">=</span> <span class="st">"#1b9e77"</span>,  </span>
-<span id="cb11-50"><a href="#cb11-50"></a>  <span class="st">"Far Eastern Curlew"</span>     <span class="ot">=</span> <span class="st">"#d95f02"</span>,  </span>
-<span id="cb11-51"><a href="#cb11-51"></a>  <span class="st">"Masked Lapwing"</span>         <span class="ot">=</span> <span class="st">"#7570b3"</span>, </span>
-<span id="cb11-52"><a href="#cb11-52"></a>  <span class="st">"Pacific Golden-Plover"</span>  <span class="ot">=</span> <span class="st">"#e7298a"</span>, </span>
-<span id="cb11-53"><a href="#cb11-53"></a>  <span class="st">"Pied Stilt"</span>             <span class="ot">=</span> <span class="st">"#66a61e"</span>, </span>
-<span id="cb11-54"><a href="#cb11-54"></a>  <span class="st">"Red-necked Avocet"</span>      <span class="ot">=</span> <span class="st">"#e6ab02"</span>   </span>
-<span id="cb11-55"><a href="#cb11-55"></a>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<span id="cb11-20"><a href="#cb11-20"></a>    </span>
+<span id="cb11-21"><a href="#cb11-21"></a>  <span class="co"># Project ID</span></span>
+<span id="cb11-22"><a href="#cb11-22"></a>    recvProjID,</span>
+<span id="cb11-23"><a href="#cb11-23"></a>    tagProjID,</span>
+<span id="cb11-24"><a href="#cb11-24"></a>  <span class="co"># Tag</span></span>
+<span id="cb11-25"><a href="#cb11-25"></a>    motusTagID,</span>
+<span id="cb11-26"><a href="#cb11-26"></a>  <span class="co"># Time</span></span>
+<span id="cb11-27"><a href="#cb11-27"></a>    time,</span>
+<span id="cb11-28"><a href="#cb11-28"></a>    timeAus,</span>
+<span id="cb11-29"><a href="#cb11-29"></a>    year,</span>
+<span id="cb11-30"><a href="#cb11-30"></a>  <span class="co"># Receiver</span></span>
+<span id="cb11-31"><a href="#cb11-31"></a>    recv,</span>
+<span id="cb11-32"><a href="#cb11-32"></a>    recvDeployName,</span>
+<span id="cb11-33"><a href="#cb11-33"></a>  <span class="co"># Tide cycle</span></span>
+<span id="cb11-34"><a href="#cb11-34"></a>    tideHeight,</span>
+<span id="cb11-35"><a href="#cb11-35"></a>    tideCategory,</span>
+<span id="cb11-36"><a href="#cb11-36"></a>  <span class="co"># Circadian cycle</span></span>
+<span id="cb11-37"><a href="#cb11-37"></a>    sunriseNewc,</span>
+<span id="cb11-38"><a href="#cb11-38"></a>    sunsetNewc,</span>
+<span id="cb11-39"><a href="#cb11-39"></a>  <span class="co"># Signal strengh</span></span>
+<span id="cb11-40"><a href="#cb11-40"></a>    sigPositive,</span>
+<span id="cb11-41"><a href="#cb11-41"></a>  <span class="co"># Bird info</span></span>
+<span id="cb11-42"><a href="#cb11-42"></a>    speciesID, speciesEN, speciesFR, speciesSci,</span>
+<span id="cb11-43"><a href="#cb11-43"></a>    speciesGroup,</span>
+<span id="cb11-44"><a href="#cb11-44"></a>  <span class="co"># Comment</span></span>
+<span id="cb11-45"><a href="#cb11-45"></a>    tagDepComments</span>
+<span id="cb11-46"><a href="#cb11-46"></a>    )</span>
+<span id="cb11-47"><a href="#cb11-47"></a></span>
+<span id="cb11-48"><a href="#cb11-48"></a><span class="co"># Color codes</span></span>
+<span id="cb11-49"><a href="#cb11-49"></a>species_colors <span class="ot">&lt;-</span> <span class="fu">c</span>(</span>
+<span id="cb11-50"><a href="#cb11-50"></a>  <span class="st">"Bar-tailed Godwit"</span>      <span class="ot">=</span> <span class="st">"#1b9e77"</span>,  </span>
+<span id="cb11-51"><a href="#cb11-51"></a>  <span class="st">"Far Eastern Curlew"</span>     <span class="ot">=</span> <span class="st">"#d95f02"</span>,  </span>
+<span id="cb11-52"><a href="#cb11-52"></a>  <span class="st">"Masked Lapwing"</span>         <span class="ot">=</span> <span class="st">"#7570b3"</span>, </span>
+<span id="cb11-53"><a href="#cb11-53"></a>  <span class="st">"Pacific Golden-Plover"</span>  <span class="ot">=</span> <span class="st">"#e7298a"</span>, </span>
+<span id="cb11-54"><a href="#cb11-54"></a>  <span class="st">"Pied Stilt"</span>             <span class="ot">=</span> <span class="st">"#66a61e"</span>, </span>
+<span id="cb11-55"><a href="#cb11-55"></a>  <span class="st">"Red-necked Avocet"</span>      <span class="ot">=</span> <span class="st">"#e6ab02"</span>   </span>
+<span id="cb11-56"><a href="#cb11-56"></a>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
-<section id="habitat-selection-descriptive-analysis" class="level4">
-<h4 class="anchored" data-anchor-id="habitat-selection-descriptive-analysis">Habitat selection: descriptive analysis</h4>
-<section id="tide-circadian-cycles" class="level5">
-<h5 class="anchored" data-anchor-id="tide-circadian-cycles">Tide &amp; Circadian cycles</h5>
+<section id="descriptive-analysis" class="level4">
+<h4 class="anchored" data-anchor-id="descriptive-analysis">Descriptive analysis</h4>
+<p><a href="#tide-circadian-cycle">Tide &amp; circadian cycles</a></p>
+<section id="tide-circadian-cycle" class="level5">
+<h5 class="anchored" data-anchor-id="tide-circadian-cycle">Tide &amp; circadian cycles</h5>
 <ul>
-<li><p><strong>Over the Motus array</strong></p>
+<li><p>Over the Motus array</p>
 <div class="cell">
 <div class="sourceCode cell-code" id="cb12"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb12-1"><a href="#cb12-1"></a>tag_summary2 <span class="sc">%&gt;%</span></span>
 <span id="cb12-2"><a href="#cb12-2"></a>  <span class="fu">mutate</span>(<span class="at">tideCategory  =</span> <span class="fu">case_when</span>(</span>
@@ -487,7 +512,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </div>
 </div>
 </div></li>
-<li><p><strong>Over each Motus stations</strong></p></li>
+<li><p>Over each Motus stations</p></li>
 </ul>
 <div class="tabset-margin-container"></div><div class="panel-tabset">
 <ul class="nav nav-tabs" role="tablist"><li class="nav-item" role="presentation"><a class="nav-link active" id="tabset-2-1-tab" data-bs-toggle="tab" data-bs-target="#tabset-2-1" role="tab" aria-controls="tabset-2-1" aria-selected="true" href="">Corrie Island</a></li><li class="nav-item" role="presentation"><a class="nav-link" id="tabset-2-2-tab" data-bs-toggle="tab" data-bs-target="#tabset-2-2" role="tab" aria-controls="tabset-2-2" aria-selected="false" href="">Curlew Point</a></li><li class="nav-item" role="presentation"><a class="nav-link" id="tabset-2-3-tab" data-bs-toggle="tab" data-bs-target="#tabset-2-3" role="tab" aria-controls="tabset-2-3" aria-selected="false" href="">Davies Point</a></li><li class="nav-item" role="presentation"><a class="nav-link" id="tabset-2-4-tab" data-bs-toggle="tab" data-bs-target="#tabset-2-4" role="tab" aria-controls="tabset-2-4" aria-selected="false" href="">Fullerton Entrance</a></li><li class="nav-item" role="presentation"><a class="nav-link" id="tabset-2-5-tab" data-bs-toggle="tab" data-bs-target="#tabset-2-5" role="tab" aria-controls="tabset-2-5" aria-selected="false" href="">Hexham Swamp</a></li><li class="nav-item" role="presentation"><a class="nav-link" id="tabset-2-6-tab" data-bs-toggle="tab" data-bs-target="#tabset-2-6" role="tab" aria-controls="tabset-2-6" aria-selected="false" href="">Milhams Pond</a></li><li class="nav-item" role="presentation"><a class="nav-link" id="tabset-2-7-tab" data-bs-toggle="tab" data-bs-target="#tabset-2-7" role="tab" aria-controls="tabset-2-7" aria-selected="false" href="">Ramsar Road</a></li><li class="nav-item" role="presentation"><a class="nav-link" id="tabset-2-8-tab" data-bs-toggle="tab" data-bs-target="#tabset-2-8" role="tab" aria-controls="tabset-2-8" aria-selected="false" href="">Swan Bay</a></li><li class="nav-item" role="presentation"><a class="nav-link" id="tabset-2-9-tab" data-bs-toggle="tab" data-bs-target="#tabset-2-9" role="tab" aria-controls="tabset-2-9" aria-selected="false" href="">Swan Pond</a></li><li class="nav-item" role="presentation"><a class="nav-link" id="tabset-2-10-tab" data-bs-toggle="tab" data-bs-target="#tabset-2-10" role="tab" aria-controls="tabset-2-10" aria-selected="false" href="">Tomago</a></li><li class="nav-item" role="presentation"><a class="nav-link" id="tabset-2-11-tab" data-bs-toggle="tab" data-bs-target="#tabset-2-11" role="tab" aria-controls="tabset-2-11" aria-selected="false" href="">Windeyers</a></li></ul>
