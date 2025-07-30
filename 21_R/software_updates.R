@@ -3,18 +3,7 @@
 ## Auteur :  Maxime Marini
 ## Topic  :  Habitat selection from migratory shorebirds within and across Hunter & Port Stephen estuaries
 ## Main   :  Check for up to date R, Rstudio software & packages
-## Created:  2025 July 
-
-
-
-
-source(here::here("21_R", "software_updates.R", echo = FALSE))
-
-
-
-
-
-
+## Created:  2025 July
 
 
 ## UPDATE R AND RSTUDIO
@@ -213,12 +202,11 @@ source(here::here("21_R", "software_updates.R", echo = FALSE))
     #source(here::here("20_R", "functions.R"))
     
     cat("\014")
-    cat("R version: ", R.version.string, "\n")
-    cat("RStudio version: ", print(as.character(RStudio.Version()$version)), "\n")
-    info <- sessionInfo()
-    cat("Platform: ", info$platform, "\n")
-    cat("Running under: ", info$running, "\n")    
-    
-    cat("\n\n     Alrighty mate, you're ready to start! ;)\n")
+    cat("\n",
+        "R version: ", R.version.string, "\n",
+        "RStudio version: ", as.character(rstudioapi::versionInfo()$long_version), "\n",
+        "Platform: ", sessionInfo()$platform, "\n",
+        "Running under: ", sessionInfo()$running, "\n",
+        "\n  = Alrighty mate, you're ready to start! ;)\n\n")
     
   
