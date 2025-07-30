@@ -5,6 +5,14 @@
 ## Main   :  CRAN & Git-Hub package list
 ## Created:  2025 July 
 
+# Rtools package
+{
+user_choice_Rtools_installation_R <- readline(prompt = "You may need to first install 'Rtools' package. If yes, you will be redirected to the cran installation page. (Y/N): ")
+if (tolower(substr(user_choice_Rtools_installation_R, 1, 1)) == "y") {
+  browseURL("https://cran.r-project.org/bin/windows/Rtools/rtools45/rtools.html")
+} else {cat("\n")}
+}
+
 cat("\nNow loading and calling the packages that are used in this study.\n")
 
 #-- CRAN packages vector --# Pour les package sur le CRAN
@@ -14,8 +22,8 @@ cran_packages <- c(
   "devtools",           # Package development tools
   "rstudioapi",         # RStudio API interface
   "DBI",                # Communicate with relational database systems
-  "staticryptR",        # Crypting URL and password stuff
-  
+  "staticryptR",        # Encrypting URL and password stuff
+
   # Plot and Visualization
   "ggplot2",            # Core plotting package
   "ggrepel",            # Repel overlapping text labels
@@ -36,7 +44,6 @@ cran_packages <- c(
   "terra",              # Spatial data analysis
   "raster",             # Geographic data analysis and modeling
   "adehabitatHR",       # Home range analysis
-  "trip",               # Handling spatial data with timestamps
   "mapview",            # Interactive viewing of spatial data
   "tidyterra",          # Tidy methods for terra objects
   "rnaturalearth",      # World maps and more
@@ -64,7 +71,6 @@ cran_packages <- c(
   "sjlabelled",         # Labelled data utility functions
   "sjmisc",             # Miscellaneous data management functions
   "circular",           # Circular Statistics
-  "aniMotum",           # Animal movement modeling
   "amt",                # Animal Movement Tools
   "RMark"              # Interface to Mark program for capture-recapture analysis
 )
@@ -73,7 +79,8 @@ github_packages <- c(
   "rlesur/klippy",      # For outputs options
   "SebastianSosa/ANTs", # Deal with spatial manipulations and habitat selection models
   "smthfrmn/mixedSSA",  # Deal with ISSA functions to model individual variability in habitat selection and movement parameters
-  "MotusWTS/motus"      # Motus wildlife tracking system tools
+  "MotusWTS/motus",     # Motus wildlife tracking system tools
+  "ianjonsen/aniMotum"  # Simulate and deal with GPS data
 )    
 
 ## non installed package list 

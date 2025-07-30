@@ -133,23 +133,3 @@ tag_summary2 %>%
 
 
 
-
-
-
-
-
-
-# 5 - Summarizing maps ---- 
-
-# To be continued ...
-# Go to:  https://motuswts.github.io/motus/articles/06-exploring-data.html
-
-
-
-
-
-
-
-
-
-

@@ -172,7 +172,7 @@
     tryCatch(
       {
         # Source packages.R to define package lists
-        source(here::here("20_R", "packages.R"))
+        source(here::here("21_R", "packages.R"))
         
         # Source functions
         #source(here::here("20_R", "functions.R"))
