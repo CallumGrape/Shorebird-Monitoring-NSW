@@ -23,6 +23,7 @@ cran_packages <- c(
   "rstudioapi",         # RStudio API interface
   "DBI",                # Communicate with relational database systems
   "staticryptR",        # Encrypting URL and password stuff
+  "Microsoft365R",      # Connect with Microsoft products
 
   # Plot and Visualization
   "ggplot2",            # Core plotting package

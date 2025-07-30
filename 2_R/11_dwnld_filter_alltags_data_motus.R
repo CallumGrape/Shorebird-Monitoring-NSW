@@ -78,14 +78,14 @@ df.tagdeps <- tbl(sql.motus, "tagdeps") %>%
 
 df.alltags %>%
   filter(is.na(recvDeployLat) | is.na(recvDeployName)) %>%
-  select(motusTagID, motusFilter, recvDeployLat, recvDeployLon, recvDeployName, recvDeployID, recv, recvProjID, recvProjName, speciesEN, recvSiteName, tagDepComments) %>%
-  count(motusTagID, recv, recvDeployLat, recvDeployLon, recvDeployName, recvDeployID, motusFilter, speciesEN, recvSiteName, tagDepComments) %>%
+  select(motusTagID, recvDeployName, recvDeployID, recv, recvProjID, speciesEN, recvSiteName, tagDepComments) %>%
+  dplyr::count(motusTagID, recv, recvDeployName, recvDeployID, speciesEN, recvSiteName, tagDepComments) %>%
   distinct() # What are those stations?
 
 # RUN LENGTH VALUE ?
 
 df.alltags %>%
-  count(runLen) # What value to choose?
+  dplyr::count(runLen) # What value to choose?
 
 # DEPLOYED/UNDEPLOYED TAG ?
 
@@ -95,21 +95,21 @@ full_join(as.data.frame(table(df.tags$tagID)),
   mutate(Freq.x = ifelse(is.na(Freq.x), 0, 1),
          Freq.y = ifelse(is.na(Freq.y), 0, 1)) %>%
   filter(Freq.x != Freq.y) %>%
-  rename(tagID = Var1, df.tags = Freq.x, df.tagdeps = Freq.y) # Those tags are not referenced into deployed tags BUT...
+  dplyr::rename(tagID = Var1, df.tags = Freq.x, df.tagdeps = Freq.y) # Those tags are not referenced into deployed tags BUT...
 
 df.alltags$motusTagID[is.na(df.alltags$tagDeployID)] #... different to those ones (from all tags)
 
-teams <- read.csv( here::here("1_data", "teams.sheet.28.07.25.csv")) 
+spreadsheet <- read.csv( here::here("1_data", "spreadsheets", "teams.sheet.30.07.25.csv")) 
 
 table(df.tagdeps$tagID)
 table(unique(df.alltags$tagDeployID))
 table(df.alltags$motusTagID)
-table(teams$Motus.tag.ID)
+table(spreadsheet$Motus.tag.ID)
 
 table(
 (df.tagdeps %>% rename(ID = "tagID") %>%
   semi_join(df.alltags %>% rename(ID = "motusTagID"), by = "ID") %>%
-  semi_join(teams %>% rename(ID = "Motus.tag.ID"), by = "ID"))$ID
+  semi_join(spreadsheet %>% rename(ID = "Motus.tag.ID"), by = "ID"))$ID
 )
 
 # SPECIES NA ?
@@ -129,10 +129,30 @@ table(df.alltags$motusTagID[is.na(df.alltags$speciesEN)]) # Tag with NA for spec
 
 ##################################################################################################
 
+# Create a unique individual ID
+spreadsheet <- spreadsheet %>%
+  filter(Radio.tag. == "Y") %>%
+  dplyr::rename(motusTagID = "Motus.tag.ID") %>%
+  dplyr::mutate(ID = Band.ID)
+
+df.alltags <- df.alltags %>% 
+  left_join(spreadsheet %>% select(motusTagID, ID), by = "motusTagID")
+
+check <- df.alltags %>%
+  filter(is.na(ID)) %>%
+  select(motusTagID, recvDeployName, recvDeployID, recv, speciesEN, recvSiteName, tagDepComments) %>%
+  dplyr::count(motusTagID, recv, recvDeployName, recvDeployID, speciesEN, recvSiteName, tagDepComments) %>%
+  distinct()
+check
+
+table(check$motusTagID)
+
+####################################################################################################################################################################################################
+
 # Wrong tags
 df.alltags <- df.alltags %>% 
-#   filter(motusTagID == c("81121", "60470")) %>%
-
+   filter(motusTagID == c("43291")) %>% # test_tag
+  
 # Wrong receivers
    filter(!is.na(recvDeployLat),
           recvDeployName != c("Throsby Creek Test Site"),
