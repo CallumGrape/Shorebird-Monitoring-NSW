@@ -16,7 +16,7 @@ drv$download_file("General/SHOREBIRD NUMBER TRACKING.xlsx", dest = "SHOREBIRD NU
 # Save 
 write.csv(read_excel("SHOREBIRD NUMBER TRACKING.xlsx"),
           here::here("1_data", "spreadsheets", paste0("teams_sheet_", Sys.Date()), 
-          row.names = FALSE)
+          row.names = FALSE))
 
-# Load df 
-spreadsheet <- read.csv(here::here("1_data", "spreadsheets", paste0("teams_sheet_", Sys.Date()))
+# Load df with date at the beginning
+spreadsheet <- read.csv(here::here("1_data", "spreadsheets", paste0(Sys.Date(), "-teams_sheet.csv")))

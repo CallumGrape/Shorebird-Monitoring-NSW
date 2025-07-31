@@ -65,7 +65,7 @@ for(row in 1:nrow(df.serno)) {
   sql_motus <- tagme(df.serno[row, "serno"],
                      new = FALSE, # TRUE overwrites existing (large data takes a while)
                      update = TRUE, 
-                     dir = here("1_data", "motus.sql", "receivers"))
+                     dir = here("1_data", "receivers", "motus.sql"))
   metadata(sql_motus)
 }
 
@@ -83,10 +83,10 @@ df.recvDeps <- df.recvDeps %>%
 
 # Remove NA & undesired receivers
 df.recvDeps <- df.recvDeps %>% 
-  filter(!is.na(recvDeployName)) %>% 
-  filter(!(recvDeployName %in% c("Throsby Creek Test Site"))) %>% 
-  mutate(recvDeployName = recode(recvDeployName, 
-                                 !!!station_rename_map))
+  filter(!is.na(name)) %>% 
+  filter(!(name %in% c("Throsby Creek Test Site"))) %>% 
+  mutate(name = recode(name, 
+                       !!!station_rename_map))
 # Correct receivers time
 df.recvDeps <- df.recvDeps %>% 
   mutate(timeStart = as_datetime(tsStart),
@@ -94,6 +94,8 @@ df.recvDeps <- df.recvDeps %>%
          timeEnd = as_datetime(tsEnd),
          timeEndAus = as_datetime(tsEnd, tz = "Australia/Sydney"))
 
+# Save df.recvDeps
+saveRDS(df.recvDeps, here::here("1_data", "receivers", paste0(Sys.Date(), "-recvDeps", ".rds" )))
 
 
 

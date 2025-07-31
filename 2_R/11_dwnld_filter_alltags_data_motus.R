@@ -99,7 +99,12 @@ full_join(as.data.frame(table(df.tags$tagID)),
 
 df.alltags$motusTagID[is.na(df.alltags$tagDeployID)] #... different to those ones (from all tags)
 
-spreadsheet <- read.csv( here::here("1_data", "spreadsheets", "teams.sheet.30.07.25.csv")) 
+spreadsheet <- read.csv( # load the most recent file
+  tail(sort(list.files(
+    here::here("1_data", "spreadsheets"),
+    pattern = "-teams.sheet\\.csv$", 
+    full.names = TRUE
+    )), 1))
 
 table(df.tagdeps$tagID)
 table(unique(df.alltags$tagDeployID))
@@ -156,7 +161,8 @@ df.alltags <- df.alltags %>%
 # Wrong receivers
    filter(!is.na(recvDeployLat),
           recvDeployName != c("Throsby Creek Test Site"),
-          recv != c("SG-62A5RPI36710") ) # test_station
+          recv != c("SG-C621RPI3E17F",       # ????? Area C, E17F ???
+                    "SG-62A5RPI36710") ) %>% # test_station
   
 # False positive
 df.alltags <- df.alltags %>% 
@@ -226,8 +232,22 @@ station_rename <- list(
    "Ramsar Road Floodgate" = "Ramsar Road",
    "Milham's Pond"         = "Milhams Pond")
 df.recvDeps <- df.recvDeps %>% 
-   mutate(recvDeployName = recode(stationName,
-                            !!!station_rename))
+   mutate(name = recode(name,
+                            !!!station_rename)) %>%
+  rename(recvDeployName = "name") %>% 
+  
+# Filter not used stations
+     filter(!is.na(recvDeployLat),
+          recvDeployName != c("Throsby Creek Test Site"),
+          recv != c("SG-C621RPI3E17F",       # ????? Area C, E17F ???
+                    "SG-62A5RPI36710") ) %>% # test_station
+  
+# Set time  
+  mutate(timeStart = as_datetime(tsStart),
+         timeStartAus = as_datetime(tsStart, tz = "Australia/Sydney"),
+         timeEnd = as_datetime(tsEnd),
+         timeEndAus = as_datetime(tsEnd, tz = "Australia/Sydney"))
+
 df.alltags <- df.alltags %>% 
   mutate(recvDeployName = recode(recvDeployName,
                                  !!!station_rename))

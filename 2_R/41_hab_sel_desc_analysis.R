@@ -91,6 +91,8 @@ data <- data_all %>%
     tagDepComments
     )
 
+# 4 - Site usage depending tide and circadian cycle (from birds) ----
+
 # Color codes
 species_colors <- c(
   "Bar-tailed Godwit"      = "#1b9e77",  
@@ -100,9 +102,6 @@ species_colors <- c(
   "Pied Stilt"             = "#66a61e", 
   "Red-necked Avocet"      = "#e6ab02"   
 )
-
-
-# 4 - Summarizing plots ----
 
 tag_summary2 %>%
   ggplot(aes(x = tideCategory, y = nTags, fill = speciesEN)) +
@@ -128,8 +127,25 @@ tag_summary2 %>%
     print(p)
   })
 
+# 5 - Birds movement direction ----
 
+# Would be cool to map the recv across estuaries and plot the x = hour and y = signal strengh with directionnal arrow
+# BY SPECIES
+# So a facet_wrap, generating a map by species, where at each rcv you get directional arrow 
+# + period (and amount) of hours flew by 
 
+# https://motuswts.github.io/motus/articles/signal-strength.html
+# ggplot(data = filter(df_tags, motusTagID == 16039), 
+#        aes(x = time, y = sig, colour = runLen_cat, shape = antBearing_cat)) + 
+#   geom_point(size = 8) + 
+#   theme_bw() +
+#   theme(legend.position = "top") +
+#   labs(x = "Time", y = "Signal strength") +
+#   scale_colour_viridis_d(end = 0.7) +
+#   scale_shape_manual(values = c("N" = "\u2191", "S" = "\u2193",
+#                                 "E" = "\u2192", "W" = "\u2190"), 
+#                      na.value = "\u25AA") +
+#   facet_wrap(~ date, scales = "free", ncol = 3)
 
 
 
