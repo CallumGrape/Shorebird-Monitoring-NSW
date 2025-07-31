@@ -35,34 +35,41 @@ recv <- readRDS(
     pattern = "-recv-info\\.rds$", full.names = TRUE
   )), 1)) 
 
-# 3 - Extracting receiver with off-line periods ----
+# 3 - Extracting receiver with offline periods ----
 
-# Filter which station has been not continously ON
-recv_off_per <- recv %>%
+# Filter which station has been not continuously ON
+recv_off_chk <- recv %>%
   arrange(recvDeployName, timeStartAus) %>%
-  group_by(recvDeployName) %>%
-  mutate(
-    offline_start = lag(timeStartAus),
-    offline_end = timeStartAus) %>%
-  filter(!is.na(offline_start) & 
-         offline_end > offline_start) %>%
-  mutate(timeOff = offline_end - offline_start) %>%
+  group_by(recvDeployName) %>% # work through the group of the same site's name (and not the serno)
+  mutate(offline_start = lag(timeEndAus), # iteratively take the previous row
+         offline_end = timeStartAus) %>% 
+  filter(!is.na(offline_start) & offline_end > offline_start) %>%
+  mutate(timeOff = round(as.numeric(difftime(offline_end, offline_start, units = "days")), digits = 1)) %>%
   select(recvDeployName, serno, timeStartAus, timeEndAus, offline_start, offline_end, timeOff) 
 
 # List the meant stations
-list_recv_off <- unique(recv_off_per$recvDeployName)
+list_recv_off <- unique(recv_off_chk$recvDeployName)
 
-# Compute the amount of time for the meant stations beeing OFF
-recv %>% 
+# Check whether this makes sense
+recv_off_chk <- recv %>% 
   filter(recvDeployName %in% list_recv_off) %>%
   select(recvDeployName, serno, timeStartAus, timeEndAus) %>%
   arrange(recvDeployName, timeStartAus)  %>%
+  left_join(recv_off_chk %>% select(recvDeployName, timeOff),
+            by = "recvDeployName")
+recv_off_chk
+
+# Filter out gaps under 24h
+recv1 <- recv %>% 
+  filter(timeStartAus < min(data_all$timeAus)) # TEST TAG TO REMOVE FIRST!!
+
   
-# Add this as a variable to the main dataset for further substraction
-  left_join(
-    recv_off_per %>%
-      select(recvDeployName, timeOff), by = "recvDeployName")
-  
-# 3 - Extracting receiver with off-line periods ----
+# 4 - Filter out gaps under 24h & date before 1st tag deployment ----
+
+
+
+
+
+
 
 
