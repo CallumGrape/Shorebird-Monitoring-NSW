@@ -57,7 +57,12 @@ get.tideIndex <- function(time){ return(which.min(abs(tideData$tideDateTimeAus-t
 # All tags MOTUS recorded for the project
 df.alltags <- tbl(sql.motus, "alltags") %>%
   dplyr::collect() %>%
-  as.data.frame()
+  as.data.frame() %>%
+  mutate(time = as_datetime(ts),
+         timeAus = as_datetime(ts, tz = "Australia/Sydney"),
+         dateAus = as_date(timeAus),
+         year = year(time), 
+         doy = yday(time)) 
 
 # Specs for all tags MOTUS recorded for the project
 df.tags <- tbl(sql.motus, "tags") %>%
@@ -72,98 +77,37 @@ df.tagdeps <- tbl(sql.motus, "tagdeps") %>%
 
 # 5 - Filtering tag data ----
 
-############################################ ??????????? #########################################
-
-# STATIONS ?
-
-df.alltags %>%
-  filter(is.na(recvDeployLat) | is.na(recvDeployName)) %>%
-  select(motusTagID, recvDeployName, recvDeployID, recv, recvProjID, speciesEN, recvSiteName, tagDepComments) %>%
-  dplyr::count(motusTagID, recv, recvDeployName, recvDeployID, speciesEN, recvSiteName, tagDepComments) %>%
-  distinct() # What are those stations?
-
-# RUN LENGTH VALUE ?
-
-df.alltags %>%
-  dplyr::count(runLen) # What value to choose?
-
-# DEPLOYED/UNDEPLOYED TAG ?
-
-full_join(as.data.frame(table(df.tags$tagID)), 
-          as.data.frame(table(df.tagdeps$tagID)), 
-          by = "Var1") %>%
-  mutate(Freq.x = ifelse(is.na(Freq.x), 0, 1),
-         Freq.y = ifelse(is.na(Freq.y), 0, 1)) %>%
-  filter(Freq.x != Freq.y) %>%
-  dplyr::rename(tagID = Var1, df.tags = Freq.x, df.tagdeps = Freq.y) # Those tags are not referenced into deployed tags BUT...
-
-df.alltags$motusTagID[is.na(df.alltags$tagDeployID)] #... different to those ones (from all tags)
-
-spreadsheet <- read.csv( # load the most recent file
-  tail(sort(list.files(
-    here::here("1_data", "spreadsheets"),
-    pattern = "-teams.sheet\\.csv$", 
-    full.names = TRUE
-    )), 1))
-
-table(df.tagdeps$tagID)
-table(unique(df.alltags$tagDeployID))
-table(df.alltags$motusTagID)
-table(spreadsheet$Motus.tag.ID)
-
-table(
-(df.tagdeps %>% rename(ID = "tagID") %>%
-  semi_join(df.alltags %>% rename(ID = "motusTagID"), by = "ID") %>%
-  semi_join(spreadsheet %>% rename(ID = "Motus.tag.ID"), by = "ID"))$ID
-)
-
-# SPECIES NA ?
-table(is.na(df.alltags$speciesEN), df.alltags$motusTagID)
-
-df.alltags.corr <- df.alltags %>% # 6 tags might be just a lack of information but the same bird and then the same specie
-  group_by(motusTagID) %>%
-  filter(any(is.na(speciesEN)) & any(!is.na(speciesEN))) %>%
-  ungroup() %>%
-  select(motusTagID, speciesEN, ts, tagDeployID, recv, recvDeployName) %>%
-  mutate(ts = as_date(as_datetime(ts, tz = "Australia/Sydney")),
-         year = year(ts) )
-table(df.alltags.corr$motusTagID,  df.alltags.corr$year, df.alltags.corr$speciesEN)  
-
-table(df.alltags$motusTagID[is.na(df.alltags$speciesEN)]) # Tag with NA for speciesEN
-
-
-##################################################################################################
-
-# Create a unique individual ID
-spreadsheet <- spreadsheet %>%
-  filter(Radio.tag. == "Y") %>%
-  dplyr::rename(motusTagID = "Motus.tag.ID") %>%
-  dplyr::mutate(ID = Band.ID)
-
+# Cleaning and correcting tags metadata
 df.alltags <- df.alltags %>% 
-  left_join(spreadsheet %>% select(motusTagID, ID), by = "motusTagID")
-
-check <- df.alltags %>%
-  filter(is.na(ID)) %>%
-  select(motusTagID, recvDeployName, recvDeployID, recv, speciesEN, recvSiteName, tagDepComments) %>%
-  dplyr::count(motusTagID, recv, recvDeployName, recvDeployID, speciesEN, recvSiteName, tagDepComments) %>%
-  distinct()
-check
-
-table(check$motusTagID)
-
-####################################################################################################################################################################################################
-
-# Wrong tags
+   filter(
+    # test tags
+     motusTagID != c("43291"),
+    # pending, unconfirmed or undeployed tags
+    !motusTagID %in% c("43288", "43291", "43297", "43299",
+                       "43307", "43424", "43425", "60470", 
+                       "60579", "81123", "81136", "81137"),
+    # used for test/validation before tagging bird (remove time before the tagging)
+    !(motusTagID == "81134" & time < dmy("23-11-2024")),
+    !(motusTagID == "60575" & time < dmy("25-10-2023")) ) %>% 
+    # NA species
+     mutate(speciesEN = case_when(
+       is.na(speciesEN) & motusTagID %in% c("60470", "81121") ~ "Red-necked Avocet",
+       is.na(speciesEN) & motusTagID %in% c("81118") ~ "Red-necked Avocet",
+       TRUE ~ speciesEN))
+  
+# Cleaning and correcting receiver metadata
 df.alltags <- df.alltags %>% 
-   filter(motusTagID == c("43291")) %>% # test_tag
-  
-# Wrong receivers
-   filter(!is.na(recvDeployLat),
-          recvDeployName != c("Throsby Creek Test Site"),
-          recv != c("SG-C621RPI3E17F",       # ????? Area C, E17F ???
-                    "SG-62A5RPI36710") ) %>% # test_station
-  
+  filter(
+    # NA
+     !is.na(recvDeployLat),
+    # site not any longer used
+      recvDeployName != c("Throsby Creek Test Site"),
+    # test sensor gnome
+      recv != c("SG-C621RPI3E17F",       
+                "SG-62A5RPI36710") ) %>% 
+  mutate(recvDeployName = ifelse(is.na(recvDeployName) & recv == "SG-D5BBRPI3E2F7", "Windeyers", recvDeployName))
+    
+     
 # False positive
 df.alltags <- df.alltags %>% 
   filter(motusFilter == 1, # 0 is invalid data
@@ -175,13 +119,6 @@ clarify(sql.motus)
 # 6 - Adding variables ----
 
 df.alltags <- df.alltags %>% 
-  
-# Time
-  mutate(time = as_datetime(ts),
-         timeAus = as_datetime(ts, tz = "Australia/Sydney"),
-         dateAus = as_date(timeAus),
-         year = year(time), # extract year from time
-         doy = yday(time)) %>%
   
 # Sunrise/set
   sunRiseSet(lat = "recvDeployLat", 
@@ -223,7 +160,11 @@ df.alltags <- df.alltags %>%
 # Get summary
 df.recvDeps <- tbl(sql.motus, "recvDeps") %>% 
   collect() %>% 
-  as.data.frame()
+  as.data.frame() %>%
+  mutate(timeStart = as_datetime(tsStart),
+         timeStartAus = as_datetime(tsStart, tz = "Australia/Sydney"),
+         timeEnd = as_datetime(tsEnd),
+         timeEndAus = as_datetime(tsEnd, tz = "Australia/Sydney"))
 
 # Rename stations
 station_rename <- list(
@@ -232,27 +173,26 @@ station_rename <- list(
    "Ramsar Road Floodgate" = "Ramsar Road",
    "Milham's Pond"         = "Milhams Pond")
 df.recvDeps <- df.recvDeps %>% 
-   mutate(name = recode(name,
-                            !!!station_rename)) %>%
-  rename(recvDeployName = "name") %>% 
-  
-# Filter not used stations
-     filter(!is.na(recvDeployLat),
-          recvDeployName != c("Throsby Creek Test Site"),
-          recv != c("SG-C621RPI3E17F",       # ????? Area C, E17F ???
-                    "SG-62A5RPI36710") ) %>% # test_station
-  
-# Set time  
-  mutate(timeStart = as_datetime(tsStart),
-         timeStartAus = as_datetime(tsStart, tz = "Australia/Sydney"),
-         timeEnd = as_datetime(tsEnd),
-         timeEndAus = as_datetime(tsEnd, tz = "Australia/Sydney"))
+  mutate(name = recode(name, !!!station_rename)) %>%
+  rename(recvDeployName = "name")
 
 df.alltags <- df.alltags %>% 
   mutate(recvDeployName = recode(recvDeployName,
-                                 !!!station_rename))
+                                 !!!station_rename)) 
   
-# 8 - Save
+# Filter not used stations as out of the local array
+df.recvDeps <- df.recvDeps %>% 
+  filter(!is.na(latitude),
+         recvDeployName != "Throsby Creek Test Site", # not used any longer
+         !serno %in% c("SG-C621RPI3E17F",             # test_station
+                       "SG-62A5RPI36710"))            # test_station
+
+# 9 - Match starting date for survey effort from the antennas to the first day a bird has been tagged
+df.recvDeps <- df.recvDeps %>%
+  filter(tsStart > min(df.alltags$ts))
+
+
+# 10 - Save
 
 saveRDS(df.alltags, here::here("1_data", "alltags", "motus.rds", paste0(Sys.Date(), "-data", ".rds" )))
 saveRDS(df.recvDeps, here::here("1_data", "alltags", "motus.rds", paste0(Sys.Date(), "-recv-info", ".rds" )))

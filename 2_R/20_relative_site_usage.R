@@ -39,13 +39,14 @@ recv <- readRDS(
 
 # Filter which station has been not continuously ON
 recv_off_chk <- recv %>%
-  arrange(recvDeployName, timeStartAus) %>%
+  arrange(recvDeployName, timeStartAus) %>% # sort by site + time
   group_by(recvDeployName) %>% # work through the group of the same site's name (and not the serno)
   mutate(offline_start = lag(timeEndAus), # iteratively take the previous row
          offline_end = timeStartAus) %>% 
   filter(!is.na(offline_start) & offline_end > offline_start) %>%
-  mutate(timeOff = round(as.numeric(difftime(offline_end, offline_start, units = "days")), digits = 1)) %>%
+  mutate(timeOff = round(as.numeric(difftime(offline_end, offline_start, units = "days")), digits = 2)) %>%
   select(recvDeployName, serno, timeStartAus, timeEndAus, offline_start, offline_end, timeOff) 
+recv_off_chk
 
 # List the meant stations
 list_recv_off <- unique(recv_off_chk$recvDeployName)
@@ -61,7 +62,9 @@ recv_off_chk
 
 # Filter out gaps under 24h
 recv1 <- recv %>% 
-  filter(timeStartAus < min(data_all$timeAus)) # TEST TAG TO REMOVE FIRST!!
+  filter(timeStartAus > min(data_all$timeAus
+                            # %>% filter(motuTagID = c("")) # TEST TAG TO REMOVE FIRST!!
+                                       )) 
 
   
 # 4 - Filter out gaps under 24h & date before 1st tag deployment ----
