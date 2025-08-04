@@ -6,12 +6,11 @@
 ## Created:  2025 August 
 
 
-
+##################################################################################################
 
 # - Filtering tag data ----
 
 # STATIONS ?
-
 df.alltags %>%
   mutate(ts = as_date(as_datetime(ts, tz = "Australia/Sydney")),
          date = format(ts, "%Y-%m-%d") ) %>%
@@ -44,12 +43,10 @@ df.alltags %>%
   format("%Y-%m-%d %H:%M:%S")
 
 # RUN LENGTH VALUE ?
-
 df.alltags %>%
   dplyr::count(runLen) # What value to choose?
 
 # DEPLOYED/UNDEPLOYED TAG ?
-
 full_join(as.data.frame(table(df.tags$tagID)), 
           as.data.frame(table(df.tagdeps$tagID)), 
           by = "Var1") %>%
@@ -89,12 +86,7 @@ df.alltags.corr <- df.alltags %>%
   mutate(ts = as_date(as_datetime(ts, tz = "Australia/Sydney")),
          year = year(ts) )
 table(df.alltags.corr$motusTagID,  df.alltags.corr$year, df.alltags.corr$speciesEN)  
-
 table(df.alltags$motusTagID[is.na(df.alltags$speciesEN)]) # Tag with NA for speciesEN
-
-# Create a unique individual ID
-df.alltags <- df.alltags %>% 
-  left_join(spreadsheet %>% select(motusTagID, ID), by = "motusTagID")
 
 check <- df.alltags %>%
   filter(is.na(ID)) %>%
@@ -104,8 +96,6 @@ check <- df.alltags %>%
 check
 
 table(check$motusTagID)
-
-
 
 df.alltags %>%
   filter(is.na(recvDeployLat) | is.na(recvDeployName)) %>%
@@ -131,6 +121,7 @@ table(unique(df.alltags$tagDeployID)) # DEVICE NB
 table(df.alltags$motusTagID)
 table(spreadsheet$Motus.tag.ID)
 table((df.tagdeps %>% rename(ID = "tagID") %>%semi_join(df.alltags %>% rename(ID = "motusTagID"), by = "ID") %>%semi_join(spreadsheet %>% rename(ID = "Motus.tag.ID"), by = "ID"))$ID)
+
 # SPECIES NA ?
 table(is.na(df.alltags$speciesEN), df.alltags$motusTagID)
 df.alltags.corr <- df.alltags %>% # 6 tags might be just a lack of information but the same bird and then the same specie
@@ -154,11 +145,30 @@ table(df.alltags$motusTagID[is.na(df.alltags$speciesEN)]) # Tag with NA for spec
 # 81134= pgp should be filtered before 23/11/2024
 # 81136 = undep and filtered before
 
-
+table(df.alltags$recv, df.alltags$recvDeployName)
+df.alltags %>%
+  filter(recvDeployName == "Fullerton Entrance") %>%
+  group_by(recv)  %>%
+  filter(time %in% range(time, na.rm = TRUE)) %>%
+  select(recvDeployName, recv, time) %>%
+  arrange(recv, time)
+df.alltags %>%
+  filter(recvDeployName == "Hexham Swamp") %>%
+  group_by(recv)  %>%
+  filter(time %in% range(time, na.rm = TRUE)) %>%
+  select(recvDeployName, recv, time) %>%
+  arrange(recv, time)
+df.alltags %>%
+  filter(recvDeployName == "Windeyers") %>%
+  group_by(recv)  %>%
+  filter(time %in% range(time, na.rm = TRUE)) %>%
+  select(recvDeployName, recv, time) %>%
+  arrange(recv, time)
 
 ##################################################################################################
 
-# Create a unique individual ID
+# - Create unique ID ----
+
 spreadsheet <- spreadsheet %>%
   filter(Radio.tag. == "Y") %>%
   dplyr::rename(motusTagID = "Motus.tag.ID") %>%
@@ -176,33 +186,39 @@ check
 
 table(check$motusTagID)
 
+##################################################################################################
 
 
 
 
-table(df.alltags$recv, df.alltags$recvDeployName)
+# Filter which station has been not continuously ON
+recv_off_chk <- recv %>%
+  arrange(recvDeployName, timeStartAus) %>% # sort by site + time
+  group_by(recvDeployName) %>% # work through the group of the same site's name (and not the serno)
+  mutate(offline_start = lag(timeEndAus), # iteratively take the previous row
+         offline_end = timeStartAus) %>% 
+  filter(!is.na(offline_start) & offline_end > offline_start) %>%
+  mutate(timeOff = round(as.numeric(difftime(offline_end, offline_start, units = "days")), digits = 2)) %>%
+  select(recvDeployName, serno, timeStartAus, timeEndAus, offline_start, offline_end, timeOff) 
+recv_off_chk
 
-df.alltags %>%
-  filter(recvDeployName == "Fullerton Entrance") %>%
-  group_by(recv)  %>%
-  filter(time %in% range(time, na.rm = TRUE)) %>%
-  select(recvDeployName, recv, time) %>%
-  arrange(recv, time)
+# List the meant stations
+list_recv_off <- unique(recv_off_chk$recvDeployName)
 
-df.alltags %>%
-  filter(recvDeployName == "Hexham Swamp") %>%
-  group_by(recv)  %>%
-  filter(time %in% range(time, na.rm = TRUE)) %>%
-  select(recvDeployName, recv, time) %>%
-  arrange(recv, time)
+# Check whether this makes sense
+recv_off_chk <- recv %>% 
+  filter(recvDeployName %in% list_recv_off) %>%
+  select(recvDeployName, serno, timeStartAus, timeEndAus) %>%
+  arrange(recvDeployName, timeStartAus)  %>%
+  left_join(recv_off_chk %>% select(recvDeployName, timeOff),
+            by = "recvDeployName")
+recv_off_chk
 
-df.alltags %>%
-  filter(recvDeployName == "Windeyers") %>%
-  group_by(recv)  %>%
-  filter(time %in% range(time, na.rm = TRUE)) %>%
-  select(recvDeployName, recv, time) %>%
-  arrange(recv, time)
-
+# Filter out gaps under 24h
+recv1 <- recv %>% 
+  filter(timeStartAus > min(data_all$timeAus
+                            # %>% filter(motuTagID = c("")) # TEST TAG TO REMOVE FIRST!!
+  )) 
 
 
 
