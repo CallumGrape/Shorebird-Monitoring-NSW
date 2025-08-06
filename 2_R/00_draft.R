@@ -188,6 +188,17 @@ table(check$motusTagID)
 
 ##################################################################################################
 
+### CHECK CONFLICT BETWEEN BOX ID AND STATION NAME ###
+table(recv$serno, recv$recvDeployName)
+
+recv %>%
+  group_by(recvDeployName) %>%
+  filter(n_distinct(serno) >= 2) %>%
+  ungroup() %>% # work through the group of the same site's name (and not the serno)
+  mutate(offline_start = lag(timeEndAus), # iteratively take the previous row
+         offline_end = timeStartAus) %>%
+  select(recvDeployName, serno, timeStartAus, timeEndAus) %>%
+  arrange(recvDeployName)
 
 
 

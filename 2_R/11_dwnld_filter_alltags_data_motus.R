@@ -189,7 +189,7 @@ df.recvDeps <- df.recvDeps %>%
 
 # 9 - Match starting date for survey effort from the antennas to the first day a bird has been tagged
 df.recvDeps <- df.recvDeps %>%
-  filter(tsStart > min(df.alltags$ts))
+  filter(timeStartAus > "2023-01-31 00:00:00 AEDT")  # BASED ON SHAREPOINT 1 MOTNH BEFORE THE 1ST TAGGED BIRD
 
 
 # 10 - Save

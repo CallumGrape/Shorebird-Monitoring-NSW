@@ -87,7 +87,7 @@ recv <- recv %>%
 
 # Generating hourly sequences per deviceID/SernoStation - expands each receiver to one row per hour between its listening start and end
 recv_hours <- recv %>%
-  select(deviceID, SernoStation, lisStart, lisEnd) %>%
+  select(recvDeployName, deviceID, SernoStation, lisStart, lisEnd) %>%
   rowwise() %>%
   mutate(hourSeq = list(seq(from = floor_date(lisStart, unit = "hour"),
                             to = floor_date(lisEnd, unit = "hour"),
@@ -127,7 +127,7 @@ uptime_summary <- recv_status %>%
   arrange(desc(uptime_pct))
 
 # Plot (hour detailed)
-ggplot(recv_status %>% 
+motus_survey_h <- ggplot(recv_status %>% 
          filter(operational),
        aes(x = hour_dt, y = factor(Station))) +
   geom_segment(aes(
@@ -141,6 +141,7 @@ ggplot(recv_status %>%
   theme_minimal() +
   ggtitle("Receiver Operational Periods (Gaps > 1 hours)")
 
+motus_survey_h
 
 # Plot (day detailed)
 recv.status <- recv_status %>%
@@ -157,21 +158,21 @@ recv.status <- recv_status %>%
             end_hour = max(hour_dt) + hours(1), # +1 hour to cover full period
             .groups = "drop") %>%
   left_join(uptime_summary %>% select(Station, cont_surv_eff), "Station") %>%
-  mutate(StationP = paste0(Station, " (", round(cont_surv_eff, digits = 1), "%)"))
+  mutate(StationP = paste0(Station, " (", round(cont_surv_eff, digits = 1), "%)")) 
 
-ggplot(recv.status, aes(y = factor(StationP))) +
+motus_survey_d <- ggplot(recv.status, aes(y = factor(StationP))) +
   geom_segment(aes(x = start_hour, xend = end_hour,
                    yend = factor(StationP)),
-               color = "black", size = 1) +
+               color = "black", linewidth = 1) +
   
   scale_y_discrete(name = "") +
   scale_x_datetime(name = "Time",
                    date_breaks = "1 month",
                    date_labels = "%b",
                    sec.axis = dup_axis(breaks = seq(from = floor_date(min(recv.status$start_hour),
-                                                                      "year"),
+                                                                      "year") + months(3),
                                                     to = floor_date(max(recv.status$end_hour), 
-                                                                    "year"),
+                                                                    "year") + months(3),
                                                     by = "1 year"),
                                        labels = function(x) format(x, "%Y"),
                                        name = NULL)) +
@@ -180,10 +181,33 @@ ggplot(recv.status, aes(y = factor(StationP))) +
   theme(axis.text.y.left = element_text(face = "bold", vjust = 0.5, margin = margin(t = 5)),
         axis.text.x.top = element_text(face = "bold", vjust = 0.5, margin = margin(t = 5)),
         axis.text.x = element_text(size = 9)) +
-  ggtitle("Receiver Operational Periods (Gaps > 24h)")
+  ggtitle("Receiver Operational Periods (gaps > 24h)")
+
+motus_survey_d
 
 # 5 - Adding Birds ----
 
+data_all_plot <- left_join(data_all %>%
+                             select(motusTagID, recv, recvDeployName, timeAus, tideCategory, speciesEN), 
+                           recv.status %>% 
+                             rename(recvDeployName = Station) %>%
+                             select(recvDeployName, StationP) %>%
+                             unique(), 
+                           "recvDeployName")
+
+motus_survey_d <- motus_survey_d +
+  geom_point(
+    data = data_all_plot ,
+    aes(x = timeAus,
+        y = factor(StationP), 
+        color = speciesEN),
+    alpha = 0.7, size = 2) +
+  scale_color_discrete(name = "Species")
+
+motus_survey_d
+
+# Suppose your plot object is named motus_survey_d
+ggsave(here::here("3_figures", "motus_survey_plot.png"), plot = motus_survey_d, width = 15, height = 5, units = "in")
 
 
 
