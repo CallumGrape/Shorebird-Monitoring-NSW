@@ -50,6 +50,12 @@ recv.act <- tbl(sql.motus, "activity")  %>%
          dateAus = as_datetime(as.POSIXct(hourBin* 3600, origin = "1970-01-06", tz = "UTC"), 
                              tz = "Australia/Sydney")) 
 
+table(is.na(recv.act$pulseCount), recv.act$numTags)                           #/!\ WARNING: pulseCount = any kind of radio contact
+                                                                              # numTags = number of diff tags reordered
+                                                                              # If one is NA but not the other = means listening
+table(is.na(recv.act$pulseCount) & is.na(recv.act$numTags))
+                                                                              # IF both are NA : working but not listening ? not long enough contact to be recorded + or noise ?
+
 # 3 - Clarifying sernoID with stationName, as devices might have been used many times at many places ----
 
 # Sort the terminated serno (if terminated, ie. one box removed from one antenna site, a date comes along)
@@ -115,7 +121,7 @@ recv.act$Station <- sub("_SG-.*", "", recv.act$SernoStation)
 recv$Station <- sub("_SG-.*", "", recv$SernoStation)
 recv_status$Station <- sub("_SG-.*", "", recv_status$SernoStation)
 
-# Summary table 
+# Summary table                                                                       ## TABLE TO PRINT OUT IN THE QUARTO AS WELL + ADD %T cover over start to end date
 uptime_summary <- recv_status %>%
   group_by(Station) %>%
   summarise(
