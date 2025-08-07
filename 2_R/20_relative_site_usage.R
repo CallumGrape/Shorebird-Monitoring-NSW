@@ -49,14 +49,15 @@ recv.act <- tbl(sql.motus, "activity")  %>%
   mutate(date = as_datetime(as.POSIXct(hourBin* 3600, origin = "1970-01-06", tz = "UTC")),
          dateAus = as_datetime(as.POSIXct(hourBin* 3600, origin = "1970-01-06", tz = "UTC"), 
                              tz = "Australia/Sydney")) 
+#saveRDS(recv.act, here::here("1_data", "alltags", "motus.rds", paste0(Sys.Date(), "-recv.act", ".rds" )))
 
-table(is.na(recv.act$pulseCount), recv.act$numTags)                           #/!\ WARNING: pulseCount = any kind of radio contact
-                                                                              # numTags = number of diff tags reordered
+table(is.na(recv.act$pulseCount), recv.act$numTags)                           #/!\ WARNING: pulseCount = any kind of radio contact (0 = NA = no noise detected)
+                                                                              # numTags = number of diff tags reordered (when 0 = pulseCount > 1 = noise detected only)
                                                                               # If one is NA but not the other = means listening
 table(is.na(recv.act$pulseCount) & is.na(recv.act$numTags))
                                                                               # IF both are NA : working but not listening ? not long enough contact to be recorded + or noise ?
 
-# 3 - Clarifying sernoID with stationName, as devices might have been used many times at many places ----
+# 3 - Clarifying sernoID with stationName, as devices might have been used many times at different places ----
 
 # Sort the terminated serno (if terminated, ie. one box removed from one antenna site, a date comes along)
 # but still needed for accessing survey effort as the station is currently running with another serno 
@@ -77,63 +78,60 @@ recv.act.runn <- recv.act %>%
   filter(!is.na(recvDeployName)) %>%
   mutate(SernoStation = paste0(recvDeployName, "_", serno))
 
-# Merging in one data-set
-recv.act <- bind_rows(recv.act.runn, recv.act.term)
+# Merging in one data-set to use Station's name further + pick-up the rounded hours
+recv.act <- bind_rows(recv.act.runn, recv.act.term) %>%
+  mutate(hour_dt = floor_date(dateAus, "hour"))
 
 # Providing helpful variables
 recv <- recv %>%
   mutate(SernoStation = paste0(recvDeployName, "_", serno),
          lisStart = timeStartAus,
          lisEnd = if_else(
-           is.na(timeEndAus),
+           is.na(timeEndAus), # means the station is still running since the last data downloading
            with_tz(Sys.time(), "Australia/Sydney"),
            with_tz(as_datetime(timeEndAus, tz = "UTC"), "Australia/Sydney")) )
 
 # 4 - Extract the period of time a station is 'listening' ----
 
-# Generating hourly sequences per deviceID/SernoStation - expands each receiver to one row per hour between its listening start and end
+# Generating hourly sequences per SernoStation from start to end dates of the deviceID at particular sites
 recv_hours <- recv %>%
   select(recvDeployName, deviceID, SernoStation, lisStart, lisEnd) %>%
   rowwise() %>%
-  mutate(hourSeq = list(seq(from = floor_date(lisStart, unit = "hour"),
+  mutate(hour_dt = list(seq(from = floor_date(lisStart, unit = "hour"),
                             to = floor_date(lisEnd, unit = "hour"),
                             by = "hour")) ) %>%
-  unnest(cols = c(hourSeq)) %>%
-  rename(hour_dt = hourSeq) %>%
+  unnest(cols = c(hour_dt)) %>%
   ungroup()
 
-# Align recv.act dates to full hours (floor date)
-recv.act <- recv.act %>%
-  mutate(hour_dt = floor_date(dateAus, "hour"))
-
-# Giving operational and not hours
-activity_hours <- recv.act %>%
-  distinct(SernoStation, hour_dt) %>%
-  mutate(operational = TRUE)
-recv_status <- recv_hours %>%
-  left_join(activity_hours, by = c("SernoStation", "hour_dt")) %>%
+# Giving operational and not-operationnal hours by joining same sequences from recv.act tbl and adding operational = TRUE when existing values
+recv_hours <- recv_hours %>%
+  left_join(recv.act %>%
+              distinct(SernoStation, hour_dt) %>%
+              mutate(operational = TRUE),
+            by = c("SernoStation", "hour_dt")) %>%
   mutate(operational = if_else(is.na(operational), FALSE, TRUE))
 
 # 5 - Displaying the survey effort from the MOTUS array ----
 
-# Relaying on the Station name on its own only
+# Relaying on the Station name on its own only (consistent values through SernoStation var)
 recv.act$Station <- sub("_SG-.*", "", recv.act$SernoStation)
 recv$Station <- sub("_SG-.*", "", recv$SernoStation)
-recv_status$Station <- sub("_SG-.*", "", recv_status$SernoStation)
+recv_hours$Station <- sub("_SG-.*", "", recv_hours$SernoStation)
 
 # Summary table                                                                       ## TABLE TO PRINT OUT IN THE QUARTO AS WELL + ADD %T cover over start to end date
-uptime_summary <- recv_status %>%
+uptime_summary <- recv_hours %>%
   group_by(Station) %>%
   summarise(
     total_hours = n(), # Period of time the station into the field
     operational_hours = sum(operational), # ON
     downtime_hours = total_hours - operational_hours, # OFF
     uptime_pct = 100 * operational_hours / total_hours) %>% # % ON/station
-  mutate(cont_surv_eff = 100 * operational_hours / sum(operational_hours)) %>%
+  mutate(cont_surv_eff_ON = 100 * operational_hours / sum(operational_hours), # % of each station surv eff regarding the total(all station) of survey effort
+         surv_time_cover = 100 * operational_hours / max(total_hours)) %>% # % of each station surv eff regarding the time coverage of the all stations
   arrange(desc(uptime_pct))
 
 # Plot (hour detailed)
-motus_survey_h <- ggplot(recv_status %>% 
+motus_survey_h <- ggplot(recv_hours %>% 
          filter(operational),
        aes(x = hour_dt, y = factor(Station))) +
   geom_segment(aes(
@@ -150,7 +148,7 @@ motus_survey_h <- ggplot(recv_status %>%
 motus_survey_h
 
 # Plot (day detailed)
-recv.status <- recv_status %>%
+recv.status <- recv_hours %>%
   filter(operational) %>%
   arrange(Station, hour_dt) %>%
   group_by(Station) %>%
@@ -163,8 +161,8 @@ recv.status <- recv_status %>%
   summarise(start_hour = min(hour_dt),
             end_hour = max(hour_dt) + hours(1), # +1 hour to cover full period
             .groups = "drop") %>%
-  left_join(uptime_summary %>% select(Station, cont_surv_eff), "Station") %>%
-  mutate(StationP = paste0(Station, " (", round(cont_surv_eff, digits = 1), "%)")) 
+  left_join(uptime_summary %>% select(Station, cont_surv_eff_ON), "Station") %>%
+  mutate(StationP = paste0(Station, " (", round(cont_surv_eff_ON, digits = 1), "%)")) 
 
 motus_survey_d <- ggplot(recv.status, aes(y = factor(StationP))) +
   geom_segment(aes(x = start_hour, xend = end_hour,
