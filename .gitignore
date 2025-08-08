@@ -24,8 +24,8 @@
 #!data/exemple.gpkg
 
 # do not upload the folder 
-/00_Callum_07.2025/
-/10_data/
+/0_Callum_07.2025/
+/1_data/
 /docs/
 
 
