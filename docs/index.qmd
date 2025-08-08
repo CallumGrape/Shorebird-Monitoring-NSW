@@ -14,11 +14,7 @@ project:
 
 ---
 
-<p style="font-size: 0.7em; color: gray;">
-
-Created on July 28, 2025
-
-</p>
+<p style="font-size: 0.7em; color: gray;"> Created on July 28, 2025 </p>
 
 ## [*Maxime Marini, Callum Gapes, Andrea S. Griffin*]{style="font-size: 0.8em;"}
 
@@ -656,7 +652,7 @@ motus_survey_d <- ggplot(recv.status, aes(y = factor(StationP))) +
   theme(axis.text.y.left = element_text(face = "bold", vjust = 0.5, margin = margin(t = 5)),
         axis.text.x.top = element_text(face = "bold", vjust = 0.5, margin = margin(t = 5)),
         axis.text.x = element_text(size = 9)) +
-  ggtitle("Receiver Operational Periods per days (contribution at the survey effort - listening)")
+  ggtitle("Receiver Operational Periods per days (contribution % at the survey effort - listening)")
 
 # Adding Birds 
 data_all_plot <- left_join(data_all %>%
@@ -667,6 +663,15 @@ data_all_plot <- left_join(data_all %>%
                              unique(), 
                            "recvDeployName")
 
+species_colors <- c(
+  "Bar-tailed Godwit"      = "#1b9e77",  
+  "Far Eastern Curlew"     = "#d95f02",  
+  "Masked Lapwing"         = "#7570b3", 
+  "Pacific Golden-Plover"  = "#e7298a", 
+  "Pied Stilt"             = "#66a61e", 
+  "Red-necked Avocet"      = "#e6ab02"   
+)
+
 motus_survey_d <- motus_survey_d +
   geom_point(
     data = data_all_plot ,
@@ -674,7 +679,7 @@ motus_survey_d <- motus_survey_d +
         y = factor(StationP), 
         color = speciesEN),
     alpha = 0.7, size = 2) +
-  scale_color_discrete(name = "Species")
+  scale_color_manual(name = "Species", values = species_colors)
 
 ```
 
@@ -688,7 +693,63 @@ ggplot2::ggsave( here::here("docs", "figures", "motus_survey_d.jpeg"), motus_sur
 
 #### Plot: array survey effort per station {#plot-station2}
 
-To be continued ...
+::: panel-tabset
+
+```{r 2 station MOTUS array survey effort plot, echo = FALSE, eval = TRUE, results = 'asis'}
+
+# Split the detection data by StationP
+data_split <- split(data_all_plot, data_all_plot$StationP)
+
+# Make sure your recv.status also has start/end per StationP
+recv_split <- split(recv.status, recv.status$StationP)
+
+# Create a named list of plots, one per station
+plots_per_station <- imap(data_split, ~ {
+  station_data <- .x
+  station_name <- .y
+  effort_data <- recv_split[[station_name]]
+  
+tag_order <- station_data %>%
+    distinct(motusTagID, speciesEN) %>%
+    arrange(speciesEN, motusTagID) %>%
+    pull(motusTagID)
+  
+# Create a factor with levels ordered by speciesEN grouping
+station_data <- station_data %>%
+    mutate(motusTagID_ordered = factor(motusTagID, levels = tag_order))
+
+ggplot() +
+  # Vertical bands for survey effort periods
+  geom_rect(data = effort_data, 
+            aes(xmin = start_hour, xmax = end_hour, ymin = -Inf, ymax = Inf),
+            fill = "grey80", alpha = 0.3) +
+  
+    # Points for detections with ordered motusTagID
+    geom_point(data = station_data,
+               aes(x = timeAus,
+                   y = motusTagID_ordered,
+                   color = speciesEN),
+               alpha = 0.7, linewidth = 2) +
+    scale_color_manual(values = species_colors, name = "Species") +
+    scale_y_discrete() +
+    theme_bw() +
+    labs(title = station_name,
+         x = "Time (Aus)",
+         y = "motusTagID") +
+    theme(axis.text.y = element_text(size = 6),
+          plot.title = element_text(hjust = 0.5))
+})
+
+# Now you can print each plot in your Quarto chunk by looping over the list
+  for (station_data in names(plots_per_station)) {
+    cat("\n\n## ", station_data, "\n\n") 
+    print(plots_per_station[[station_data]]) 
+    flush.console() #force immediate output
+  }
+
+```
+
+:::
 
 <button
   class="backBtn"
@@ -849,11 +910,11 @@ species_colors <- c(
 )
 ```
 
-#### Descriptive analysis {#descriptive-analysis4}
+### Descriptive analysis {#descriptive-analysis4}
 
 - [Tide & circadian cycles](#tide-circadian-cycle4)
 
-##### Tide & circadian cycles {#tide-circadian-cycle4}
+#### Tide & circadian cycles {#tide-circadian-cycle4}
 
 OVER THE MOTUS ARRAY
 

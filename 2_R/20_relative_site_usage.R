@@ -215,8 +215,62 @@ motus_survey_d <- motus_survey_d +
 motus_survey_d
 
 # Save
-ggsave(here::here("3_figures", "motus_survey_plot_d.png"), plot = motus_survey_d, 
-       width = 15, height = 5, units = "in")
+# ggsave(here::here("3_figures", "motus_survey_plot_d.png"), plot = motus_survey_d, 
+#        width = 15, height = 5, units = "in")
+
+# 6 - Per station ----
+
+# Color per sp
+species_colors <- c(
+  "Bar-tailed Godwit"      = "#1b9e77",
+  "Far Eastern Curlew"     = "#d95f02",
+  "Masked Lapwing"         = "#7570b3",
+  "Pacific Golden-Plover"  = "#e7298a",
+  "Pied Stilt"             = "#66a61e",
+  "Red-necked Avocet"      = "#e6ab02"
+)
+
+# Create a list by split data by StationP
+data_split <- split(data_all_plot, data_all_plot$StationP)
+effort_split <- split(recv.status, recv.status$StationP)
+
+# Loop through each StationP
+walk2(data_split, names(data_split), ~ {
+  station_data <- .x
+  station_name <- .y
+  effort_data <- effort_split[[station_name]]
+  
+  # Order tag by sp for grouping on y axis
+  tag_order <- station_data %>%
+    distinct(motusTagID, speciesEN) %>%
+    arrange(speciesEN, motusTagID) %>%
+    pull(motusTagID)
+  station_data <- station_data %>%
+    mutate(motusTagID_ordered = factor(motusTagID, levels = tag_order))
+  
+  p <- ggplot() +
+    # Black effort line
+    geom_segment(data = effort_data,
+                 aes(x = start_hour, xend = end_hour, y = 0, yend = 0),
+                 color = "black", size = 1) +
+    
+    # Points by species
+    geom_point(data = station_data,
+               aes(x = timeAus, y = motusTagID_ordered, color = speciesEN),
+               alpha = 0.7, size = 2) +
+    scale_color_manual(values = species_colors, name = "Species") +
+    scale_y_discrete() +
+    theme_bw() +
+    labs(title = station_name,
+         x = "Time (Aus)",
+         y = "motusTagID") +
+    theme(axis.text.y = element_text(size = 6),
+          plot.title = element_text(hjust = 0.5))
+  
+  print(p)
+  
+})
+
 
 
 
