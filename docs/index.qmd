@@ -11,7 +11,6 @@ resources:
 project:
   type: website
   output-dir: docs
-
 ---
 
 <p style="font-size: 0.7em; color: gray;"> Created on July 28, 2025 </p>
@@ -70,13 +69,13 @@ To be continued ...
 
 # [Method]{.smallcaps}
 
-This following aims to describe the analysis ran with VHF Motus data set that tries to access the complex articulation of habitat selection from migratory shorebirds across and within estuaries habitats. The analysis tackles several key points before properly studying migratory shorebirds spatial ecology as described as below:
+The following aims to describe the analysis ran with VHF Motus data set that tries to access the complex articulation of habitat selection from migratory shorebirds across and within estuaries habitats. The analysis process several key points before to properly studying migratory shorebirds spatial ecology as described as below:
 
 1.  **Filtering the data**
 
 <p style="font-size: 0.9em; color: gray;">
 
-*Aims to clean out, simplify and format the raw data set from Motus network (.sql) to an easier table (.rds). Remove false positive signals, clarify ambiguous detection and add useful variables (ie. tide cycle, circadian cycle, etc.).*
+*Aims to clean out, simplify and format the raw data set from Motus network (.sql) to an easier table (.rds). Correct wrong data and NA, remove false positive signals, clarify ambiguous detection and add useful variables (ie. tide cycle, circadian cycle, etc.).*
 
 </p>
 
@@ -84,7 +83,7 @@ This following aims to describe the analysis ran with VHF Motus data set that tr
 
 <p style="font-size: 0.9em; color: gray;">
 
-*The local deployed Motus array is composed of 8 receivers that suppose to 7/24 'listen' the tag signals, sent by the devices settled on birds, potentially within their range of reception. However, all the receivers did not 'listen' the same amount of time for multiple reasons (ie. date of networked, temporary out of servicing, etc.). Hence, the temporal coverage is unequal across the receivers meaning the survey effort -7/24 'listening'- is not comparable. This chapter access this bias by suggesting a site usage from bird, relative to the station effort survey.*
+*The local deployed Motus array consists of 8 receivers that are supposed to listen to tag signals 24/7, which are emitted by devices attached to birds potentially within their reception range. However, not all receivers listen for the same amount of time due to various reasons (e.g., network installation dates, temporary outages, etc.). As a result, temporal coverage varies across receivers, meaning the survey effort—continuous 24/7 listening—is unequal among stations. Because of this, bird detection quality is not directly comparable between stations. This chapter addresses this bias by proposing the use of each site’s effort relative to bird detections, adjusting for differences in station survey effort.*
 
 </p>
 
@@ -92,7 +91,7 @@ This following aims to describe the analysis ran with VHF Motus data set that tr
 
 <p style="font-size: 0.9em; color: gray;">
 
-*All the bird we are focused on do not share the same land-use. That means the built-up array can not be suitable at the best for every species since the receivers are permanently settled at specific sites across the estuaries. Among all the deployed tags, which ones are the best surveyed within the local Motus array?*
+*All the bird species we are focusing on do not share the same land-use habitats. This means the built-up array cannot be equally suitable for every species since the receivers are permanently installed at specific sites throughout the estuaries. Among all the deployed tags, which ones have been best surveyed within the local Motus array?*
 
 </p>
 
@@ -553,18 +552,33 @@ uptime_summary <- recv_hours %>%
     total_hours = n(),
     operational_hours = sum(operational), 
     downtime_hours = total_hours - operational_hours, 
-    uptime_pct = 100 * operational_hours / total_hours) %>% 
-  mutate(cont_surv_eff_ON = 100 * operational_hours / sum(operational_hours), # % of each station surv eff regarding the total(all station) of survey effort
-         surv_time_cover = 100 * operational_hours / max(total_hours)) %>% # % of each station surv eff regarding the time coverage of the all stations
+    uptime_pct = round(100 * operational_hours / total_hours), 2)  %>% 
+  mutate(cont_listening_eff = round(100 * operational_hours / sum(operational_hours), 1), # % of each station surv eff regarding the total(all station) of survey effort
+         surv_time_cover = round(100 * operational_hours / max(total_hours),1)) %>% # % of each station surv eff regarding the time coverage of the all stations
   arrange(desc(uptime_pct))
 
 ```
 
 ```{r 2 table MOTUS array survey effort print,  message = FALSE, warning = FALSE, echo = FALSE}
-
-DT::datatable(uptime_summary,
-              options = list(scrollX = TRUE, pageLength = 10),
-              caption = 'Summary of MOTUS array survey effort per station')
+DT::datatable(
+  uptime_summary,
+  options = list(
+    scrollX = TRUE,
+    pageLength = 10,
+    fixedColumns = list(leftColumns = 2)
+  ),
+  extensions = c('FixedColumns'),
+  caption = 'Summary of MOTUS array survey effort per station'
+) %>%
+  DT::formatStyle(
+    'Station',
+    fontWeight = 'bold'
+  ) %>%
+  DT::formatStyle(
+    c('cont_listening_eff', 'surv_time_cover'),
+    fontWeight = 'bold',
+    color = '#808080'  # grey color
+  )
 ```
 
 
@@ -574,8 +588,8 @@ Let's summarize the information regarding the survey effort from our MOTUS array
 -   `operational_hours`: total of hours for the station being listening, regardless the `deviceID`
 -   `downtime_hours`: total of hours for the station being NOT listening, regardless the `deviceID`
 -   `uptime_pct`: per station, percentage of being listening over its `total_hours`
--   `cont_surv_eff_ON`: per station, contribution (%) of hours being listening (`operational_hour`) over the total (sum) of listening period across the array
--   `surv_time_cover`: per station, temporal coverage (%) of hours being listening (`operational_hour`) over the array survey effort temporal coverage
+-   `cont_listening_eff`: per station, contribution (%) of hours being listening (`operational_hour`) over the total (sum) of listening period across all the stations
+-   `surv_time_cover`: per station, temporal coverage (%) of hours being listening (`operational_hour`) over the period of time the array has been deployed (i.e. from the first day the first deployed station has been listening to the last day the last deployed station has been listening)
 
 ::: blockquote-red
 AWAITING FOR UPDATES: The data-set have some unknown and not-understood *NaN* within the raw data (failure in collecting process?). That matches pretty well with some gaps along the antennas survey effort (i.e. Hexham road), so, we expect to fill up these gaps once the *NaN* are processed.
@@ -628,8 +642,8 @@ recv.status <- recv_hours %>%
   summarise(start_hour = min(hour_dt),
             end_hour = max(hour_dt) + hours(1), # +1 hour to cover full period
             .groups = "drop") %>%
-  left_join(uptime_summary %>% select(Station, cont_surv_eff_ON), "Station") %>%
-  mutate(StationP = paste0(Station, " (", round(cont_surv_eff_ON, digits = 1), "%)")) 
+  left_join(uptime_summary %>% select(Station, cont_listening_eff), "Station") %>%
+  mutate(StationP = paste0(Station, " (", round(cont_listening_eff, digits = 1), "%)")) 
 
 motus_survey_d <- ggplot(recv.status, aes(y = factor(StationP))) +
   geom_segment(aes(x = start_hour, xend = end_hour,
@@ -898,16 +912,6 @@ data <- data_all %>%
   # Comment
     tagDepComments
     )
-
-# Color codes
-species_colors <- c(
-  "Bar-tailed Godwit"      = "#1b9e77",  
-  "Far Eastern Curlew"     = "#d95f02",  
-  "Masked Lapwing"         = "#7570b3", 
-  "Pacific Golden-Plover"  = "#e7298a", 
-  "Pied Stilt"             = "#66a61e", 
-  "Red-necked Avocet"      = "#e6ab02"   
-)
 ```
 
 ### Descriptive analysis {#descriptive-analysis4}

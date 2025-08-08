@@ -86,6 +86,10 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 
 <script src="index_files/libs/dt-core-1.13.6/js/jquery.dataTables.min.js"></script>
 
+<link href="index_files/libs/dt-ext-fixedcolumns-1.13.6/css/fixedColumns.dataTables.min.css" rel="stylesheet">
+
+<script src="index_files/libs/dt-ext-fixedcolumns-1.13.6/js/dataTables.fixedColumns.min.js"></script>
+
 <link href="index_files/libs/crosstalk-1.2.1/css/crosstalk.min.css" rel="stylesheet">
 
 <script src="index_files/libs/crosstalk-1.2.1/js/crosstalk.min.js"></script>
@@ -178,24 +182,24 @@ Created on July 28, 2025
 </section>
 <section id="method" class="level1">
 <h1><span class="smallcaps">Method</span></h1>
-<p>This following aims to describe the analysis ran with VHF Motus data set that tries to access the complex articulation of habitat selection from migratory shorebirds across and within estuaries habitats. The analysis tackles several key points before properly studying migratory shorebirds spatial ecology as described as below:</p>
+<p>The following aims to describe the analysis ran with VHF Motus data set that tries to access the complex articulation of habitat selection from migratory shorebirds across and within estuaries habitats. The analysis process several key points before to properly studying migratory shorebirds spatial ecology as described as below:</p>
 <ol type="1">
 <li><strong>Filtering the data</strong></li>
 </ol>
 <p style="font-size: 0.9em; color: gray;">
-</p><p><em>Aims to clean out, simplify and format the raw data set from Motus network (.sql) to an easier table (.rds). Remove false positive signals, clarify ambiguous detection and add useful variables (ie. tide cycle, circadian cycle, etc.).</em></p>
+</p><p><em>Aims to clean out, simplify and format the raw data set from Motus network (.sql) to an easier table (.rds). Correct wrong data and NA, remove false positive signals, clarify ambiguous detection and add useful variables (ie. tide cycle, circadian cycle, etc.).</em></p>
 <p></p>
 <ol start="2" type="1">
 <li><strong>Relative site usage</strong></li>
 </ol>
 <p style="font-size: 0.9em; color: gray;">
-</p><p><em>The local deployed Motus array is composed of 8 receivers that suppose to 7/24 ‘listen’ the tag signals, sent by the devices settled on birds, potentially within their range of reception. However, all the receivers did not ‘listen’ the same amount of time for multiple reasons (ie. date of networked, temporary out of servicing, etc.). Hence, the temporal coverage is unequal across the receivers meaning the survey effort -7/24 ‘listening’- is not comparable. This chapter access this bias by suggesting a site usage from bird, relative to the station effort survey.</em></p>
+</p><p><em>The local deployed Motus array consists of 8 receivers that are supposed to listen to tag signals 24/7, which are emitted by devices attached to birds potentially within their reception range. However, not all receivers listen for the same amount of time due to various reasons (e.g., network installation dates, temporary outages, etc.). As a result, temporal coverage varies across receivers, meaning the survey effort—continuous 24/7 listening—is unequal among stations. Because of this, bird detection quality is not directly comparable between stations. This chapter addresses this bias by proposing the use of each site’s effort relative to bird detections, adjusting for differences in station survey effort.</em></p>
 <p></p>
 <ol start="3" type="1">
 <li><strong>Motus array suitability</strong></li>
 </ol>
 <p style="font-size: 0.9em; color: gray;">
-</p><p><em>All the bird we are focused on do not share the same land-use. That means the built-up array can not be suitable at the best for every species since the receivers are permanently settled at specific sites across the estuaries. Among all the deployed tags, which ones are the best surveyed within the local Motus array?</em></p>
+</p><p><em>All the bird species we are focusing on do not share the same land-use habitats. This means the built-up array cannot be equally suitable for every species since the receivers are permanently installed at specific sites throughout the estuaries. Among all the deployed tags, which ones have been best surveyed within the local Motus array?</em></p>
 <p></p>
 <ol start="4" type="1">
 <li><strong>Habitat selection</strong></li>
@@ -603,15 +607,15 @@ FALSE
 <span id="cb21-4"><a href="#cb21-4"></a>    <span class="at">total_hours =</span> <span class="fu">n</span>(),</span>
 <span id="cb21-5"><a href="#cb21-5"></a>    <span class="at">operational_hours =</span> <span class="fu">sum</span>(operational), </span>
 <span id="cb21-6"><a href="#cb21-6"></a>    <span class="at">downtime_hours =</span> total_hours <span class="sc">-</span> operational_hours, </span>
-<span id="cb21-7"><a href="#cb21-7"></a>    <span class="at">uptime_pct =</span> <span class="dv">100</span> <span class="sc">*</span> operational_hours <span class="sc">/</span> total_hours) <span class="sc">%&gt;%</span> </span>
-<span id="cb21-8"><a href="#cb21-8"></a>  <span class="fu">mutate</span>(<span class="at">cont_surv_eff_ON =</span> <span class="dv">100</span> <span class="sc">*</span> operational_hours <span class="sc">/</span> <span class="fu">sum</span>(operational_hours), <span class="co"># % of each station surv eff regarding the total(all station) of survey effort</span></span>
-<span id="cb21-9"><a href="#cb21-9"></a>         <span class="at">surv_time_cover =</span> <span class="dv">100</span> <span class="sc">*</span> operational_hours <span class="sc">/</span> <span class="fu">max</span>(total_hours)) <span class="sc">%&gt;%</span> <span class="co"># % of each station surv eff regarding the time coverage of the all stations</span></span>
+<span id="cb21-7"><a href="#cb21-7"></a>    <span class="at">uptime_pct =</span> <span class="fu">round</span>(<span class="dv">100</span> <span class="sc">*</span> operational_hours <span class="sc">/</span> total_hours), <span class="dv">2</span>)  <span class="sc">%&gt;%</span> </span>
+<span id="cb21-8"><a href="#cb21-8"></a>  <span class="fu">mutate</span>(<span class="at">cont_listening_eff =</span> <span class="fu">round</span>(<span class="dv">100</span> <span class="sc">*</span> operational_hours <span class="sc">/</span> <span class="fu">sum</span>(operational_hours), <span class="dv">1</span>), <span class="co"># % of each station surv eff regarding the total(all station) of survey effort</span></span>
+<span id="cb21-9"><a href="#cb21-9"></a>         <span class="at">surv_time_cover =</span> <span class="fu">round</span>(<span class="dv">100</span> <span class="sc">*</span> operational_hours <span class="sc">/</span> <span class="fu">max</span>(total_hours),<span class="dv">1</span>)) <span class="sc">%&gt;%</span> <span class="co"># % of each station surv eff regarding the time coverage of the all stations</span></span>
 <span id="cb21-10"><a href="#cb21-10"></a>  <span class="fu">arrange</span>(<span class="fu">desc</span>(uptime_pct))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 <div class="cell">
 <div class="cell-output-display">
-<div class="datatables html-widget html-fill-item" id="htmlwidget-381d2e819b2822ec2b92" style="width:100%;height:auto;"></div>
-<script type="application/json" data-for="htmlwidget-381d2e819b2822ec2b92">{"x":{"filter":"none","vertical":false,"caption":"<caption>Summary of MOTUS array survey effort per station<\/caption>","data":[["1","2","3","4","5","6","7","8","9","10"],["Swan Pond","Hexham Swamp","Fullerton Entrance","Curlew Point","Milhams Pond","Ramsar Road","Tomago","Windeyers","Corrie Island","Davies Point"],[20964,16754,20725,16754,20916,20797,15852,5725,15904,15874],[17216,11164,13739,8294,10145,8372,4047,262,554,441],[3748,5590,6986,8460,10771,12425,11805,5463,15350,15433],[82.12173249379889,66.63483347260356,66.29191797346201,49.50459591739286,48.50353796136929,40.25580612588354,25.52990158970477,4.576419213973799,3.483400402414487,2.778127756079123],[23.19152948783576,15.03893094808309,18.50769189320258,11.17277797235768,13.66624457795619,11.27785111943314,5.451679823261578,0.3529380068432255,0.7462887625616295,0.5940674084651238],[82.12173249379889,53.25319595497042,65.53615722190422,39.56306048464034,48.39248235069643,39.93512688418241,19.30452203777905,1.249761495897729,2.642625453157794,2.103606182026331]],"container":"<table class=\"display\">\n  <thead>\n    <tr>\n      <th> <\/th>\n      <th>Station<\/th>\n      <th>total_hours<\/th>\n      <th>operational_hours<\/th>\n      <th>downtime_hours<\/th>\n      <th>uptime_pct<\/th>\n      <th>cont_surv_eff_ON<\/th>\n      <th>surv_time_cover<\/th>\n    <\/tr>\n  <\/thead>\n<\/table>","options":{"scrollX":true,"pageLength":10,"columnDefs":[{"className":"dt-right","targets":[2,3,4,5,6,7]},{"orderable":false,"targets":0},{"name":" ","targets":0},{"name":"Station","targets":1},{"name":"total_hours","targets":2},{"name":"operational_hours","targets":3},{"name":"downtime_hours","targets":4},{"name":"uptime_pct","targets":5},{"name":"cont_surv_eff_ON","targets":6},{"name":"surv_time_cover","targets":7}],"order":[],"autoWidth":false,"orderClasses":false}},"evals":[],"jsHooks":[]}</script>
+<div class="datatables html-widget html-fill-item" id="htmlwidget-ad5c273e26e8c0f92825" style="width:100%;height:auto;"></div>
+<script type="application/json" data-for="htmlwidget-ad5c273e26e8c0f92825">{"x":{"filter":"none","vertical":false,"extensions":["FixedColumns"],"caption":"<caption>Summary of MOTUS array survey effort per station<\/caption>","data":[["1","2","3","4","5","6","7","8","9","10"],["Swan Pond","Hexham Swamp","Fullerton Entrance","Curlew Point","Milhams Pond","Ramsar Road","Tomago","Windeyers","Corrie Island","Davies Point"],[20965,16755,20726,16755,20917,20798,15853,5726,15905,15875],[17216,11164,13739,8294,10145,8372,4047,262,554,441],[3749,5591,6987,8461,10772,12426,11806,5464,15351,15434],[82,67,66,50,49,40,26,5,3,3],[2,2,2,2,2,2,2,2,2,2],[23.2,15,18.5,11.2,13.7,11.3,5.5,0.4,0.7,0.6],[82.09999999999999,53.3,65.5,39.6,48.4,39.9,19.3,1.2,2.6,2.1]],"container":"<table class=\"display\">\n  <thead>\n    <tr>\n      <th> <\/th>\n      <th>Station<\/th>\n      <th>total_hours<\/th>\n      <th>operational_hours<\/th>\n      <th>downtime_hours<\/th>\n      <th>uptime_pct<\/th>\n      <th>2<\/th>\n      <th>cont_listening_eff<\/th>\n      <th>surv_time_cover<\/th>\n    <\/tr>\n  <\/thead>\n<\/table>","options":{"scrollX":true,"pageLength":10,"fixedColumns":{"leftColumns":2},"columnDefs":[{"className":"dt-right","targets":[2,3,4,5,6,7,8]},{"orderable":false,"targets":0},{"name":" ","targets":0},{"name":"Station","targets":1},{"name":"total_hours","targets":2},{"name":"operational_hours","targets":3},{"name":"downtime_hours","targets":4},{"name":"uptime_pct","targets":5},{"name":"2","targets":6},{"name":"cont_listening_eff","targets":7},{"name":"surv_time_cover","targets":8}],"order":[],"autoWidth":false,"orderClasses":false,"rowCallback":"function(row, data, displayNum, displayIndex, dataIndex) {\nvar value=data[1]; $(this.api().cell(row, 1).node()).css({'font-weight':'bold'});\nvar value=data[7]; $(this.api().cell(row, 7).node()).css({'font-weight':'bold','color':'#808080'});\nvar value=data[8]; $(this.api().cell(row, 8).node()).css({'font-weight':'bold','color':'#808080'});\n}"}},"evals":["options.rowCallback"],"jsHooks":[]}</script>
 </div>
 </div>
 <p>Let’s summarize the information regarding the survey effort from our MOTUS array:</p>
@@ -620,8 +624,8 @@ FALSE
 <li><code>operational_hours</code>: total of hours for the station being listening, regardless the <code>deviceID</code></li>
 <li><code>downtime_hours</code>: total of hours for the station being NOT listening, regardless the <code>deviceID</code></li>
 <li><code>uptime_pct</code>: per station, percentage of being listening over its <code>total_hours</code></li>
-<li><code>cont_surv_eff_ON</code>: per station, contribution (%) of hours being listening (<code>operational_hour</code>) over the total (sum) of listening period across the array</li>
-<li><code>surv_time_cover</code>: per station, temporal coverage (%) of hours being listening (<code>operational_hour</code>) over the array survey effort temporal coverage</li>
+<li><code>cont_listening_eff</code>: per station, contribution (%) of hours being listening (<code>operational_hour</code>) over the total (sum) of listening period across all the stations</li>
+<li><code>surv_time_cover</code>: per station, temporal coverage (%) of hours being listening (<code>operational_hour</code>) over the period of time the array has been deployed (i.e.&nbsp;from the first day the first deployed station has been listening to the last day the last deployed station has been listening)</li>
 </ul>
 <div class="blockquote-red">
 <p>AWAITING FOR UPDATES: The data-set have some unknown and not-understood <em>NaN</em> within the raw data (failure in collecting process?). That matches pretty well with some gaps along the antennas survey effort (i.e.&nbsp;Hexham road), so, we expect to fill up these gaps once the <em>NaN</em> are processed.</p>
@@ -810,17 +814,7 @@ Back to Contents
 <span id="cb25-43"><a href="#cb25-43"></a>    speciesGroup,</span>
 <span id="cb25-44"><a href="#cb25-44"></a>  <span class="co"># Comment</span></span>
 <span id="cb25-45"><a href="#cb25-45"></a>    tagDepComments</span>
-<span id="cb25-46"><a href="#cb25-46"></a>    )</span>
-<span id="cb25-47"><a href="#cb25-47"></a></span>
-<span id="cb25-48"><a href="#cb25-48"></a><span class="co"># Color codes</span></span>
-<span id="cb25-49"><a href="#cb25-49"></a>species_colors <span class="ot">&lt;-</span> <span class="fu">c</span>(</span>
-<span id="cb25-50"><a href="#cb25-50"></a>  <span class="st">"Bar-tailed Godwit"</span>      <span class="ot">=</span> <span class="st">"#1b9e77"</span>,  </span>
-<span id="cb25-51"><a href="#cb25-51"></a>  <span class="st">"Far Eastern Curlew"</span>     <span class="ot">=</span> <span class="st">"#d95f02"</span>,  </span>
-<span id="cb25-52"><a href="#cb25-52"></a>  <span class="st">"Masked Lapwing"</span>         <span class="ot">=</span> <span class="st">"#7570b3"</span>, </span>
-<span id="cb25-53"><a href="#cb25-53"></a>  <span class="st">"Pacific Golden-Plover"</span>  <span class="ot">=</span> <span class="st">"#e7298a"</span>, </span>
-<span id="cb25-54"><a href="#cb25-54"></a>  <span class="st">"Pied Stilt"</span>             <span class="ot">=</span> <span class="st">"#66a61e"</span>, </span>
-<span id="cb25-55"><a href="#cb25-55"></a>  <span class="st">"Red-necked Avocet"</span>      <span class="ot">=</span> <span class="st">"#e6ab02"</span>   </span>
-<span id="cb25-56"><a href="#cb25-56"></a>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<span id="cb25-46"><a href="#cb25-46"></a>    )</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 </section>
 <section id="descriptive-analysis4" class="level3">
