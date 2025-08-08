@@ -684,7 +684,7 @@ ggplot2::ggsave( here::here("docs", "figures", "motus_survey_d.jpeg"), motus_sur
 ```
 
 [![MOTUS Survey Plot - days](figures/motus_survey_d.jpeg){width=100%}](figures/motus_survey_d.jpeg){target="_blank"}
-
+ 
 
 #### Plot: array survey effort per station {#plot-station2}
 
