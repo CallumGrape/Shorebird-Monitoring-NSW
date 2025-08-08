@@ -765,6 +765,8 @@ ggplot() +
 
 :::
 
+***Legend:*** *The band in grey represents the operational period for each station, when the antenna is actually listening. When no grey, the station is "OFF"*
+
 <button
   class="backBtn"
   data-target="contents2" 
