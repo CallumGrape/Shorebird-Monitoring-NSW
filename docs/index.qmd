@@ -607,11 +607,11 @@ motus_survey_h <- ggplot(recv_hours %>%
 ```
 
 ```{r 2 hour MOTUS array survey effort plot,  message = FALSE, warning = FALSE, echo = FALSE}
-ggplot2::ggsave( here::here("docs", "figures", "motus_survey_h.png"), motus_survey_h, 
-                 width = 15, height = 6, dpi = 300)
+ggplot2::ggsave( here::here("docs", "figures", "motus_survey_h.jpeg"), motus_survey_h, 
+                 width = 15, height = 6, dpi = 150)
 ```
 
-![MOTUS Survey Plot - hours](figures/motus_survey_h.png){width=100%}
+[![MOTUS Survey Plot - hours](figures/motus_survey_h.jpeg){width=100%}](figures/motus_survey_h.jpeg){target="_blank"}
 
 
 #### Plot: array survey effort per day {#plot-day2}
@@ -679,11 +679,11 @@ motus_survey_d <- motus_survey_d +
 ```
 
 ```{r 2 day MOTUS array survey effort plot,  message = FALSE, warning = FALSE, echo = FALSE}
-ggplot2::ggsave( here::here("docs", "figures", "motus_survey_d.png"), motus_survey_d, 
-                 width = 15, height = 6, dpi = 300)
+ggplot2::ggsave( here::here("docs", "figures", "motus_survey_d.jpeg"), motus_survey_d, 
+                 width = 15, height = 6, dpi = 150)
 ```
 
-![MOTUS Survey Plot - days](figures/motus_survey_d.png){width=100%}
+[![MOTUS Survey Plot - days](figures/motus_survey_d.jpeg){width=100%}](figures/motus_survey_d.jpeg){target="_blank"}
 
 
 #### Plot: array survey effort per station {#plot-station2}
