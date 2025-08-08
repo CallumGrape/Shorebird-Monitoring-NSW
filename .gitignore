@@ -26,6 +26,8 @@
 # do not upload the folder 
 /00_Callum_07.2025/
 /10_data/
+/docs/
+
 
 # do not upload this type of files
 *.rds
