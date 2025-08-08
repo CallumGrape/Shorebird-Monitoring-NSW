@@ -660,7 +660,7 @@ motus_survey_d <- ggplot(recv.status, aes(y = factor(StationP))) +
 
 # Adding Birds 
 data_all_plot <- left_join(data_all %>%
-                             select(motusTagID, recv, recvDeployName, timeAus, tideCategory, speciesEN), 
+                             select(motusTagID, recv, recvDeployName, timeAus, tideCategory, speciesEN),
                            recv.status %>% 
                              rename(recvDeployName = Station) %>%
                              select(recvDeployName, StationP) %>%
