@@ -147,6 +147,10 @@ motus_survey_h <- ggplot(recv_hours %>%
 
 motus_survey_h
 
+# Save
+ggsave(here::here("3_figures", "motus_survey_plot_h.png"), plot = motus_survey_h, 
+       width = 15, height = 5, units = "in")
+
 # Plot (day detailed)
 recv.status <- recv_hours %>%
   filter(operational) %>%
@@ -210,8 +214,9 @@ motus_survey_d <- motus_survey_d +
 
 motus_survey_d
 
-# Suppose your plot object is named motus_survey_d
-ggsave(here::here("3_figures", "motus_survey_plot.png"), plot = motus_survey_d, width = 15, height = 5, units = "in")
+# Save
+ggsave(here::here("3_figures", "motus_survey_plot_d.png"), plot = motus_survey_d, 
+       width = 15, height = 5, units = "in")
 
 
 
