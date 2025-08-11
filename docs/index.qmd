@@ -553,8 +553,8 @@ uptime_summary <- recv_hours %>%
     operational_hours = sum(operational), 
     downtime_hours = total_hours - operational_hours, 
     uptime_pct = round(100 * operational_hours / total_hours), 2)  %>% 
-  mutate(cont_listening_eff = round(100 * operational_hours / sum(operational_hours), 1), # % of each station surv eff regarding the total(all station) of survey effort
-         surv_time_cover = round(100 * operational_hours / max(total_hours),1)) %>% # % of each station surv eff regarding the time coverage of the all stations
+  mutate(cont_listening_eff = round(100 * operational_hours / sum(operational_hours), 1), 
+         surv_time_cover = round(100 * operational_hours / total_hours, 1)) %>%
   arrange(desc(uptime_pct))
 
 ```
@@ -577,7 +577,7 @@ DT::datatable(
   DT::formatStyle(
     c('cont_listening_eff', 'surv_time_cover'),
     fontWeight = 'bold',
-    color = '#808080'  # grey color
+    color = '#808080'  
   )
 ```
 
@@ -621,7 +621,7 @@ ggplot2::ggsave( here::here("docs", "figures", "motus_survey_h.jpeg"), motus_sur
                  width = 15, height = 6, dpi = 150)
 ```
 
-[![MOTUS Survey Plot - hours](figures/motus_survey_h.jpeg){width=100%}](figures/motus_survey_h.jpeg){target="_blank"}
+[![Legend: Every black dot represent an hour where the station has activity recorded meaning the station is operational, meaning recording radio noise or a specicific tag.](figures/motus_survey_h.jpeg){width=100%}](figures/motus_survey_h.jpeg){target="_blank"}
 
 
 #### Plot: array survey effort per day {#plot-day2}
@@ -702,7 +702,7 @@ ggplot2::ggsave( here::here("docs", "figures", "motus_survey_d.jpeg"), motus_sur
                  width = 15, height = 6, dpi = 150)
 ```
 
-[![MOTUS Survey Plot - days](figures/motus_survey_d.jpeg){width=100%}](figures/motus_survey_d.jpeg){target="_blank"}
+[![Legend: Solid black lines are when a MOTUS station is operational For simplifying, When a station is not operational for less than 24 hours, this period is considered as a operational period. Every dot represent at least one detection of one bird within an hour of the operational period. Every MOTUS station has a contribution value at the survey effort (%), i.e: Curlew Point station contributed 11.2% at the total operational period for every stations within our local MOTUS array (operational survey effort).](figures/motus_survey_d.jpeg){width=100%}](figures/motus_survey_d.jpeg){target="_blank"}
  
 
 #### Plot: array survey effort per station {#plot-station2}
@@ -765,7 +765,7 @@ ggplot() +
 
 :::
 
-***Legend:*** *The band in grey represents the operational period for each station, when the antenna is actually listening. When no grey, the station is "OFF"*
+***Legend:*** *The band in grey represents the operational period for each MOTUS station, when the antenna is actually listening. When no grey, the station is "OFF" and not operational. Every dot is at least one detection for one tag. Every MOTUS station has a contribution value at the survey effort (%), i.e: Curlew Point station contributed 11.2% at the total operational period for every stations within our local MOTUS array (operational survey effort).*
 
 <button
   class="backBtn"

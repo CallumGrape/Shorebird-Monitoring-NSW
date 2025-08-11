@@ -6,7 +6,7 @@
 
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
 
-<meta name="dcterms.date" content="2025-08-08">
+<meta name="dcterms.date" content="2025-08-11">
 
 <title>MOTUS telemetry array to access habitat selection from migratory shorebirds within and across Hunter and Port Stephen estuaries, NSW</title>
 <style>
@@ -118,7 +118,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
     <div>
     <div class="quarto-title-meta-heading">Published</div>
     <div class="quarto-title-meta-contents">
-      <p class="date">August 8, 2025</p>
+      <p class="date">August 11, 2025</p>
     </div>
   </div>
   
@@ -608,14 +608,14 @@ FALSE
 <span id="cb21-5"><a href="#cb21-5"></a>    <span class="at">operational_hours =</span> <span class="fu">sum</span>(operational), </span>
 <span id="cb21-6"><a href="#cb21-6"></a>    <span class="at">downtime_hours =</span> total_hours <span class="sc">-</span> operational_hours, </span>
 <span id="cb21-7"><a href="#cb21-7"></a>    <span class="at">uptime_pct =</span> <span class="fu">round</span>(<span class="dv">100</span> <span class="sc">*</span> operational_hours <span class="sc">/</span> total_hours), <span class="dv">2</span>)  <span class="sc">%&gt;%</span> </span>
-<span id="cb21-8"><a href="#cb21-8"></a>  <span class="fu">mutate</span>(<span class="at">cont_listening_eff =</span> <span class="fu">round</span>(<span class="dv">100</span> <span class="sc">*</span> operational_hours <span class="sc">/</span> <span class="fu">sum</span>(operational_hours), <span class="dv">1</span>), <span class="co"># % of each station surv eff regarding the total(all station) of survey effort</span></span>
-<span id="cb21-9"><a href="#cb21-9"></a>         <span class="at">surv_time_cover =</span> <span class="fu">round</span>(<span class="dv">100</span> <span class="sc">*</span> operational_hours <span class="sc">/</span> <span class="fu">max</span>(total_hours),<span class="dv">1</span>)) <span class="sc">%&gt;%</span> <span class="co"># % of each station surv eff regarding the time coverage of the all stations</span></span>
+<span id="cb21-8"><a href="#cb21-8"></a>  <span class="fu">mutate</span>(<span class="at">cont_listening_eff =</span> <span class="fu">round</span>(<span class="dv">100</span> <span class="sc">*</span> operational_hours <span class="sc">/</span> <span class="fu">sum</span>(operational_hours), <span class="dv">1</span>), </span>
+<span id="cb21-9"><a href="#cb21-9"></a>         <span class="at">surv_time_cover =</span> <span class="fu">round</span>(<span class="dv">100</span> <span class="sc">*</span> operational_hours <span class="sc">/</span> total_hours, <span class="dv">1</span>)) <span class="sc">%&gt;%</span></span>
 <span id="cb21-10"><a href="#cb21-10"></a>  <span class="fu">arrange</span>(<span class="fu">desc</span>(uptime_pct))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 <div class="cell">
 <div class="cell-output-display">
-<div class="datatables html-widget html-fill-item" id="htmlwidget-2ef9715c9a64739403b7" style="width:100%;height:auto;"></div>
-<script type="application/json" data-for="htmlwidget-2ef9715c9a64739403b7">{"x":{"filter":"none","vertical":false,"extensions":["FixedColumns"],"caption":"<caption>Summary of MOTUS array survey effort per station<\/caption>","data":[["1","2","3","4","5","6","7","8","9","10"],["Swan Pond","Hexham Swamp","Fullerton Entrance","Curlew Point","Milhams Pond","Ramsar Road","Tomago","Windeyers","Corrie Island","Davies Point"],[20966,16756,20727,16756,20918,20799,15854,5727,15906,15876],[17216,11164,13739,8294,10145,8372,4047,262,554,441],[3750,5592,6988,8462,10773,12427,11807,5465,15352,15435],[82,67,66,49,48,40,26,5,3,3],[2,2,2,2,2,2,2,2,2,2],[23.2,15,18.5,11.2,13.7,11.3,5.5,0.4,0.7,0.6],[82.09999999999999,53.2,65.5,39.6,48.4,39.9,19.3,1.2,2.6,2.1]],"container":"<table class=\"display\">\n  <thead>\n    <tr>\n      <th> <\/th>\n      <th>Station<\/th>\n      <th>total_hours<\/th>\n      <th>operational_hours<\/th>\n      <th>downtime_hours<\/th>\n      <th>uptime_pct<\/th>\n      <th>2<\/th>\n      <th>cont_listening_eff<\/th>\n      <th>surv_time_cover<\/th>\n    <\/tr>\n  <\/thead>\n<\/table>","options":{"scrollX":true,"pageLength":10,"fixedColumns":{"leftColumns":2},"columnDefs":[{"className":"dt-right","targets":[2,3,4,5,6,7,8]},{"orderable":false,"targets":0},{"name":" ","targets":0},{"name":"Station","targets":1},{"name":"total_hours","targets":2},{"name":"operational_hours","targets":3},{"name":"downtime_hours","targets":4},{"name":"uptime_pct","targets":5},{"name":"2","targets":6},{"name":"cont_listening_eff","targets":7},{"name":"surv_time_cover","targets":8}],"order":[],"autoWidth":false,"orderClasses":false,"rowCallback":"function(row, data, displayNum, displayIndex, dataIndex) {\nvar value=data[1]; $(this.api().cell(row, 1).node()).css({'font-weight':'bold'});\nvar value=data[7]; $(this.api().cell(row, 7).node()).css({'font-weight':'bold','color':'#808080'});\nvar value=data[8]; $(this.api().cell(row, 8).node()).css({'font-weight':'bold','color':'#808080'});\n}"}},"evals":["options.rowCallback"],"jsHooks":[]}</script>
+<div class="datatables html-widget html-fill-item" id="htmlwidget-8ee438617013749ceafd" style="width:100%;height:auto;"></div>
+<script type="application/json" data-for="htmlwidget-8ee438617013749ceafd">{"x":{"filter":"none","vertical":false,"extensions":["FixedColumns"],"caption":"<caption>Summary of MOTUS array survey effort per station<\/caption>","data":[["1","2","3","4","5","6","7","8","9","10"],["Swan Pond","Fullerton Entrance","Hexham Swamp","Curlew Point","Milhams Pond","Ramsar Road","Tomago","Windeyers","Corrie Island","Davies Point"],[21025,20786,16815,16815,20977,20858,15913,5786,15965,15935],[17216,13739,11164,8294,10145,8372,4047,262,554,441],[3809,7047,5651,8521,10832,12486,11866,5524,15411,15494],[82,66,66,49,48,40,25,5,3,3],[2,2,2,2,2,2,2,2,2,2],[23.2,18.5,15,11.2,13.7,11.3,5.5,0.4,0.7,0.6],[81.90000000000001,66.09999999999999,66.40000000000001,49.3,48.4,40.1,25.4,4.5,3.5,2.8]],"container":"<table class=\"display\">\n  <thead>\n    <tr>\n      <th> <\/th>\n      <th>Station<\/th>\n      <th>total_hours<\/th>\n      <th>operational_hours<\/th>\n      <th>downtime_hours<\/th>\n      <th>uptime_pct<\/th>\n      <th>2<\/th>\n      <th>cont_listening_eff<\/th>\n      <th>surv_time_cover<\/th>\n    <\/tr>\n  <\/thead>\n<\/table>","options":{"scrollX":true,"pageLength":10,"fixedColumns":{"leftColumns":2},"columnDefs":[{"className":"dt-right","targets":[2,3,4,5,6,7,8]},{"orderable":false,"targets":0},{"name":" ","targets":0},{"name":"Station","targets":1},{"name":"total_hours","targets":2},{"name":"operational_hours","targets":3},{"name":"downtime_hours","targets":4},{"name":"uptime_pct","targets":5},{"name":"2","targets":6},{"name":"cont_listening_eff","targets":7},{"name":"surv_time_cover","targets":8}],"order":[],"autoWidth":false,"orderClasses":false,"rowCallback":"function(row, data, displayNum, displayIndex, dataIndex) {\nvar value=data[1]; $(this.api().cell(row, 1).node()).css({'font-weight':'bold'});\nvar value=data[7]; $(this.api().cell(row, 7).node()).css({'font-weight':'bold','color':'#808080'});\nvar value=data[8]; $(this.api().cell(row, 8).node()).css({'font-weight':'bold','color':'#808080'});\n}"}},"evals":["options.rowCallback"],"jsHooks":[]}</script>
 </div>
 </div>
 <p>Let’s summarize the information regarding the survey effort from our MOTUS array:</p>
@@ -651,7 +651,7 @@ FALSE
 <div class="quarto-figure quarto-figure-center">
 <figure class="figure">
 <p><a href="figures/motus_survey_h.jpeg" target="_blank"><img src="figures/motus_survey_h.jpeg" class="img-fluid figure-img" style="width:100.0%"></a></p>
-<figcaption>MOTUS Survey Plot - hours</figcaption>
+<figcaption>Legend: Every black dot represent an hour where the station has activity recorded meaning the station is operational, meaning recording radio noise or a specicific tag.</figcaption>
 </figure>
 </div>
 </section>
@@ -660,7 +660,7 @@ FALSE
 <div class="quarto-figure quarto-figure-center">
 <figure class="figure">
 <p><a href="figures/motus_survey_d.jpeg" target="_blank"><img src="figures/motus_survey_d.jpeg" class="img-fluid figure-img" style="width:100.0%"></a></p>
-<figcaption>MOTUS Survey Plot - days</figcaption>
+<figcaption>Legend: Solid black lines are when a MOTUS station is operational For simplifying, When a station is not operational for less than 24 hours, this period is considered as a operational period. Every dot represent at least one detection of one bird within an hour of the operational period. Every MOTUS station has a contribution value at the survey effort (%), i.e: Curlew Point station contributed 11.2% at the total operational period for every stations within our local MOTUS array (operational survey effort).</figcaption>
 </figure>
 </div>
 </section>
@@ -695,7 +695,7 @@ FALSE
 </div>
 </div>
 </div>
-<p><strong><em>Legend:</em></strong> <em>The band in grey represents the operational period for each station, when the antenna is actually listening. When no grey, the station is “OFF”</em></p>
+<p><strong><em>Legend:</em></strong> <em>The band in grey represents the operational period for each MOTUS station, when the antenna is actually listening. When no grey, the station is “OFF” and not operational. Every dot is at least one detection for one tag. Every MOTUS station has a contribution value at the survey effort (%), i.e: Curlew Point station contributed 11.2% at the total operational period for every stations within our local MOTUS array (operational survey effort).</em></p>
 <button class="backBtn" data-target="contents2" onclick="document.getElementById(this.getAttribute('data-target')).scrollIntoView({behavior: 'smooth'});" style="position: fixed; bottom: 20px; right: 20px; z-index: 9999; padding: 10px 15px; background-color: #007bff; border: none; border-radius: 5px; color: white; cursor: pointer; box-shadow: 0 2px 4px rgba(0,0,0,0.3); display: none;">
 Back to Contents
 </button>
