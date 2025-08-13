@@ -47,7 +47,7 @@ recv <- readRDS(
 
 # Data summary (To be edited still...)
 tagSummary1 <- data_all %>%
-  group_by(motusTagID, recvDeployName) %>% 
+  group_by(Band.ID, recvDeployName) %>% 
   summarize(nDet = n(),
             nRecv = n_distinct(recvDeployName),
             timeMin = min(time),
@@ -55,11 +55,11 @@ tagSummary1 <- data_all %>%
             totDay = length(unique(doy)), 
             species = first(speciesEN),
             .groups = "drop") %>%
-  relocate(motusTagID, species)
+  relocate(Band.ID, species)
 
 tag_summary2 <- data_all %>%
   group_by(recvDeployName, tideCategory, speciesEN) %>%
-  summarise(nTags = n_distinct(motusTagID), .groups = "drop")
+  summarise(nTags = n_distinct(Band.ID), .groups = "drop")
 
 # Selecting variables
 data <- data_all %>%
@@ -68,7 +68,7 @@ data <- data_all %>%
     recvProjID,
     tagProjID,
     # Tag
-    motusTagID,
+    Band.ID,
     # Time
     time,
     timeAus,
@@ -135,7 +135,7 @@ tag_summary2 %>%
 # + period (and amount) of hours flew by 
 
 # https://motuswts.github.io/motus/articles/signal-strength.html
-# ggplot(data = filter(df_tags, motusTagID == 16039), 
+# ggplot(data = filter(df_tags, Band.ID == 16039), 
 #        aes(x = time, y = sig, colour = runLen_cat, shape = antBearing_cat)) + 
 #   geom_point(size = 8) + 
 #   theme_bw() +

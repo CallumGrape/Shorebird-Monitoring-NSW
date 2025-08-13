@@ -64,7 +64,224 @@ To be continued ...
 
 ## 3. The deployed tags
 
-To be continued ...
+### Overview 
+
+```{r 03 data overview DOUBLE FOR GENERATING PLOT text for moni object, message = FALSE, warning = FALSE, eval = TRUE, echo = FALSE}
+library(dplyr)
+write.csv(readxl::read_excel("C:/Users/marin/The University of Newcastle/StudentGroupPhD - Louise Williams and Mattea Taylor - General/SHOREBIRD NUMBER TRACKING.xlsx"), 
+          file.path(here::here("1_data", "spreadsheets"), paste0(Sys.Date(), "-teams_sheet", ".csv")), 
+          row.names = FALSE)
+spreadsheet <- read.csv(here::here("1_data", "spreadsheets", paste0(Sys.Date(), "-teams.sheet.csv"))) %>%
+  filter(Radio.tag. == "Y") %>%     
+  rename(DateAUS.Trap = "Date", motusTagID = "Motus.tag.ID") %>% 
+  mutate(motusTagID = as.factor(motusTagID))
+data_all <- readRDS(
+  tail(sort(list.files(
+    here::here("1_data", "alltags", "motus.rds"),
+    pattern = "-data\\.rds$", full.names = TRUE
+  )), 1))
+nb_undetect <- spreadsheet %>% 
+  filter(is.na(Euthanised.)) %>%
+  distinct(Band.ID) %>%
+  filter(!Band.ID %in% unique(data_all$Band.ID))
+nb_release <- spreadsheet %>% 
+  filter(is.na(Euthanised.),
+         is.na(Retagged.))
+moni <- bind_rows(
+  tibble(metric = "nb_tagged",
+         value  = length(spreadsheet$Band.ID)),
+  tibble(metric = "nb_euthanised",
+         value  = sum(spreadsheet$Euthanised. == "Y", na.rm = TRUE)),
+  tibble(metric = "nb_retagged",
+         value  = sum(!is.na(spreadsheet$Retagged.))),
+  tibble(metric = "nb_released",
+         value  = nrow(nb_release)),
+  tibble(metric = "detect_0",
+         value  = nrow(nb_undetect)),
+  tibble(metric = "detect_inf_150",
+         value  = data_all %>%
+           count(Band.ID) %>%
+           filter(n < 150) %>% 
+           nrow() ),
+  tibble(metric = "detect_sup_150",
+         value  = data_all %>%
+           count(Band.ID) %>%
+           filter(n > 149) %>% 
+           nrow() )
+)
+undetect <-  spreadsheet %>% 
+  filter(Band.ID %in% nb_undetect$Band.ID) %>%
+  select(Band.ID, motusTagID, Species, DateAUS.Trap, everything())
+
+eutha <-  spreadsheet %>% 
+  filter(Euthanised.== "Y") %>%
+  select(Band.ID, motusTagID, Species, DateAUS.Trap, everything())
+```
+
+Since 2021, we trapped `r moni$value[moni$metric == "nb_tagged"]` birds, and `r moni$value[moni$metric == "nb_released"]` were released and potentially detectable across our MOTUS array.
+
+```{r 03 data overview DOUBLE FOR GENERATING PLOT, message = FALSE, warning = FALSE, eval = TRUE, echo = FALSE}
+library(dplyr)
+write.csv(readxl::read_excel("C:/Users/marin/The University of Newcastle/StudentGroupPhD - Louise Williams and Mattea Taylor - General/SHOREBIRD NUMBER TRACKING.xlsx"), 
+          file.path(here::here("1_data", "spreadsheets"), paste0(Sys.Date(), "-teams_sheet", ".csv")), 
+          row.names = FALSE)
+spreadsheet <- read.csv(here::here("1_data", "spreadsheets", paste0(Sys.Date(), "-teams.sheet.csv"))) %>%
+  filter(Radio.tag. == "Y") %>%     
+  rename(DateAUS.Trap = "Date", motusTagID = "Motus.tag.ID") %>% 
+  mutate(motusTagID = as.factor(motusTagID)) %>%
+    select(Band.ID, motusTagID, Species, DateAUS.Trap, everything())
+
+data_all <- readRDS(
+  tail(sort(list.files(
+    here::here("1_data", "alltags", "motus.rds"),
+    pattern = "-data\\.rds$", full.names = TRUE
+  )), 1))
+nb_undetect <- spreadsheet %>% 
+  filter(is.na(Euthanised.)) %>%
+  distinct(Band.ID) %>%
+  filter(!Band.ID %in% unique(data_all$Band.ID))
+nb_release <- spreadsheet %>% 
+  filter(is.na(Euthanised.),
+         is.na(Retagged.))
+moni <- bind_rows(
+  tibble(metric = "nb_tagged",
+         value  = length(spreadsheet$Band.ID)),
+  tibble(metric = "nb_euthanised",
+         value  = sum(spreadsheet$Euthanised. == "Y", na.rm = TRUE)),
+  tibble(metric = "nb_retagged",
+         value  = sum(!is.na(spreadsheet$Retagged.))),
+  tibble(metric = "nb_released",
+         value  = nrow(nb_release)),
+  tibble(metric = "detect_0",
+         value  = nrow(nb_undetect)),
+  tibble(metric = "detect_inf_150",
+         value  = data_all %>%
+           count(Band.ID) %>%
+           filter(n < 150) %>% 
+           nrow() ),
+  tibble(metric = "detect_sup_150",
+         value  = data_all %>%
+           count(Band.ID) %>%
+           filter(n > 149) %>% 
+           nrow() )
+)
+undetect <-  spreadsheet %>% 
+  filter(Band.ID %in% nb_undetect$Band.ID) %>%
+  select(Band.ID, motusTagID, Species, DateAUS.Trap, everything())
+
+eutha <-  spreadsheet %>% 
+  filter(Euthanised.== "Y") %>%
+  select(Band.ID, motusTagID, Species, DateAUS.Trap, everything())
+
+DT::datatable(
+  moni,
+  options = list(
+    scrollX = TRUE,
+    pageLength = 10,
+    fixedColumns = list(leftColumns = 2)
+  ),
+  extensions = c('FixedColumns'),
+  caption = 'Overview on our bird data'
+) %>%
+  DT::formatStyle(
+    'metric',
+    fontWeight = 'bold'
+  ) %>%
+  DT::formatStyle(
+    c('value'),
+    fontWeight = 'bold',
+    color = '#808080'  
+  )
+
+```
+
+-   `nb_tagged`: total of birds trapped, banded (`Band.ID`) and tagged with a MOTUS device (`motusTagID`)
+-   `nb_euthanised`: total of birds that has been euthanised
+-   `nb_retagged`: total of birds that were re-trapped and needed to be re-tagged with a new MOTUS device, but did not require re-banding (as bands are permanent, whereas MOTUS devices can detach or fall off). This means that a single individual may have carried multiple MOTUS devices over time but only ever received one band
+-   `nb_released`: total of unique individual birds that have been trapped at least once, banded, tagged with a MOTUS device, and subsequently released. These individuals constitute the population that is potentially detectable across our MOTUS receiver array
+-   `detect_0`: total of individual that have NEVER been recorded across our MOTUS array (0 detection)
+-   `detect_inf_150`: total of individual recorded LESS than 150 times across our MOTUS array
+-   `detect_sup_150`: total of individual recorded MORE than 150 times across our MOTUS array
+
+### Detailed list 
+
+Find below more information about the captures (i.e. species, marking, banding, date, etc.).
+
+```{r 03 spreadsheet, message = FALSE, warning = FALSE, eval = TRUE, echo = FALSE}
+DT::datatable(
+  spreadsheet,
+  options = list(
+    scrollX = TRUE,
+    pageLength = 10,
+    fixedColumns = list(leftColumns = 2)
+  ),
+  extensions = c('FixedColumns'),
+  caption = 'Details on capture data'
+) %>%
+  DT::formatStyle(
+    c('Band.ID', 'motusTagID'),
+    fontWeight = 'bold'
+  ) %>%
+  DT::formatStyle(
+    c('DateAUS.Trap', 'Location'),
+    fontWeight = 'bold',
+    color = '#808080'  
+  )
+```
+
+
+### Undetected birds 
+
+However, for various reasons — such as limitations in device technology, the bird never flying within the coverage area of any antenna, the device detaching, and so on — some birds have never been detected again after the day they were tagged.
+
+```{r 03 undet, message = FALSE, warning = FALSE, eval = TRUE, echo = FALSE}
+DT::datatable(
+  undetect,
+  options = list(
+    scrollX = TRUE,
+    pageLength = 10,
+    fixedColumns = list(leftColumns = 2)
+  ),
+  extensions = c('FixedColumns'),
+  caption = 'Birds never detected'
+) %>%
+  DT::formatStyle(
+    c('Band.ID', 'motusTagID'),
+    fontWeight = 'bold'
+  ) %>%
+  DT::formatStyle(
+    c('Species', 'DateAUS.Trap'),
+    fontWeight = 'bold',
+    color = '#808080'  
+  )
+```
+
+### Euthanasied birds 
+
+Unfortunalely, it happens that we need to euthanasy birds, under the ACCE of University of Newcastle.
+
+```{r 03 euthe, message = FALSE, warning = FALSE, eval = TRUE, echo = FALSE}
+DT::datatable(
+  eutha,
+  options = list(
+    scrollX = TRUE,
+    pageLength = 10,
+    fixedColumns = list(leftColumns = 2)
+  ),
+  extensions = c('FixedColumns'),
+  caption = 'Birds euthanised'
+) %>%
+  DT::formatStyle(
+    c('Band.ID', 'motusTagID'),
+    fontWeight = 'bold'
+  ) %>%
+  DT::formatStyle(
+    c('Species', 'DateAUS.Trap'),
+    fontWeight = 'bold',
+    color = '#808080'  
+  )
+```
+
 :::
 
 # [Method]{.smallcaps}
@@ -119,6 +336,8 @@ Navigate the four different tabs below to get deeper into the [method]{.smallcap
 -   [Filter the data](#filter-the-data)
 -   [Adding variables](#adding-variables)
 -   [Set survey time frame](#set-timeframe)
+-   [Import Band ID](#bandID)
+-   [Filtered data: overview](#overview)
 
 ### Packages {#packages}
 
@@ -333,12 +552,169 @@ df.recvDeps <- df.recvDeps %>%
 
 Finally, set the *survey effort* starting day from our local Motus array, as one month before the first day a bird has been caught and tagged (information found into the [sharepoint](https://uonstaff.sharepoint.com/:x:/r/sites/StudentGroupPhD-LouiseWilliamsandMatteaTaylor/_layouts/15/Doc2.aspx?action=edit&sourcedoc=%7Ba23e66f0-c551-4ba4-acd0-de0d5e83ca42%7D&wdOrigin=TEAMS-MAGLEV.teamsSdk_ns.rwc&wdExp=TEAMS-TREATMENT&wdhostclicktime=175385) to access the file.).
 
+### Import Band ID {#bandID}
+
+As we might re-trap individuals and re-tag them with a new MOTUS tag, we can't use the Motus tag ID as unique ID anymore and have to use Band ID which supposes to last on the same bird from banding date to individual's death. Unfortunately, the Band ID is not imported by MOTUS network at the moment. So, we need to import it from our own record accessible on SharePoint [here](https://uonstaff.sharepoint.com/:x:/r/sites/StudentGroupPhD-LouiseWilliamsandMatteaTaylor/Shared%20Documents/General/SHOREBIRD%20NUMBER%20TRACKING.xlsx?d=wa23e66f0c5514ba4acd0de0d5e83ca42&csf=1&web=1&e=BuGI0w&nav=MTVfe0QyREY1NzZGLUM2RjktNEJFRi1BQThGLTc1M0E3OEFFM0ZERn0).
+
+::: blockquote-yellow
+**Note:** To download the spreadsheet from *Teams* to your device, you first need to *sync* the *Teams* cloud folder to your *OneDrive* account. Once synced, you can access it locally from your device and direct *RStudio* to work with this now-local directory. Refer to the instructions [here](https://support.microsoft.com/en-au/office/sync-sharepoint-and-teams-files-with-your-computer-6de9ede8-5b6e-4503-80b2-6190f3354a88) for more details.  
+Remember to specify the correct directories in your *R* *code.*
+:::
+
+```{r 1 Band ID, message = FALSE, warning = FALSE, eval = FALSE, echo = TRUE}
+
+# Call and extract last up to date Spreadsheet record (sync your one drive with the TEAMS channel first)
+write.csv(readxl::read_excel("C:/Users/marin/The University of Newcastle/StudentGroupPhD - Louise Williams and Mattea Taylor - General/SHOREBIRD NUMBER TRACKING.xlsx"), # change the path depending your device
+          file.path(here::here("1_data", "spreadsheets"), paste0(Sys.Date(), "-teams_sheet", ".csv")), 
+          row.names = FALSE)
+
+# Load df with date at the beginning
+spreadsheet <- read.csv(here::here("1_data", "spreadsheets", paste0(Sys.Date(), "-teams.sheet.csv"))) %>%
+  filter(Radio.tag. == "Y") %>%     # Keep only the tagged ones
+  rename(DateAUS.Trap = "Date", motusTagID = "Motus.tag.ID") %>% 
+  mutate(motusTagID = as.factor(motusTagID))
+
+# Join unique Band IDs for inconsistent motusTag (same bird re-tagged, etc)
+data_all <- left_join(data_all, 
+                      spreadsheet %>% 
+                        filter(is.na(Euthanised.)) %>%
+                        select(motusTagID, DateAUS.Trap, Band.ID, Bander),
+                      by = "motusTagID")
+```
+
+
+### Filtered data: overview {#overview}
+
+```{r 1 data overview, message = FALSE, warning = FALSE, eval = FALSE, echo = TRUE}
+
+# Band.IDs in spreadsheet but not in data_all (tagged + released but not detected)
+nb_undetect <- spreadsheet %>% 
+  filter(is.na(Euthanised.)) %>%
+  distinct(Band.ID) %>%
+  filter(!Band.ID %in% unique(data_all$Band.ID))
+
+# Bird released (total tagged and released birds, supposed to be detectable) 
+nb_release <- spreadsheet %>% 
+  filter(is.na(Euthanised.),
+         is.na(Retagged.))
+
+# Combine all into Monitoring table table
+moni <- bind_rows(
+  # Nb of birds trapped & tagged
+  tibble(metric = "nb_tagged",
+         value  = length(spreadsheet$Band.ID)),
+  # Nb of birds euthanised (tag re-used)
+  tibble(metric = "nb_euthanised",
+         value  = sum(spreadsheet$Euthanised. == "Y", na.rm = TRUE)),
+  # Nb of birds re-trapped & re-tagged (initial tag lost)
+  tibble(metric = "nb_retagged",
+         value  = sum(!is.na(spreadsheet$Retagged.))),
+  # Nb of birds trapped, tagged & released (supposed to be detectable)
+  tibble(metric = "nb_released",
+         value  = nrow(nb_release)),
+  # Nb of birds released but never detected
+  tibble(metric = "detect_0",
+         value  = nrow(nb_undetect)),
+  # Nb of birds released with low detection (less than 30 times)
+  tibble(metric = "detect_inf_150",
+         value  = data_all %>%
+           count(Band.ID) %>%
+           filter(n < 150) %>% #1*: we can change this treshold value depending our appreciation
+           nrow() ),
+  # Nb of birds released with good detection (more than 30 times)
+  tibble(metric = "detect_sup_150",
+         value  = data_all %>%
+           count(Band.ID) %>%
+           filter(n > 149) %>% #1*
+           nrow() )
+)
+
+# Undetected & Euthanaised tables
+undetect <-  spreadsheet %>% 
+  filter(Band.ID %in% nb_undetect$Band.ID)
+eutha <-  spreadsheet %>% 
+  filter(Euthanised.== "Y")
+
+```
+
+```{r 1 data overview DOUBLE FOR GENERATING PLOT, message = FALSE, warning = FALSE, eval = TRUE, echo = FALSE}
+DT::datatable(
+  moni,
+  options = list(
+    scrollX = TRUE,
+    pageLength = 10,
+    fixedColumns = list(leftColumns = 2)
+  ),
+  extensions = c('FixedColumns'),
+  caption = 'Overview on our bird data'
+) %>%
+  DT::formatStyle(
+    'metric',
+    fontWeight = 'bold'
+  ) %>%
+  DT::formatStyle(
+    c('value'),
+    fontWeight = 'bold',
+    color = '#808080'  
+  )
+
+```
+
+Let's have an overview on our data, now filtered and with every tagged bird identified with a unique *Band ID*, also related to a *MOTUS tag ID*.
+Since 2021, we trapped `r moni$value[moni$metric == "nb_tagged"]` birds, and `r moni$value[moni$metric == "nb_released"]` were released and potentially detectable.
+
+```{r 1 other cases, message = FALSE, warning = FALSE, eval = TRUE, echo = FALSE}
+DT::datatable(
+  undetect,
+  options = list(
+    scrollX = TRUE,
+    pageLength = 10,
+    fixedColumns = list(leftColumns = 2)
+  ),
+  extensions = c('FixedColumns'),
+  caption = 'Birds never detected'
+) %>%
+  DT::formatStyle(
+    c('Band.ID', 'motusTagID'),
+    fontWeight = 'bold'
+  ) %>%
+  DT::formatStyle(
+    c('Species', 'DateAUS.Trap'),
+    fontWeight = 'bold',
+    color = '#808080'  
+  )
+
+DT::datatable(
+  eutha,
+  options = list(
+    scrollX = TRUE,
+    pageLength = 10,
+    fixedColumns = list(leftColumns = 2)
+  ),
+  extensions = c('FixedColumns'),
+  caption = 'Birds euthanised'
+) %>%
+  DT::formatStyle(
+    c('Band.ID', 'motusTagID'),
+    fontWeight = 'bold'
+  ) %>%
+  DT::formatStyle(
+    c('Species', 'DateAUS.Trap'),
+    fontWeight = 'bold',
+    color = '#808080'  
+  )
+```
+
+Above are particular cases of undetected and euthanised individuals.
+
+### Save
+
 ```{r 1 save .rds, message = FALSE, warning = FALSE, eval = FALSE, echo = TRUE}
 saveRDS(df.alltags, here::here("data", paste0(Sys.Date(), "-data", ".rds" )))
 saveRDS(df.recvDeps, here::here("data", paste0(Sys.Date(), "-recv-info", ".rds" )))
 ```
 
-Save your now formatted data, ready for use. Automatically named with the date of your saving.
+Save your now formatted data, ready for use. Automatically named with the date of your saving (for tracking updates).
 
 <button
   class="backBtn"
@@ -375,9 +751,11 @@ library(tidyr)
 
 ### Load the data {#load-the-data2}
 
-Either load your own data by connecting through `DBI::dbConnect(RSQLite::SQLite())` and calling the data with `tbl(sql.motus, "activity")`, or download the data up to the-last-document-update date provided here below (contact maxime.marini\@uon.edu.au for password access):
+Either call and load your own data by connecting through `DBI::dbConnect(RSQLite::SQLite())` and `tbl(sql.motus, "activity")`, or download the data up to the-last-document-update date provided here below (contact maxime.marini\@uon.edu.au for password access):
 
-Receiver activity: <a href="#" onclick="return checkPassword('recv')">recv.act.rds</a><br>
+Receiver activity: <a href="#" onclick="return checkPassword('recv.act')">recv.act.rds</a><br>
+Receiver information: <a href="#" onclick="return checkPassword('recv')">recv-info.rds</a><br> 
+Bird data: <a href="#" onclick="return checkPassword('bird')">data.rds</a>
 
 ```{=html}
 <script>
@@ -387,6 +765,8 @@ Receiver activity: <a href="#" onclick="return checkPassword('recv')">recv.act.r
     };
     var urlLinks = {
       recv.act: "https://uoneduau-my.sharepoint.com/:u:/g/personal/c3541851_uon_edu_au/EcizeHaA5kpHhluczVvJ5_4BoU4nfvFLtLGr0uTOPzsqng?e=FIF1gA",
+      recv: "https://uoneduau-my.sharepoint.com/:u:/g/personal/c3541851_uon_edu_au/EemdZD3VJUdHvkVoKbqUhsABCJekUx7zYJ-_5snIw0BI4A?e=RRnDGy",
+      bird: "https://uoneduau-my.sharepoint.com/:u:/g/personal/c3541851_uon_edu_au/EU1v7RPMqwZGi-fapl0G620BYQVUbAQcr1tHyDqgsEPBKg?e=pfZgDd"
     };
     var userPassword = prompt("Please enter the password to access the link:");
     if (userPassword === correctPasswords[type]) {
@@ -453,7 +833,7 @@ table(is.na(recv.act$pulseCount) & is.na(recv.act$numTags))
 
 `pulseCount`:Antenna pulses are a reflection of environmental noise and consist of radio pulses at the nominal listening frequency (e.g.; 166.38 MHz) which did not correspond to a known tag signature. The number of radio pulses measured on each antenna over each hour period (hourBin) - [`Motus documentation, 2025`](https://docs.motus.org/en/stations/station-inspection/up-time-and-detectability#antenna-pulses){target="_blank"} . `numTags`: Variable in the Motus SQL data (including the activity table and functions that generate site or tag summaries) represents the total number of unique tags detected within a given context—typically at a site, within a batch, or for a set of detections.
 
-::: blockquote-red
+::: blockquote-yellow
 **Note** that when `pulseCount` is NA, no noise has been recorded while one or several tags have been recorded. When no tag has been recorded but noise happened, `numTags` = 0 and `pulseCount` \> 0. So a case when a station is actually listening has either values or NA for `pulseCount` or/and for `numTags` variables. In other words, when a station is not listening, there is no row at all in the table (no data recorded).
 
 **Keep in mind** What we can miss, are the hours where no tag or noise are happening within the environment BUT the antenna still being "listening". In such a case, let's further assume than the antenna is not working/listening since "no noise" condition during more than an hour may be extremely rare.
@@ -591,7 +971,7 @@ Let's summarize the information regarding the survey effort from our MOTUS array
 -   `cont_listening_eff`: per station, contribution (%) of hours being listening (`operational_hour`) over the total (sum) of listening period across all the stations
 -   `surv_time_cover`: per station, temporal coverage (%) of hours being listening (`operational_hour`) over the period of time the array has been deployed (i.e. from the first day the first deployed station has been listening to the last day the last deployed station has been listening)
 
-::: blockquote-red
+::: blockquote-yellow
 AWAITING FOR UPDATES: The data-set have some unknown and not-understood *NaN* within the raw data (failure in collecting process?). That matches pretty well with some gaps along the antennas survey effort (i.e. Hexham road), so, we expect to fill up these gaps once the *NaN* are processed.
 :::
 
@@ -670,7 +1050,7 @@ motus_survey_d <- ggplot(recv.status, aes(y = factor(StationP))) +
 
 # Adding Birds 
 data_all_plot <- left_join(data_all %>%
-                             select(motusTagID, recv, recvDeployName, timeAus, tideCategory, speciesEN),
+                             select(Band.ID, recv, recvDeployName, timeAus, tideCategory, speciesEN),
                            recv.status %>% 
                              rename(recvDeployName = Station) %>%
                              select(recvDeployName, StationP) %>%
@@ -724,13 +1104,13 @@ plots_per_station <- imap(data_split, ~ {
   effort_data <- recv_split[[station_name]]
   
 tag_order <- station_data %>%
-    distinct(motusTagID, speciesEN) %>%
-    arrange(speciesEN, motusTagID) %>%
-    pull(motusTagID)
+    distinct(Band.ID, speciesEN) %>%
+    arrange(speciesEN, Band.ID) %>%
+    pull(Band.ID)
   
 # Create a factor with levels ordered by speciesEN grouping
 station_data <- station_data %>%
-    mutate(motusTagID_ordered = factor(motusTagID, levels = tag_order))
+    mutate(Band.ID_ordered = factor(Band.ID, levels = tag_order))
 
 ggplot() +
   # Vertical bands for survey effort periods
@@ -738,10 +1118,10 @@ ggplot() +
             aes(xmin = start_hour, xmax = end_hour, ymin = -Inf, ymax = Inf),
             fill = "grey80", alpha = 0.3) +
   
-    # Points for detections with ordered motusTagID
+    # Points for detections with ordered Band.ID
     geom_point(data = station_data,
                aes(x = timeAus,
-                   y = motusTagID_ordered,
+                   y = Band.ID_ordered,
                    color = speciesEN),
                alpha = 0.7, linewidth = 2) +
     scale_color_manual(values = species_colors, name = "Species") +
@@ -749,7 +1129,7 @@ ggplot() +
     theme_bw() +
     labs(title = station_name,
          x = "Time (Aus)",
-         y = "motusTagID") +
+         y = "Band.ID") +
     theme(axis.text.y = element_text(size = 6),
           plot.title = element_text(hjust = 0.5))
 })
@@ -811,7 +1191,8 @@ library(ggplot2)
 
 Either load your own data generated across the previous chapters (.rds format), or download the data up to the-last-document-update date provided here below (contact maxime.marini\@uon.edu.au for password access):
 
-Receiver information: <a href="#" onclick="return checkPassword('recv')">recv-info.rds</a><br> Bird data: <a href="#" onclick="return checkPassword('bird')">data.rds</a>
+Receiver information: <a href="#" onclick="return checkPassword('recv')">recv-info.rds</a><br>
+Bird data: <a href="#" onclick="return checkPassword('bird')">data.rds</a>
 
 ```{=html}
 <script>
@@ -822,7 +1203,7 @@ Receiver information: <a href="#" onclick="return checkPassword('recv')">recv-in
     };
     var urlLinks = {
       recv: "https://uoneduau-my.sharepoint.com/:u:/g/personal/c3541851_uon_edu_au/EemdZD3VJUdHvkVoKbqUhsABCJekUx7zYJ-_5snIw0BI4A?e=RRnDGy",
-      bird: "https://uoneduau-my.sharepoint.com/:u:/g/personal/c3541851_uon_edu_au/Eaq8OOOLx9FEkCmGpcMtkD0Bq-8TPPmvELJ7ZomHdsXH4Q?e=qcrQZt"
+      bird: "https://uoneduau-my.sharepoint.com/:u:/g/personal/c3541851_uon_edu_au/EU1v7RPMqwZGi-fapl0G620BYQVUbAQcr1tHyDqgsEPBKg?e=pfZgDd"
     };
     var userPassword = prompt("Please enter the password to access the link:");
     if (userPassword === correctPasswords[type]) {
@@ -870,7 +1251,7 @@ For the aim of the analysis and generate readable figures, let's simplify the ta
 ```{r 4 summarise data, echo = TRUE, eval = TRUE}
 # Data summary (To be edited still...)
 tagSummary1 <- data_all %>%
-  group_by(motusTagID, recvDeployName) %>% 
+  group_by(Band.ID, recvDeployName) %>% 
   summarize(nDet = n(),
             nRecv = n_distinct(recvDeployName),
             timeMin = min(time),
@@ -878,11 +1259,11 @@ tagSummary1 <- data_all %>%
             totDay = length(unique(doy)), 
             species = first(speciesEN),
             .groups = "drop") %>%
-  relocate(motusTagID, species)
+  relocate(Band.ID, species)
 
 tag_summary2 <- data_all %>%
   group_by(recvDeployName, tideCategory, speciesEN) %>%
-  summarise(nTags = n_distinct(motusTagID), .groups = "drop")
+  summarise(nTags = n_distinct(Band.ID), .groups = "drop")
 
 # Selecting variables
 data <- data_all %>%
@@ -892,7 +1273,7 @@ data <- data_all %>%
     recvProjID,
     tagProjID,
   # Tag
-    motusTagID,
+    Band.ID,
   # Time
     time,
     timeAus,

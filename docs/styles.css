@@ -21,4 +21,15 @@
 }
 
 
+.blockquote-yellow {
+  background-color: #fff3cd; /* light yellow background */
+  border-left: 4px solid #ffc107; /* Bootstrap yellow */
+  padding: 1em;
+  margin: 1em 0;
+  color: #856404; /* dark yellow/brownish text */
+  border-radius: 4px;
+}
+
+
+
 

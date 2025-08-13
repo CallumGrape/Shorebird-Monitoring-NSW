@@ -196,7 +196,7 @@ motus_survey_d
 # 5 - Adding Birds ----
 
 data_all_plot <- left_join(data_all %>%
-                             select(motusTagID, recv, recvDeployName, timeAus, tideCategory, speciesEN), 
+                             select(Band.ID, recv, recvDeployName, timeAus, tideCategory, speciesEN), 
                            recv.status %>% 
                              rename(recvDeployName = Station) %>%
                              select(recvDeployName, StationP) %>%
@@ -242,11 +242,11 @@ walk2(data_split, names(data_split), ~ {
   
   # Order tag by sp for grouping on y axis
   tag_order <- station_data %>%
-    distinct(motusTagID, speciesEN) %>%
-    arrange(speciesEN, motusTagID) %>%
-    pull(motusTagID)
+    distinct(Band.ID, speciesEN) %>%
+    arrange(speciesEN, Band.ID) %>%
+    pull(Band.ID)
   station_data <- station_data %>%
-    mutate(motusTagID_ordered = factor(motusTagID, levels = tag_order))
+    mutate(Band.ID_ordered = factor(Band.ID, levels = tag_order))
   
   p <- ggplot() +
     # Black effort line
@@ -256,14 +256,14 @@ walk2(data_split, names(data_split), ~ {
     
     # Points by species
     geom_point(data = station_data,
-               aes(x = timeAus, y = motusTagID_ordered, color = speciesEN),
+               aes(x = timeAus, y = Band.ID_ordered, color = speciesEN),
                alpha = 0.7, size = 2) +
     scale_color_manual(values = species_colors, name = "Species") +
     scale_y_discrete() +
     theme_bw() +
     labs(title = station_name,
          x = "Time (Aus)",
-         y = "motusTagID") +
+         y = "Band.ID") +
     theme(axis.text.y = element_text(size = 6),
           plot.title = element_text(hjust = 0.5))
   
