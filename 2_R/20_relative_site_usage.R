@@ -15,6 +15,7 @@ library(forcats)
 library(ggplot2)
 library(lubridate)
 library(tidyr)
+library(purrr)
 
 # 2 - Settings ----
 
@@ -258,7 +259,9 @@ walk2(data_split, names(data_split), ~ {
     geom_point(data = station_data,
                aes(x = timeAus, y = Band.ID_ordered, color = speciesEN),
                alpha = 0.7, size = 2) +
-    scale_color_manual(values = species_colors, name = "Species") +
+    scale_color_manual(
+      values = species_colors,
+      name = paste0("Species\n (n = ", n_distinct(station_data$Band.ID_ordered), " indiv. recorded)") ) +
     scale_y_discrete() +
     theme_bw() +
     labs(title = station_name,
