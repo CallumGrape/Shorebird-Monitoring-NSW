@@ -158,9 +158,8 @@ recv.status <- recv_hours %>%
   arrange(Station, hour_dt) %>%
   group_by(Station) %>%
   # Calculate gap (in hours) between consecutive operational hours
-  mutate(gap_hours = as.numeric(difftime(hour_dt, lag(hour_dt), units = "hours")),
-         # New run starts if gap > 24h or if first row (NA gap)
-         run_group = cumsum(if_else(is.na(gap_hours) | gap_hours > 24, 1, 0))) %>%
+  mutate(gap_hours = as.numeric(difftime(hour_dt, lag(hour_dt), units = "hours")), # Gives diff between hour row and previous hour raw
+         run_group = cumsum(if_else(is.na(gap_hours) | gap_hours > 24, 1, 0))) %>% # New run starts if gap > 24h or if first row (NA gap)
   group_by(Station, run_group) %>%
   # Get the start and end datetime per run group
   summarise(start_hour = min(hour_dt),
