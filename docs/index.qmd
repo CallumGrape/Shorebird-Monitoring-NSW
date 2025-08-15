@@ -64,7 +64,17 @@ To be continued ...
 
 ## 3. The deployed tags
 
-### Trapping: overview 
+### [Contents]{#contents03 style="color: grey; font-size: smaller;"}
+
+-   [Trapping: overview](#overview)
+-   [Trapping: details](#details)
+-   [Detected birds](#detected)
+-   [Undetected birds](#undetected)
+-   [Euthanasied birds](#euthanasied)
+
+---
+
+### Trapping: overview {#overview}
 
 ```{r 03 data overview DOUBLE FOR GENERATING PLOT text for moni object, message = FALSE, warning = FALSE, eval = TRUE, echo = FALSE}
 library(dplyr)
@@ -215,7 +225,7 @@ DT::datatable(
 -   `detect_inf_150`: total of individual recorded LESS than 150 times across our MOTUS array
 -   `detect_sup_150`: total of individual recorded MORE than 150 times across our MOTUS array
 
-### Trapping: details 
+### Trapping: details {#details}
 
 Find below more information about the captures (i.e. species, marking, banding, date, etc.).
 
@@ -241,7 +251,7 @@ DT::datatable(
   )
 ```
 
-### Detected birds 
+### Detected birds {#detected}
 
 ```{r 03 detect, message = FALSE, warning = FALSE, eval = TRUE, echo = FALSE}
 DT::datatable(
@@ -265,7 +275,7 @@ DT::datatable(
   )
 ```
 
-### Undetected birds 
+### Undetected birds {#undetected}
 
 However, for various reasons — such as limitations in device technology, the bird never flying within the coverage area of any antenna, the device detaching, and so on — some birds have never been detected again after the day they were tagged.
 
@@ -291,7 +301,7 @@ DT::datatable(
   )
 ```
 
-### Euthanasied birds 
+### Euthanasied birds {#euthanasied}
 
 Unfortunalely, it happens that we need to euthanasy birds, under the ACCE of University of Newcastle.
 
@@ -317,6 +327,13 @@ DT::datatable(
   )
 ```
 
+<button
+  class="backBtn"
+  data-target="contents03" 
+  onclick="document.getElementById(this.getAttribute('data-target')).scrollIntoView({behavior: 'smooth'});"
+  style="position: fixed; bottom: 20px; right: 20px; z-index: 9999; padding: 10px 15px; background-color: #007bff; border: none; border-radius: 5px; color: white; cursor: pointer; box-shadow: 0 2px 4px rgba(0,0,0,0.3); display: none;">
+  Back to Contents
+</button>
 :::
 
 # [Method]{.smallcaps}
@@ -373,6 +390,8 @@ Navigate the four different tabs below to get deeper into the [method]{.smallcap
 -   [Set survey time frame](#set-timeframe)
 -   [Import Band ID](#bandID)
 -   [Filtered data: overview](#overview)
+
+---
 
 ### Packages {#packages}
 
@@ -769,6 +788,8 @@ Save your now formatted data, ready for use. Automatically named with the date o
 -   [Clarifying deviceID and stations](#clarifying2)
 -   [Extracting listening periods per stations](#extracting2)
 -   [MOTUS array survey effort](#survey-effort2)
+
+---
 
 ### Packages {#packages2}
 
