@@ -33,6 +33,12 @@ nb_undetect <- spreadsheet %>%
   distinct(Band.ID) %>%
   filter(!Band.ID %in% unique(data_all$Band.ID))
 
+# Band.IDs in spreadsheet and  in data_all (tagged + released and detected)
+nb_detect <- spreadsheet %>% 
+  filter(is.na(Euthanised.)) %>%
+  distinct(Band.ID) %>%
+  filter(Band.ID %in% unique(data_all$Band.ID))
+
 # Bird released (total tagged and released birds, supposed to be detectable) 
 nb_release <- spreadsheet %>% 
   filter(is.na(Euthanised.),
@@ -83,6 +89,15 @@ moni <- bind_rows(
 
 
 # Undetected & Euthanaised tables
+detect <-  spreadsheet %>% 
+  filter(Band.ID %in% nb_detect$Band.ID) %>%
+  left_join(data_all %>%
+              group_by(motusTagID) %>%
+              summarise(Detections = n(), 
+                        .groups = "drop"), 
+            by = "motusTagID") %>%
+  mutate(Detections = ifelse(is.na(Detections), 0, Detections)) %>%
+  select(Detections, Band.ID, motusTagID, Species, DateAUS.Trap, everything())
 undetect <-  spreadsheet %>% 
   filter(Band.ID %in% nb_undetect$Band.ID)
 eutha <-  spreadsheet %>% 

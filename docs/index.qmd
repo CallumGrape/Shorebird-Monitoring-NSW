@@ -64,12 +64,12 @@ To be continued ...
 
 ## 3. The deployed tags
 
-### Overview 
+### Trapping: overview 
 
 ```{r 03 data overview DOUBLE FOR GENERATING PLOT text for moni object, message = FALSE, warning = FALSE, eval = TRUE, echo = FALSE}
 library(dplyr)
 write.csv(readxl::read_excel("C:/Users/marin/The University of Newcastle/StudentGroupPhD - Louise Williams and Mattea Taylor - General/SHOREBIRD NUMBER TRACKING.xlsx"), 
-          file.path(here::here("1_data", "spreadsheets"), paste0(Sys.Date(), "-teams_sheet", ".csv")), 
+          file.path(here::here("1_data", "spreadsheets"), paste0(Sys.Date(), "-teams.sheet", ".csv")), 
           row.names = FALSE)
 spreadsheet <- read.csv(here::here("1_data", "spreadsheets", paste0(Sys.Date(), "-teams.sheet.csv"))) %>%
   filter(Radio.tag. == "Y") %>%     
@@ -140,6 +140,10 @@ nb_undetect <- spreadsheet %>%
   filter(is.na(Euthanised.)) %>%
   distinct(Band.ID) %>%
   filter(!Band.ID %in% unique(data_all$Band.ID))
+nb_detect <- spreadsheet %>% 
+  filter(is.na(Euthanised.)) %>%
+  distinct(Band.ID) %>%
+  filter(Band.ID %in% unique(data_all$Band.ID))
 nb_release <- spreadsheet %>% 
   filter(is.na(Euthanised.),
          is.na(Retagged.))
@@ -168,7 +172,15 @@ moni <- bind_rows(
 undetect <-  spreadsheet %>% 
   filter(Band.ID %in% nb_undetect$Band.ID) %>%
   select(Band.ID, motusTagID, Species, DateAUS.Trap, everything())
-
+detect <-  spreadsheet %>% 
+  filter(Band.ID %in% nb_detect$Band.ID) %>%
+  left_join(data_all %>%
+              group_by(motusTagID) %>%
+              summarise(Detections = n(), 
+                        .groups = "drop"), 
+            by = "motusTagID") %>%
+  mutate(Detections = ifelse(is.na(Detections), 0, Detections)) %>%
+  select(Detections, Band.ID, motusTagID, Species, DateAUS.Trap, everything())
 eutha <-  spreadsheet %>% 
   filter(Euthanised.== "Y") %>%
   select(Band.ID, motusTagID, Species, DateAUS.Trap, everything())
@@ -203,11 +215,11 @@ DT::datatable(
 -   `detect_inf_150`: total of individual recorded LESS than 150 times across our MOTUS array
 -   `detect_sup_150`: total of individual recorded MORE than 150 times across our MOTUS array
 
-### Detailed list 
+### Trapping: details 
 
 Find below more information about the captures (i.e. species, marking, banding, date, etc.).
 
-```{r 03 spreadsheet, message = FALSE, warning = FALSE, eval = TRUE, echo = FALSE}
+```{r 03 spreadsheet trap details, message = FALSE, warning = FALSE, eval = TRUE, echo = FALSE}
 DT::datatable(
   spreadsheet,
   options = list(
@@ -229,6 +241,29 @@ DT::datatable(
   )
 ```
 
+### Detected birds 
+
+```{r 03 detect, message = FALSE, warning = FALSE, eval = TRUE, echo = FALSE}
+DT::datatable(
+  detect,
+  options = list(
+    scrollX = TRUE,
+    pageLength = 10,
+    fixedColumns = list(leftColumns = 3)
+  ),
+  extensions = c('FixedColumns'),
+  caption = 'Details on capture data - detected birds'
+) %>%
+  DT::formatStyle(
+    c('Band.ID', 'motusTagID'),
+    fontWeight = 'bold'
+  ) %>%
+  DT::formatStyle(
+    c('Detections', 'DateAUS.Trap', 'Location'),
+    fontWeight = 'bold',
+    color = '#808080'  
+  )
+```
 
 ### Undetected birds 
 
@@ -243,7 +278,7 @@ DT::datatable(
     fixedColumns = list(leftColumns = 2)
   ),
   extensions = c('FixedColumns'),
-  caption = 'Birds never detected'
+  caption = 'Details on capture data - birds never detected'
 ) %>%
   DT::formatStyle(
     c('Band.ID', 'motusTagID'),
@@ -269,7 +304,7 @@ DT::datatable(
     fixedColumns = list(leftColumns = 2)
   ),
   extensions = c('FixedColumns'),
-  caption = 'Birds euthanised'
+  caption = 'Details on capture data - birds euthanised'
 ) %>%
   DT::formatStyle(
     c('Band.ID', 'motusTagID'),
