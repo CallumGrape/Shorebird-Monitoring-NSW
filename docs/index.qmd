@@ -1217,7 +1217,201 @@ ggplot() +
 
 ## 3. Motus array suitability
 
-To be continued ...
+### [Contents]{#contents3 style="color: grey; font-size: smaller;"}
+
+-   [Packages](#packages3)
+-   [Load the data](#load-the-data3)
+-   [Process variables](#process3)
+-   [Detectectability: Tables](#tables3)
+-   [Detectability: Plots](#plots3)
+
+---
+
+### Packages {#package3}
+
+```{r 3 packages, message = FALSE, warning = FALSE, eval = TRUE}
+library(dplyr)
+library(here)
+library(ggplot2)
+library(lubridate)
+```
+
+### Load the data {#load-the-data3}
+
+Either load your own data generated across the previous chapters (.rds format), or download the data up to the-last-document-update date provided here below (contact maxime.marini\@uon.edu.au for password access):
+
+Receiver information: <a href="#" onclick="return checkPassword('recv')">recv-info.rds</a><br>
+Bird data: <a href="#" onclick="return checkPassword('bird')">data.rds</a>
+
+```{=html}
+<script>
+  function checkPassword(type) {
+    var correctPasswords = {
+      recv: "provence13",
+      bird: "provence13"
+    };
+    var urlLinks = {
+      recv: "https://uoneduau-my.sharepoint.com/:u:/g/personal/c3541851_uon_edu_au/EemdZD3VJUdHvkVoKbqUhsABCJekUx7zYJ-_5snIw0BI4A?e=RRnDGy",
+      bird: "https://uoneduau-my.sharepoint.com/:u:/g/personal/c3541851_uon_edu_au/EU1v7RPMqwZGi-fapl0G620BYQVUbAQcr1tHyDqgsEPBKg?e=pfZgDd"
+    };
+    var userPassword = prompt("Please enter the password to access the link:");
+    if (userPassword === correctPasswords[type]) {
+      window.open(urlLinks[type], '_blank');
+    } else {
+      alert("Incorrect password. Access denied.");
+    }
+    return false; // prevent default link behavior
+  }
+</script>
+```
+
+To properly load the data into your environment, make sure to set the working directory and the path as yours.
+
+```{r 3 load data 1, eval = FALSE}
+# Set WD
+setwd(dirname(rstudioapi::getSourceEditorContext()$path)) 
+# Birds
+data_all <- readRDS(here::here("data", "recv.info.rds"))
+```
+
+```{r 3 load data 2, echo = FALSE, eval = TRUE}
+# Birds
+data_all <- readRDS(
+  tail(sort(list.files(
+  here::here("1_data", "alltags", "motus.rds"),
+  pattern = "-data\\.rds$", full.names = TRUE
+  )), 1)) # pick up the most recent .rds file
+```
+
+### Process variables  {#process3}
+
+```{r 3 process, echo = TRUE, eval = TRUE}
+
+# Get deployment duration for each tags (in days)
+tag_dep_duration <- data_all %>%
+  group_by(Band.ID) %>%
+  summarise(start_date = min(DateAUS.Trap),
+            end_date = max(dateAus),
+            period_tag_dep_d = 1 + time_length(interval(start = start_date, end = end_date), unit = "day"), # +1 to include the trapping day
+            .groups = "drop") %>%
+  select(Band.ID, period_tag_dep_d)
+
+# Get number days each tag has been detected at least once in any station
+tag_dep_nb_d <- data_all %>%
+  mutate(dateAus = as.Date(dateAus)) %>%
+  group_by(Band.ID) %>%
+  summarise(days_detect = n_distinct(dateAus), .groups = "drop")
+
+# Get number of days one tag has been recorded in >1 station (for each tags)
+multiple_site_detect <- data_all %>%
+  group_by(Band.ID, dateAus) %>%
+  # Counts per day the number of station one tag has been recorded
+  summarise(distinct_sites = n_distinct(recvDeployName),
+            .groups = "drop_last") %>%
+  # Tells if one day one tag has been recorded several sites
+  mutate(multiple_detect = distinct_sites > 1) %>%
+  group_by(Band.ID) %>%
+  summarise(multiple_site_detect = sum(multiple_detect),
+            .groups = "drop")
+
+```
+
+### Detectectability: Tables  {#tables3}
+
+```{r 3 table, echo = TRUE, eval = TRUE}
+# Get number of day each tag has been recorded /species and /station
+tag_detection <- data_all %>%
+  group_by(Band.ID, recvDeployName, speciesEN) %>%
+  # to count sp*ID per recv
+  reframe(days_recorded = n_distinct(dateAus)) %>%
+  # flip table to get one column per station
+  pivot_wider(names_from = recvDeployName, 
+              values_from = days_recorded,
+              values_fill = 0) %>% # = 0 if NA
+  left_join(multiple_site_detect, by = "Band.ID") %>%
+  left_join(tag_dep_nb_d, by = "Band.ID") %>%
+  left_join(tag_dep_duration, by = "Band.ID") %>%
+  mutate(perc = (days_detect / period_tag_dep_d) * 100) # nb of day one tag is recorded once / nb of day the tag is deployed
+
+```
+
+```{r 3 table bis, echo = TRUE, eval = TRUE}
+DT::datatable(
+  tag_detection,
+  options = list(
+    scrollX = TRUE,
+    pageLength = 10,
+    fixedColumns = list(leftColumns = 2)
+  ),
+  extensions = c('FixedColumns'),
+  caption = 'MOTUS array detectability potential'
+) %>%
+  DT::formatStyle(
+    c('Band.ID', 'perc'),
+    fontWeight = 'bold'
+  ) %>%
+  DT::formatStyle(
+    c('speciesEN', "multiple_site_detect", "days_detect", "period_tag_dep_d"),
+    fontWeight = 'bold',
+    color = '#808080'  
+  )
+
+```
+
+-   `[MOTUS stations]`: total of days an individual has been detected across one MOTUS station
+-   `multiple_site_detect`: total of days an individual has been detected at more than one MOTUS station
+-   `days_detect`: total of days an individual has been recorded at least once across any MOTUS station
+-   `period_tag_dep_d`: total period of Nanotag deployment on an individual (from trapping day to last detection)
+-   `perc`: total of days the bird has been detected over its deployed tag period (`days_detect`/ `period_tag_dep_d`)
+
+### Detectectability: Plots  {#plots3}
+
+#### Per birds
+
+```{r 3 plot birds, echo = TRUE, eval = TRUE}
+ggplot(tag_detection %>%
+         group_by(speciesEN) %>%
+         arrange(desc(perc), .by_group = TRUE) %>%
+         mutate(Band.ID = factor(Band.ID, levels = unique(Band.ID))), 
+       aes(x = Band.ID, y = perc, fill = speciesEN)) +
+  geom_col(width = 0.8, alpha = 0.7, color = "black") +
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 90, hjust = 1),
+        legend.position = "none") +
+  labs(x = "Band ID",
+       y = "Detection (%)",
+       title = "Bird detection across MOTUS array (%)")
+```
+
+#### Per species
+
+```{r 3 plot sp, echo = TRUE, eval = TRUE}
+ggplot(tag_detection %>%
+         group_by(speciesEN) %>%
+         summarise(n = n_distinct(Band.ID),            
+                   mean_perc = mean(perc, na.rm = TRUE)) %>%
+         mutate(species_label = paste0(speciesEN, " (n = ", n, ")")) %>%
+         arrange(desc(mean_perc)) %>%
+         mutate(species_label = factor(species_label, levels = species_label)), 
+       
+       aes(x = species_label, y = mean_perc, fill = species_label)) +
+  
+  geom_col(width = 0.8, alpha = 0.7, color = "black") +
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 90, hjust = 1),
+        legend.position = "none") +
+  labs(x = "Species (n = indiv.)",
+       y = "Detection (%)",
+       title = "Species detectability across the MOTUS array (%)")
+```
+
+<button
+  class="backBtn"
+  data-target="contents3" 
+  onclick="document.getElementById(this.getAttribute('data-target')).scrollIntoView({behavior: 'smooth'});"
+  style="position: fixed; bottom: 20px; right: 20px; z-index: 9999; padding: 10px 15px; background-color: #007bff; border: none; border-radius: 5px; color: white; cursor: pointer; box-shadow: 0 2px 4px rgba(0,0,0,0.3); display: none;">
+  Back to Contents
+</button>
 
 ## 4. Habitat selection
 
@@ -1227,6 +1421,8 @@ To be continued ...
 -   [Load the data](#load-the-data4)
 -   [Summarise the data](#summarise-the-data4)
 -   [Descriptive analysis](#descriptive-analysis4)
+
+---
 
 ### Packages {#package4}
 
