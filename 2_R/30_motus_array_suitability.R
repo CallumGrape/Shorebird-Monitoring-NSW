@@ -10,6 +10,7 @@
 # 1 - Packages ----
 
 library(dplyr)
+library(tidyr)
 library(here)
 library(ggplot2)
 library(lubridate)
@@ -71,10 +72,10 @@ tag_detection <- data_all %>%
   left_join(multiple_site_detect, by = "Band.ID") %>%
   left_join(tag_dep_nb_d, by = "Band.ID") %>%
   left_join(tag_dep_duration, by = "Band.ID") %>%
-  mutate(perc = (days_detect / period_tag_dep_d) * 100) # nb of day one tag is recorded once / nb of day the tag is deployed
+  mutate(perc = round((days_detect / period_tag_dep_d) * 100, 1)) # nb of day one tag is recorded once / nb of day the tag is deployed
 
 # list per species
-list_species_tables <- species_band_summary %>%
+list_species_tables <- tag_detection %>%
   group_by(speciesEN, .add = TRUE) %>%
   group_split()
 
@@ -112,6 +113,21 @@ ggplot(tag_detection %>%
   labs(x = "Species (number of individuals)",
        y = "Detection (%)",
        title = "Species etectability across the MOTUS array (%)")
+
+# Box plot
+ggplot(tag_detection %>%
+         add_count(speciesEN) %>%
+         mutate(species_label = paste0(speciesEN, " (n = ", n, ")")),
+       aes(x = reorder(species_label, -perc, FUN = median),
+           y = perc, fill = species_label)) +
+  
+  geom_boxplot(width = 0.8, alpha = 0.7, color = "black") +
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 90, hjust = 1),
+        legend.position = "none") +
+  labs(x = "Species (number of individuals)",
+       y = "Detection (%)",
+       title = "Species detectability across the MOTUS array")
 
 
 
