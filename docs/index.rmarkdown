@@ -13,6 +13,8 @@ project:
   output-dir: docs
 ---
 
+
+
 <p style="font-size: 0.7em; color: gray;"> Created on July 28, 2025 </p>
 
 ## [*Maxime Marini, Callum Gapes, Andrea S. Griffin*]{style="font-size: 0.8em;"}
@@ -76,6 +78,8 @@ To be continued ...
 
 ### Trapping: overview {#overview}
 
+
+
 ```{r 03 data overview DOUBLE FOR GENERATING PLOT text for moni object, message = FALSE, warning = FALSE, eval = TRUE, echo = FALSE}
 library(dplyr)
 write.csv(readxl::read_excel("C:/Users/c3541851/The University of Newcastle/StudentGroupPhD - Louise Williams and Mattea Taylor - General/SHOREBIRD NUMBER TRACKING.xlsx"), 
@@ -128,7 +132,11 @@ eutha <-  spreadsheet %>%
   select(Band.ID, motusTagID, Species, DateAUS.Trap, everything())
 ```
 
+
+
 Since 2021, we trapped `r moni$value[moni$variable == "nb_tagged"]` birds, and `r moni$value[moni$variable == "nb_released"]` were released and potentially detectable across our MOTUS array.
+
+
 
 ```{r 03 data overview DOUBLE FOR GENERATING PLOT, message = FALSE, warning = FALSE, eval = TRUE, echo = FALSE}
 library(dplyr)
@@ -229,6 +237,8 @@ DT::datatable(
 
 ```
 
+
+
 -   `nb_tagged`: total of birds trapped, banded (`Band.ID`) and tagged with a MOTUS device (`motusTagID`)
 -   `nb_euthanised`: total of birds that has been euthanised
 -   `nb_retagged`: total of birds that were re-trapped and needed to be re-tagged with a new MOTUS device, but did not require re-banding (as bands are permanent, whereas MOTUS devices can detach or fall off). This means that a single individual may have carried multiple MOTUS devices over time but only ever received one band
@@ -240,6 +250,8 @@ DT::datatable(
 ### Trapping: details {#details}
 
 Find below more information about the captures (i.e. species, marking, banding, date, etc.).
+
+
 
 ```{r 03 spreadsheet trap details, message = FALSE, warning = FALSE, eval = TRUE, echo = FALSE}
 DT::datatable(
@@ -263,7 +275,11 @@ DT::datatable(
   )
 ```
 
+
+
 ### Detected birds {#detected}
+
+
 
 ```{r 03 detect, message = FALSE, warning = FALSE, eval = TRUE, echo = FALSE}
 DT::datatable(
@@ -287,9 +303,13 @@ DT::datatable(
   )
 ```
 
+
+
 ### Undetected birds {#undetected}
 
 However, for various reasons — such as limitations in device technology, the bird never flying within the coverage area of any antenna, the device detaching, and so on — some birds have never been detected again after the day they were tagged.
+
+
 
 ```{r 03 undet, message = FALSE, warning = FALSE, eval = TRUE, echo = FALSE}
 DT::datatable(
@@ -313,9 +333,13 @@ DT::datatable(
   )
 ```
 
+
+
 ### Euthanasied birds {#euthanasied}
 
 Unfortunalely, it happens that we need to euthanasy birds, under the ACCE of University of Newcastle.
+
+
 
 ```{r 03 euthe, message = FALSE, warning = FALSE, eval = TRUE, echo = FALSE}
 DT::datatable(
@@ -338,6 +362,8 @@ DT::datatable(
     color = '#808080'  
   )
 ```
+
+
 
 <button
   class="backBtn"
@@ -407,6 +433,8 @@ Navigate the four different tabs below to get deeper into the [method]{.smallcap
 
 ### Packages {#packages}
 
+
+
 ```{r 1 packages, message = FALSE, warning = FALSE, eval = TRUE, echo = TRUE}
 
 # install.packages("motus", 
@@ -423,7 +451,11 @@ library(bioRad)
 library(purrr) 
 ```
 
+
+
 ### Download the data from Motus network {#download-the-data-from-motus-network}
+
+
 
 ```{r 1 settings, message = FALSE, warning = FALSE, eval = FALSE, echo = TRUE}
 
@@ -434,7 +466,11 @@ proj.num <- 294
 motusLogout()
 ```
 
+
+
 Set general settings first as working directory, Time Zone, Motus project number (ie. ours is 294). And make sure the environment is free from any connection to any other networked project or from any other Motus user account (avoid undesired mistakes).
+
+
 
 ```{r 1 download data, message = FALSE, warning = FALSE, eval = FALSE, echo = TRUE}
 sql.motus <- tagme(projRecv = proj.num,
@@ -456,6 +492,8 @@ df.alltags <- tbl(sql.motus, "alltags") %>%
          doy = yday(time))
 ```
 
+
+
 `motus::tagme()`gets the data from the online Motus network, the ones part of your project (ie. ID = 294) only. Make sure you set your own directory. A file of type .sql is automatically created.
 
 `motus::metadata()` downloads the metadata from the online Motus network (receiver information and more).
@@ -469,6 +507,8 @@ df.alltags <- tbl(sql.motus, "alltags") %>%
 ::: blockquote-red
 **WARNING**: The values entered within the below filtering R code are depending your own context.
 :::
+
+
 
 ```{r 1 filter the data, message = FALSE, warning = FALSE, eval = FALSE, echo = TRUE}
 # Cleaning and correcting tags metadata
@@ -502,9 +542,13 @@ df.alltags <- df.alltags %>%
   mutate(recvDeployName = ifelse(is.na(recvDeployName) & recv == "SG-D5BBRPI3E2F7", "Windeyers", recvDeployName))
 ```
 
+
+
 Here are cleaned-out the data recorded from undesired tags and/or receivers depending our local context.
 
 Have been removed: test tags, tags recorded into the Motus project but undeployed, period of time where tags were *ON* but not set on any bird, test sensor gnome, sites not any longer used. Receiver station's name has been changed from *NA* to Windeyers starting from 02/15/2025. Tag's *specieEN* information have been changed from *NA* to different values depending case to case.
+
+
 
 ```{r 2 filter the noise, message = FALSE, warning = FALSE, eval = FALSE, echo = TRUE}
 # False positive
@@ -516,11 +560,15 @@ df.alltags <- df.alltags %>%
 clarify(sql.motus)
 ```
 
+
+
 Then the False Positive signals are put away (ie. noise coming from external device, or any kind of external radio activity happening within the area) thanks to pre-made Motus filter and \`runLen\` threshold value, here set at 3. This value defines the number of bursts recorded from one tag and received at once, too low amount of burst are suspected for not being True Positif so not reliable.
 
 `motus::clarify()` checks whether the combination of two tag signals emitting at the mean time could generate the detection of a third tag signal, which would be a False Positive on its own, but also hidding the two True Positives. If the table generated by this code has rows resulting, please go to [Motus documentation.](https://motuswts.github.io/motus/articles/05-data-cleaning.html).
 
 ### Adding variables {#adding-variables}
+
+
 
 ```{r 1 Tide data, message = FALSE, warning = FALSE, eval = FALSE, echo = TRUE}
 # Load tide (Callum work 01_import_tide_data.R)
@@ -530,7 +578,11 @@ tidalCurveFunc <- splinefun(tideData$tideDateTimeAus, tideData$tideHeight, metho
 get.tideIndex <- function(time){ return(which.min(abs(tideData$tideDateTimeAus-time)))}
 ```
 
+
+
 Note that the raw Tide data-set is not provided here. Since it has been manually extracted from [New South Wales government resources](https://www.nsw.gov.au/sites/default/files/2024-06/tide-tables-24-25-nsw.pdf) and formatted by [Callum Gapes](https://www.linkedin.com/in/callum-g/?originalSubdomain=au) through this [method](https://uoneduau-my.sharepoint.com/:u:/g/personal/c3541851_uon_edu_au/EWOk05RFs1xJhAWLBddbf-kB_H2xRuz0XPUWtPVfcju_-Q?e=P6WzOT).
+
+
 
 ```{r 1 variable, message = FALSE, warning = FALSE, eval = FALSE, echo = TRUE}
 df.alltags <- df.alltags %>% 
@@ -572,7 +624,11 @@ df.alltags <- df.alltags %>%
 
 ```
 
+
+
 Several variables are added as some are formatted and/or renamed for the aims of the study.
+
+
 
 ```{r 1 recv, message = FALSE, warning = FALSE, eval = FALSE, echo = TRUE}
 # Get summary
@@ -607,14 +663,20 @@ df.recvDeps <- df.recvDeps %>%
 
 ```
 
+
+
 Rename here the receiver of your array for a better comprehension. Also, remove the stations that are not any longer used.
 
 ### Set survey time frame {#set-timeframe}
+
+
 
 ```{r 1 final filtering, message = FALSE, warning = FALSE, eval = FALSE, echo = TRUE}
 df.recvDeps <- df.recvDeps %>%
   filter(timeStartAus > "2023-01-31 00:00:00 AEDT") 
 ```
+
+
 
 Finally, set the *survey effort* starting day from our local Motus array, as one month before the first day a bird has been caught and tagged (information found into the [sharepoint](https://uonstaff.sharepoint.com/:x:/r/sites/StudentGroupPhD-LouiseWilliamsandMatteaTaylor/_layouts/15/Doc2.aspx?action=edit&sourcedoc=%7Ba23e66f0-c551-4ba4-acd0-de0d5e83ca42%7D&wdOrigin=TEAMS-MAGLEV.teamsSdk_ns.rwc&wdExp=TEAMS-TREATMENT&wdhostclicktime=175385) to access the file.).
 
@@ -626,6 +688,8 @@ As we might re-trap individuals and re-tag them with a new MOTUS tag, we can't u
 **Note:** To download the spreadsheet from *Teams* to your device, you first need to *sync* the *Teams* cloud folder to your *OneDrive* account. Once synced, you can access it locally from your device and direct *RStudio* to work with this now-local directory. Refer to the instructions [here](https://support.microsoft.com/en-au/office/sync-sharepoint-and-teams-files-with-your-computer-6de9ede8-5b6e-4503-80b2-6190f3354a88) for more details.  
 Remember to specify the correct directories in your *R* *code.*
 :::
+
+
 
 ```{r 1 Band ID, message = FALSE, warning = FALSE, eval = FALSE, echo = TRUE}
 
@@ -649,7 +713,11 @@ data_all <- left_join(data_all,
 ```
 
 
+
+
 ### Filtered data: overview {#overview}
+
+
 
 ```{r 1 data overview, message = FALSE, warning = FALSE, eval = FALSE, echo = TRUE}
 
@@ -726,8 +794,12 @@ DT::datatable(
 
 ```
 
+
+
 Let's have an overview on our data, now filtered and with every tagged bird identified with a unique *Band ID*, also related to a *MOTUS tag ID*.
 Since 2021, we trapped `r moni$value[moni$variable == "nb_tagged"]` birds, and `r moni$value[moni$variable == "nb_released"]` were released and potentially detectable.
+
+
 
 ```{r 1 other cases, message = FALSE, warning = FALSE, eval = TRUE, echo = FALSE}
 DT::datatable(
@@ -771,14 +843,20 @@ DT::datatable(
   )
 ```
 
+
+
 Above are particular cases of undetected and euthanised individuals.
 
 ### Save
+
+
 
 ```{r 1 save .rds, message = FALSE, warning = FALSE, eval = FALSE, echo = TRUE}
 saveRDS(df.alltags, here::here("data", paste0(Sys.Date(), "-data", ".rds" )))
 saveRDS(df.recvDeps, here::here("data", paste0(Sys.Date(), "-recv-info", ".rds" )))
 ```
+
+
 
 Save your now formatted data, ready for use. Automatically named with the date of your saving (for tracking updates).
 
@@ -805,6 +883,8 @@ Save your now formatted data, ready for use. Automatically named with the date o
 
 ### Packages {#packages2}
 
+
+
 ```{r 2 packages, message = FALSE, warning = FALSE, eval = TRUE}
 
 library(motus)
@@ -818,6 +898,8 @@ library(purrr)
 
 ```
 
+
+
 ### Load the data {#load-the-data2}
 
 Either call and load your own data by connecting through `DBI::dbConnect(RSQLite::SQLite())` and `tbl(sql.motus, "activity")`, or download the data up to the-last-document-update date provided here below (contact maxime.marini\@uon.edu.au for password access):
@@ -825,6 +907,8 @@ Either call and load your own data by connecting through `DBI::dbConnect(RSQLite
 Receiver activity: <a href="#" onclick="return checkPassword('recv.act')">recv.act.rds</a><br>
 Receiver information: <a href="#" onclick="return checkPassword('recv')">recv-info.rds</a><br> 
 Bird data: <a href="#" onclick="return checkPassword('bird')">data.rds</a>
+
+
 
 ```{=html}
 <script>
@@ -848,7 +932,11 @@ Bird data: <a href="#" onclick="return checkPassword('bird')">data.rds</a>
 </script>
 ```
 
+
+
 To properly load the data into your environment, make sure to set the working directory and the path as yours.
+
+
 
 ```{r 2 load data 1, eval = FALSE}
 # Set WD
@@ -900,6 +988,8 @@ table(is.na(recv.act$pulseCount) & is.na(recv.act$numTags))
 
 ```
 
+
+
 `pulseCount`:Antenna pulses are a reflection of environmental noise and consist of radio pulses at the nominal listening frequency (e.g.; 166.38 MHz) which did not correspond to a known tag signature. The number of radio pulses measured on each antenna over each hour period (hourBin) - [`Motus documentation, 2025`](https://docs.motus.org/en/stations/station-inspection/up-time-and-detectability#antenna-pulses){target="_blank"} . `numTags`: Variable in the Motus SQL data (including the activity table and functions that generate site or tag summaries) represents the total number of unique tags detected within a given context—typically at a site, within a batch, or for a set of detections.
 
 ::: blockquote-yellow
@@ -913,6 +1003,8 @@ table(is.na(recv.act$pulseCount) & is.na(recv.act$numTags))
 One issue within the Motus data is the number of variables related to IDs (receivers, Raspberry Pi, sites, etc.) and the unconsistent names for the same variable across the different tables (ie. `recv$serno` = `alltags$recv`). Plus, some of our SensorGnome devices `serno` (black boxes containing a Raspberry Pi processor) have been swapped between sites to optimize the array survey. For example, when two stations need their devices repaired, we first remove the devices from their antennas to fix them. When re-installing, we prioritise placing the repaired device at the site where it is most needed, regardless of which station it originally came from.
 
 Since the survey effort is accessed through the `hourBin` depending `deviceID` within the `activity` table, we need to re-associate each deviceID with their corresponding stations (`recvDeployName`) at the corresponding time/period. We'll first create a unique ID that matches station's name with `deviceID`: `SernoStation`.
+
+
 
 ```{r 2 clarifying stations,  message = FALSE, warning = FALSE, eval = TRUE}
 
@@ -949,9 +1041,13 @@ recv <- recv %>%
 
 ```
 
+
+
 We get `recv.act` table with every rows of activity the variables `lisStart` and `lisEnd` that specify the complete period of time the station (`recvDeployName`) has been deployed with what `deviceID`. When a station is still deployed, `lisEnd` = NA.
 
 ### Extracting listening periods per stations {#extracting2}
+
+
 
 ```{r 2 Extracting listening periods,  message = FALSE, warning = FALSE, eval = TRUE}
 
@@ -980,6 +1076,8 @@ recv_hours$Station <- sub("_SG-.*", "", recv_hours$SernoStation)
 
 ```
 
+
+
 Step where for each row of `recv` is created one list composed of as many rows of as many hours it is contained within the period \[`lisStart` - `lisEnd`\], and if `lisEnd` is NA because the station is still running, the date of today is taken. This prepares the `recv_hours` table where each row is one hour when one station (`SernoStation`) can potentially be working/listening. To get the `operational` hours for each stations, meaning "when a station is actually listening", we first gave an extra variable to the `recv.act` table as `operational` is always TRUE since this records only the hours when the station is listening, and we join this to the `recv` table by the shared variable `hour_dt`, which then will generate NA for the cases `recv_hours$hour_dt` has no matching values with `recv.act$hour_dt`. These NA are the hours where one site is deployed, but not working.
 
 Finally, for consistency, we make sure that we are using station's name (`Station`) regardless the `deviceID`.
@@ -992,6 +1090,8 @@ Finally, for consistency, we make sure that we are using station's name (`Statio
 - [Plot: array survey effort per station](#plot-station2)
 
 #### Table: summary {#summary2}
+
+
 
 ```{r 2 table MOTUS array survey effort,  message = FALSE, warning = FALSE, eval = TRUE}
 
@@ -1031,6 +1131,8 @@ DT::datatable(
 ```
 
 
+
+
 Let's summarize the information regarding the survey effort from our MOTUS array:
 
 -   `total_hours`: total of hours for the station being deployed into the field, regardless whether it is working/listening
@@ -1046,6 +1148,8 @@ AWAITING FOR UPDATES: The data-set have some unknown and not-understood *NaN* wi
 
 
 #### Plot: array survey effort per hour {#plot-hour2}
+
+
 
 ```{r 2 hour MOTUS array survey effort,  message = FALSE, warning = FALSE, eval = TRUE}
 
@@ -1070,10 +1174,14 @@ ggplot2::ggsave( here::here("docs", "figures", "motus_survey_h.jpeg"), motus_sur
                  width = 15, height = 6, dpi = 150)
 ```
 
+
+
 [![Legend: Every black dot represent an hour where the station has activity recorded meaning the station is operational, meaning recording radio noise or a specicific tag.](figures/motus_survey_h.jpeg){width=100%}](figures/motus_survey_h.jpeg){target="_blank"}
 
 
 #### Plot: array survey effort per day {#plot-day2}
+
+
 
 ```{r 2 day MOTUS array survey effort,  message = FALSE, warning = FALSE, eval = TRUE, echo = FALSE}
 
@@ -1151,12 +1259,16 @@ ggplot2::ggsave( here::here("docs", "figures", "motus_survey_d.jpeg"), motus_sur
                  width = 15, height = 6, dpi = 150)
 ```
 
+
+
 [![Legend: Solid black lines are when a MOTUS station is operational For simplifying, When a station is not operational for less than 24 hours, this period is considered as a operational period. Every dot represent at least one detection of one bird within an hour of the operational period. Every MOTUS station has a contribution value at the survey effort (%), i.e: Curlew Point station contributed 11.2% at the total operational period for every stations within our local MOTUS array (operational survey effort).](figures/motus_survey_d.jpeg){width=100%}](figures/motus_survey_d.jpeg){target="_blank"}
  
 
 #### Plot: array survey effort per station {#plot-station2}
 
 ::: panel-tabset
+
+
 
 ```{r 2 station MOTUS array survey effort plot, echo = FALSE, eval = TRUE, results = 'asis'}
 
@@ -1214,6 +1326,8 @@ ggplot() +
 
 ```
 
+
+
 :::
 
 ***Legend:*** *The band in grey represents the operational period for each MOTUS station, when the antenna is actually listening. When no grey, the station is "OFF" and not operational. Every dot is at least one detection for one tag. Every MOTUS station has a contribution value at the survey effort (%), i.e: Curlew Point station contributed 11.2% at the total operational period for every stations within our local MOTUS array (operational survey effort).*
@@ -1241,6 +1355,8 @@ ggplot() +
 
 ### Packages {#package3}
 
+
+
 ```{r 3 packages, message = FALSE, warning = FALSE, eval = TRUE}
 library(dplyr)
 library(here)
@@ -1249,12 +1365,16 @@ library(lubridate)
 library(tidyr)
 ```
 
+
+
 ### Load the data {#load-the-data3}
 
 Either load your own data generated across the previous chapters (.rds format), or download the data up to the-last-document-update date provided here below (contact maxime.marini\@uon.edu.au for password access):
 
 Receiver information: <a href="#" onclick="return checkPassword('recv')">recv-info.rds</a><br>
 Bird data: <a href="#" onclick="return checkPassword('bird')">data.rds</a>
+
+
 
 ```{=html}
 <script>
@@ -1278,7 +1398,11 @@ Bird data: <a href="#" onclick="return checkPassword('bird')">data.rds</a>
 </script>
 ```
 
+
+
 To properly load the data into your environment, make sure to set the working directory and the path as yours.
+
+
 
 ```{r 3 load data 1, eval = FALSE}
 # Set WD
@@ -1296,7 +1420,11 @@ data_all <- readRDS(
   )), 1)) # pick up the most recent .rds file
 ```
 
+
+
 ### Process variables  {#process3}
+
+
 
 ```{r 3 process, echo = TRUE, eval = TRUE}
 
@@ -1329,7 +1457,11 @@ multiple_site_detect <- data_all %>%
 
 ```
 
+
+
 ### Detectectability: Tables  {#tables3}
+
+
 
 ```{r 3 table, echo = TRUE, eval = TRUE}
 # Get number of day each tag has been recorded /species and /station
@@ -1371,6 +1503,8 @@ DT::datatable(
 
 ```
 
+
+
 -   `[MOTUS stations]`: total of days an individual has been detected across one MOTUS station
 -   `multiple_site_detect`: total of days an individual has been detected at more than one MOTUS station
 -   `days_detect`: total of days an individual has been recorded at least once across any MOTUS station
@@ -1380,6 +1514,8 @@ DT::datatable(
 ### Detectectability: Plots  {#plots3}
 
 #### Per birds
+
+
 
 ```{r 3 plot birds, echo = TRUE, eval = TRUE}
 ggplot(tag_detection %>%
@@ -1398,7 +1534,11 @@ ggplot(tag_detection %>%
        title = "Bird detection across MOTUS array (% of days)")
 ```
 
+
+
 #### Per species
+
+
 
 ```{r 3 histogram sp, echo = TRUE, eval = TRUE}
 ggplot(tag_detection %>%
@@ -1438,6 +1578,8 @@ ggplot(tag_detection %>%
 
 ```
 
+
+
 <button
   class="backBtn"
   data-target="contents3" 
@@ -1459,6 +1601,8 @@ ggplot(tag_detection %>%
 
 ### Packages {#package4}
 
+
+
 ```{r 4 packages, message = FALSE, warning = FALSE, eval = TRUE}
 library(motus)
 library(dplyr)
@@ -1475,12 +1619,16 @@ library(rnaturalearth)
 library(ggplot2)
 ```
 
+
+
 ### Load the data {#load-the-data4}
 
 Either load your own data generated across the previous chapters (.rds format), or download the data up to the-last-document-update date provided here below (contact maxime.marini\@uon.edu.au for password access):
 
 Receiver information: <a href="#" onclick="return checkPassword('recv')">recv-info.rds</a><br>
 Bird data: <a href="#" onclick="return checkPassword('bird')">data.rds</a>
+
+
 
 ```{=html}
 <script>
@@ -1504,7 +1652,11 @@ Bird data: <a href="#" onclick="return checkPassword('bird')">data.rds</a>
 </script>
 ```
 
+
+
 To properly load the data into your environment, make sure to set the working directory and the path as yours.
+
+
 
 ```{r 4 load data 1, eval = FALSE}
 # Set WD
@@ -1532,9 +1684,13 @@ recv <- readRDS(
   )), 1)) 
 ```
 
+
+
 ### Summarise the data {#summarise-the-data4}
 
 For the aim of the analysis and generate readable figures, let's simplify the table to keep useful information only.
+
+
 
 ```{r 4 summarise data, echo = TRUE, eval = TRUE}
 # Data summary (To be edited still...)
@@ -1585,6 +1741,8 @@ data <- data_all %>%
     )
 ```
 
+
+
 ### Descriptive analysis {#descriptive-analysis4}
 
 - [Tide & circadian cycles](#tide-circadian-cycle4)
@@ -1592,6 +1750,8 @@ data <- data_all %>%
 #### Tide & circadian cycles {#tide-circadian-cycle4}
 
 OVER THE MOTUS ARRAY
+
+
 
 ```{r 4 Habitat selection across sites, echo = TRUE, eval = TRUE}
     tag_summary2 %>%
@@ -1609,9 +1769,13 @@ OVER THE MOTUS ARRAY
       scale_fill_manual(values = species_colors)
 ```
 
+
+
 OVER EACH MOTUS STATIONS
 
 ::: panel-tabset
+
+
 
 ```{r 4 Habitat selection across sites 2, echo = FALSE, eval = TRUE, results = 'asis'}
 plots <- tag_summary2 %>%
@@ -1639,6 +1803,8 @@ plots <- tag_summary2 %>%
     flush.console() #force immediate output
   }
 ```
+
+
 :::
 
 ::: blockquote-blue
@@ -1692,6 +1858,8 @@ document.addEventListener("DOMContentLoaded", function() {
 
 *The analysis are ran through R version 4.5.1 (2025-06-13 ucrt) -- "Great Square Root" and the platform: x86_64-w64-mingw32/x64.*
 
+
+
 ```{r check, echo = FALSE, eval = FALSE}
 
 ############ /!\ always check /!\ #############
@@ -1702,3 +1870,4 @@ document.addEventListener("DOMContentLoaded", function() {
 
 
 ```
+

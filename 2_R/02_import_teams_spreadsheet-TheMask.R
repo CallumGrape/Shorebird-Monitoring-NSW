@@ -10,14 +10,14 @@ data_all <- readRDS(
   )), 1))
 
 # Call and extract last up to date Spreadsheet record 
-write.csv(readxl::read_excel("C:/Users/c3541851/The University of Newcastle/StudentGroupPhD - Louise Williams and Mattea Taylor - General/SHOREBIRD NUMBER TRACKING.xlsx"),
+write.csv(readxl::read_excel("C:/Users/marin/The University of Newcastle/StudentGroupPhD - Louise Williams and Mattea Taylor - General/SHOREBIRD NUMBER TRACKING.xlsx"),
           file.path(here::here("1_data", "spreadsheets"), paste0(Sys.Date(), "-teams.sheet", ".csv")), 
           row.names = FALSE)
 
 # Load df with date at the beginning
 spreadsheet <- read.csv(here::here("1_data", "spreadsheets", paste0(Sys.Date(), "-teams.sheet.csv"))) %>%
    filter(Radio.tag. == "Y") %>%     # Keep only the tagged ones
-   dplyr::rename(DateAUS.Trap = "Date", motusTagID = "Motus.tag.ID") %>% 
+   rename(DateAUS.Trap = "Date", motusTagID = "Motus.tag.ID") %>% 
    mutate(motusTagID = as.factor(motusTagID))
 
 # Join unique Band IDs for inconsistent motusTag (same bird re-tagged, etc)

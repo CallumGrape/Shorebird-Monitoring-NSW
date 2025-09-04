@@ -90,10 +90,10 @@ ggplot(tag_detection %>%
   geom_col(width = 0.8, alpha = 0.7, color = "black") +
   theme_minimal() +
   theme(axis.text.x = element_text(angle = 90, hjust = 1),
-        legend.position = "none") +
+        legend.position = "bottom") +
   labs(x = "Band ID",
        y = "Detection (%)",
-       title = "Bird detection across MOTUS array depending the Species (%)")
+       title = "Bird detection across MOTUS array (% of days)")
 
 # Plot per species
 ggplot(tag_detection %>%
@@ -112,7 +112,7 @@ ggplot(tag_detection %>%
         legend.position = "none") +
   labs(x = "Species (number of individuals)",
        y = "Detection (%)",
-       title = "Species etectability across the MOTUS array (%)")
+       title = "Species detectability across the MOTUS array (%)")
 
 # Box plot
 ggplot(tag_detection %>%

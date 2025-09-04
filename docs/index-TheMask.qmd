@@ -78,7 +78,7 @@ To be continued ...
 
 ```{r 03 data overview DOUBLE FOR GENERATING PLOT text for moni object, message = FALSE, warning = FALSE, eval = TRUE, echo = FALSE}
 library(dplyr)
-write.csv(readxl::read_excel("C:/Users/c3541851/The University of Newcastle/StudentGroupPhD - Louise Williams and Mattea Taylor - General/SHOREBIRD NUMBER TRACKING.xlsx"), 
+write.csv(readxl::read_excel("C:/Users/marin/The University of Newcastle/StudentGroupPhD - Louise Williams and Mattea Taylor - General/SHOREBIRD NUMBER TRACKING.xlsx"), 
           file.path(here::here("1_data", "spreadsheets"), paste0(Sys.Date(), "-teams.sheet", ".csv")), 
           row.names = FALSE)
 spreadsheet <- read.csv(here::here("1_data", "spreadsheets", paste0(Sys.Date(), "-teams.sheet.csv"))) %>%
@@ -132,7 +132,7 @@ Since 2021, we trapped `r moni$value[moni$variable == "nb_tagged"]` birds, and `
 
 ```{r 03 data overview DOUBLE FOR GENERATING PLOT, message = FALSE, warning = FALSE, eval = TRUE, echo = FALSE}
 library(dplyr)
-write.csv(readxl::read_excel("C:/Users/c3541851/The University of Newcastle/StudentGroupPhD - Louise Williams and Mattea Taylor - General/SHOREBIRD NUMBER TRACKING.xlsx"), 
+write.csv(readxl::read_excel("C:/Users/marin/The University of Newcastle/StudentGroupPhD - Louise Williams and Mattea Taylor - General/SHOREBIRD NUMBER TRACKING.xlsx"), 
           file.path(here::here("1_data", "spreadsheets"), paste0(Sys.Date(), "-teams_sheet", ".csv")), 
           row.names = FALSE)
 spreadsheet <- read.csv(here::here("1_data", "spreadsheets", paste0(Sys.Date(), "-teams.sheet.csv"))) %>%
@@ -179,19 +179,9 @@ moni <- bind_rows(
            filter(n > 149) %>% 
            nrow() )
 )
-
-detect_dates <- data_all %>%
-  group_by(Band.ID) %>%
-  summarise(
-    first_detect = min(dateAus, na.rm = FALSE),
-    last_detect = max(dateAus, na.rm = FALSE),
-    .groups = "drop"
-  )
-
 undetect <-  spreadsheet %>% 
-  filter(Band.ID %in% nb_undetect$Band.ID)%>%
-  left_join(detect_dates, by = "Band.ID") %>%
-  select(Band.ID, motusTagID, Species, DateAUS.Trap, first_detect, last_detect, everything())  
+  filter(Band.ID %in% nb_undetect$Band.ID) %>%
+  select(Band.ID, motusTagID, Species, DateAUS.Trap, everything())
 detect <-  spreadsheet %>% 
   filter(Band.ID %in% nb_detect$Band.ID) %>%
   left_join(data_all %>%
@@ -200,12 +190,10 @@ detect <-  spreadsheet %>%
                         .groups = "drop"), 
             by = "motusTagID") %>%
   mutate(Detections = ifelse(is.na(Detections), 0, Detections)) %>%
-  left_join(detect_dates, by = "Band.ID") %>%
-  select(Detections, Band.ID, motusTagID, Species, DateAUS.Trap, first_detect, last_detect, everything())
+  select(Detections, Band.ID, motusTagID, Species, DateAUS.Trap, everything())
 eutha <-  spreadsheet %>% 
   filter(Euthanised.== "Y") %>%
-  left_join(detect_dates, by = "Band.ID") %>%
-  select(Band.ID, motusTagID, Species, DateAUS.Trap, first_detect, last_detect, everything())
+  select(Band.ID, motusTagID, Species, DateAUS.Trap, everything())
 
 DT::datatable(
   moni,
@@ -1388,14 +1376,12 @@ ggplot(tag_detection %>%
          mutate(Band.ID = factor(Band.ID, levels = unique(Band.ID))), 
        aes(x = Band.ID, y = perc, fill = speciesEN)) +
   geom_col(width = 0.8, alpha = 0.7, color = "black") +
-  scale_fill_manual(values = species_colors) +
   theme_minimal() +
   theme(axis.text.x = element_text(angle = 90, hjust = 1),
-        legend.position = "bottom",
-        legend.title = element_blank()) +
+        legend.position = "none") +
   labs(x = "Band ID",
        y = "Detection (%)",
-       title = "Bird detection across MOTUS array (% of days)")
+       title = "Bird detection across MOTUS array (%)")
 ```
 
 #### Per species
@@ -1409,16 +1395,15 @@ ggplot(tag_detection %>%
          arrange(desc(mean_perc)) %>%
          mutate(species_label = factor(species_label, levels = species_label)), 
        
-       aes(x = species_label, y = mean_perc, fill = speciesEN)) +  # fill mapped to speciesEN
+       aes(x = species_label, y = mean_perc, fill = species_label)) +
+  
   geom_col(width = 0.8, alpha = 0.7, color = "black") +
-  scale_fill_manual(values = species_colors) +
   theme_minimal() +
   theme(axis.text.x = element_text(angle = 90, hjust = 1),
         legend.position = "none") +
   labs(x = "Species (n = indiv.)",
        y = "Detection (%)",
        title = "Species detectability across the MOTUS array (Histogram)")
-
 ```
 
 ```{r 3 boxplot sp, echo = TRUE, eval = TRUE}
@@ -1426,16 +1411,15 @@ ggplot(tag_detection %>%
          add_count(speciesEN) %>%
          mutate(species_label = paste0(speciesEN, " (n = ", n, ")")),
        aes(x = reorder(species_label, -perc, FUN = median),
-           y = perc, fill = speciesEN)) +   
+           y = perc, fill = species_label)) +
+  
   geom_boxplot(width = 0.8, alpha = 0.7, color = "black") +
-  scale_fill_manual(values = species_colors) +
   theme_minimal() +
   theme(axis.text.x = element_text(angle = 90, hjust = 1),
         legend.position = "none") +
   labs(x = "Species (number of individuals)",
        y = "Detection (%)",
        title = "Species detectability across the MOTUS array (Boxplot)")
-
 ```
 
 <button
