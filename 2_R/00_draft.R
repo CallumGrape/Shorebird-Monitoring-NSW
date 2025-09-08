@@ -189,40 +189,40 @@ table(check$motusTagID)
 ##################################################################################################
 
 ### CHECK CONFLICT BETWEEN BOX ID AND STATION NAME ###
-table(recv$serno, recv$recvDeployName)
+table(recv$serno, recv$name)
 
 recv %>%
-  group_by(recvDeployName) %>%
+  group_by(name) %>%
   filter(n_distinct(serno) >= 2) %>%
   ungroup() %>% # work through the group of the same site's name (and not the serno)
   mutate(offline_start = lag(timeEndAus), # iteratively take the previous row
          offline_end = timeStartAus) %>%
-  select(recvDeployName, serno, timeStartAus, timeEndAus) %>%
-  arrange(recvDeployName)
+  select(name, serno, timeStartAus, timeEndAus) %>%
+  arrange(name)
 
 
 
 # Filter which station has been not continuously ON
 recv_off_chk <- recv %>%
-  arrange(recvDeployName, timeStartAus) %>% # sort by site + time
-  group_by(recvDeployName) %>% # work through the group of the same site's name (and not the serno)
+  arrange(name, timeStartAus) %>% # sort by site + time
+  group_by(name) %>% # work through the group of the same site's name (and not the serno)
   mutate(offline_start = lag(timeEndAus), # iteratively take the previous row
          offline_end = timeStartAus) %>% 
   filter(!is.na(offline_start) & offline_end > offline_start) %>%
   mutate(timeOff = round(as.numeric(difftime(offline_end, offline_start, units = "days")), digits = 2)) %>%
-  select(recvDeployName, serno, timeStartAus, timeEndAus, offline_start, offline_end, timeOff) 
+  select(name, serno, timeStartAus, timeEndAus, offline_start, offline_end, timeOff) 
 recv_off_chk
 
 # List the meant stations
-list_recv_off <- unique(recv_off_chk$recvDeployName)
+list_recv_off <- unique(recv_off_chk$name)
 
 # Check whether this makes sense
 recv_off_chk <- recv %>% 
-  filter(recvDeployName %in% list_recv_off) %>%
-  select(recvDeployName, serno, timeStartAus, timeEndAus) %>%
-  arrange(recvDeployName, timeStartAus)  %>%
-  left_join(recv_off_chk %>% select(recvDeployName, timeOff),
-            by = "recvDeployName")
+  filter(name %in% list_recv_off) %>%
+  select(name, serno, timeStartAus, timeEndAus) %>%
+  arrange(name, timeStartAus)  %>%
+  left_join(recv_off_chk %>% select(name, timeOff),
+            by = "name")
 recv_off_chk
 
 # Filter out gaps under 24h
