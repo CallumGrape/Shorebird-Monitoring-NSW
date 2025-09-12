@@ -35,3 +35,23 @@
 
 # but the file exemple.html
 #!/resources/exemple.html
+
+# Added by Callum
+.Rproj.user
+.Rhistory
+.RData
+.Ruserdata
+.RDataTmp*
+
+
+# Specific folders
+Backup/
+Papers/
+Plots/
+Docs/
+GIS Map/
+Maps/
+Presentations/
+Tables/
+Data/ 
+Photos/
