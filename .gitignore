@@ -36,7 +36,7 @@
 # but the file exemple.html
 #!/resources/exemple.html
 
-# Added by Callum
+# ==== Added by Callum ====
 .Rproj.user
 .Rhistory
 .RData
@@ -55,3 +55,6 @@ Presentations/
 Tables/
 Data/ 
 Photos/
+
+R Files/Shiny Apps/Detection-Plot-App/Images
+R Files/Shiny Apps/Species-Detection-Plot-App/Images
