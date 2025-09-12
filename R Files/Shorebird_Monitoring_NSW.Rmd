@@ -55,7 +55,7 @@ library(fuzzyjoin)
 library(plotly)
 library(DT)
 
-source("R Scripts/shorebirdFunctions.R")
+source(here("R Scripts", "shorebirdFunctions.R"))
 ```
 
 

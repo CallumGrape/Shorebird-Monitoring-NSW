@@ -9,6 +9,7 @@
 # To Do: 
 #   - Need to somewhere / somehow account for the case of multiple tags deployed on an individual
 #     (not necessarily in this script, but wanted to make note somewhere)
+#   - Currently MotusFilter is being used to filter out false positives. 
 # Resources: 
 # ---------------------------------------------------------------------------- #
 
@@ -59,7 +60,7 @@ rm(df.tagdeps)
 df.alltags <- df.alltags %>% filter(!is.na(recvDeployName))
 
 # Filter out specific stations
-#receivers.remove <- c("Wanggong, Changhua")
+receivers.remove <- c("Wanggong, Changhua")
 receivers.remove <- c("Throsby Creek Test Site")
 df.alltags <- df.alltags %>% filter(!(recvDeployName %in% receivers.remove))
 
@@ -144,34 +145,34 @@ print("Assigning tide height to each detection")
 df.alltags <- df.alltags %>% mutate(tideHeight = tidalCurveFunc(timeAus))
 
 
-# Function for finding index of nearest tide point (index in list of tides)
-get.tideIndex <- function(time){
-  return(which.min(abs(tideData$tideDateTimeAus-time)))
-}
-
-print("Finding closest tide point to each detection - will take up to 10 minutes")
-### THIS LINE TAKES ~8 MINUTES TO RUN ###
-# Add column for index of nearest tide point (in tideData) to df.alltags
-df.alltags <- df.alltags %>% mutate(
-  tideIndex = map_dbl(timeAus, get.tideIndex)
-)
-
-# Add relevant data to df.alltags: tide time, high / low, diurnal / nocturnal
-## Precompute columns using tideIndex
-tide_values <- tideData[df.alltags$tideIndex, c("tideDateTimeAus", "high_low", "day_night", "tideCategory", "tideID", "tideHeight")]
-
-## Add values to df.alltags
-df.alltags <- df.alltags %>%
-  mutate(
-    tideDateTimeAus = tide_values$tideDateTimeAus,
-    tideHighLow = as_factor(tide_values$high_low),
-    tideDiel = as_factor(tide_values$day_night),
-    tideCategory = as_factor(tide_values$tideCategory),
-    tideCategoryHeight = tide_values$tideHeight,
-    tideID = as_factor(tide_values$tideID),
-    # Calculate time difference between the detection and nearest tide point
-    tideTimeDiff = abs(difftime(timeAus, tideDateTimeAus, units = "hours"))
-  )
+# # Function for finding index of nearest tide point (index in list of tides)
+# get.tideIndex <- function(time){
+#   return(which.min(abs(tideData$tideDateTimeAus-time)))
+# }
+# 
+# print("Finding closest tide point to each detection - will take up to 10 minutes")
+# ### THIS LINE TAKES ~8 MINUTES TO RUN ###
+# # Add column for index of nearest tide point (in tideData) to df.alltags
+# df.alltags <- df.alltags %>% mutate(
+#   tideIndex = map_dbl(timeAus, get.tideIndex)
+# )
+# 
+# # Add relevant data to df.alltags: tide time, high / low, diurnal / nocturnal
+# ## Precompute columns using tideIndex
+# tide_values <- tideData[df.alltags$tideIndex, c("tideDateTimeAus", "high_low", "day_night", "tideCategory", "tideID", "tideHeight")]
+# 
+# ## Add values to df.alltags
+# df.alltags <- df.alltags %>%
+#   mutate(
+#     tideDateTimeAus = tide_values$tideDateTimeAus,
+#     tideHighLow = as_factor(tide_values$high_low),
+#     tideDiel = as_factor(tide_values$day_night),
+#     tideCategory = as_factor(tide_values$tideCategory),
+#     tideCategoryHeight = tide_values$tideHeight,
+#     tideID = as_factor(tide_values$tideID),
+#     # Calculate time difference between the detection and nearest tide point
+#     tideTimeDiff = abs(difftime(timeAus, tideDateTimeAus, units = "hours"))
+#   )
 
 
 ## Summarise detections for each receiver and each tag ----
@@ -189,7 +190,7 @@ saveRDS(speciesSummary, "Data/speciesSummary.rds")
 saveRDS(station_rename_map, "Data/station_rename_map.rds")
 saveRDS(df.recvDeps, "Data/df.recvDeps.rds")
 
-## Remove unnecessary objects
+## Close connection to local SQLite database
 dbDisconnect(project294.motus)
 
 ## Print how long processing took and remove time variables

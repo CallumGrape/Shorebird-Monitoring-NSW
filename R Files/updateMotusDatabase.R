@@ -59,7 +59,3 @@ metadata(sql.motus, proj.num)
 ## registered to ANY project. This is necessary to get metadata about any
 ## tags that we may detect from other projects (although no tags from other
 ## projects have been detected as of 2025-06-10). 
-
-# ==== Clean up global environment ====
-# Remove unecessary variables for clarity
-rm(proj.num, sql.motus)

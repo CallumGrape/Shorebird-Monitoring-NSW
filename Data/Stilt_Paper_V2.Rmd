@@ -4,6 +4,8 @@ output: html_document
 ---
 
 ```{r Set Time Bin Width}
+df.alltags <- readRDS(here("Data","df.alltags.rds"))
+
 ## We are interested in detections within 3 hours of a high / low tide.
 ## Set maximum time from the most recent high or low tide. Value is in hours.
 ## Note that this is either side of the tide, so bin width will be double.
