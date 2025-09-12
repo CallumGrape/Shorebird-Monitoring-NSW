@@ -9,10 +9,7 @@
 # To Do: 
 #   - Need to somewhere / somehow account for the case of multiple tags deployed on an individual
 #     (not necessarily in this script, but wanted to make note somewhere)
-<<<<<<< HEAD
 #   - Currently MotusFilter is being used to filter out false positives. 
-=======
->>>>>>> 55e79fbae7c3b844d0072527d8c19f532cd79c2f
 # Resources: 
 # ---------------------------------------------------------------------------- #
 
