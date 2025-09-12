@@ -29,10 +29,13 @@ source(here("R Files","shorebirdFunctions.R"))
 df.recvDeps <- readRDS("Data/df.recvDeps.rds")
 ```
 
+<<<<<<< HEAD
 ```{r}
 
 ```
 
+=======
+>>>>>>> 55e79fbae7c3b844d0072527d8c19f532cd79c2f
 
 ```{r Explore a Single Table v2}
 # Trying to figure out whether we have detected tags from any other projects!!

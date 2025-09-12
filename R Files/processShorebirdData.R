@@ -9,7 +9,10 @@
 # To Do: 
 #   - Need to somewhere / somehow account for the case of multiple tags deployed on an individual
 #     (not necessarily in this script, but wanted to make note somewhere)
+<<<<<<< HEAD
 #   - Currently MotusFilter is being used to filter out false positives. 
+=======
+>>>>>>> 55e79fbae7c3b844d0072527d8c19f532cd79c2f
 # Resources: 
 # ---------------------------------------------------------------------------- #
 
@@ -60,7 +63,11 @@ rm(df.tagdeps)
 df.alltags <- df.alltags %>% filter(!is.na(recvDeployName))
 
 # Filter out specific stations
+<<<<<<< HEAD
 receivers.remove <- c("Wanggong, Changhua")
+=======
+#receivers.remove <- c("Wanggong, Changhua")
+>>>>>>> 55e79fbae7c3b844d0072527d8c19f532cd79c2f
 receivers.remove <- c("Throsby Creek Test Site")
 df.alltags <- df.alltags %>% filter(!(recvDeployName %in% receivers.remove))
 

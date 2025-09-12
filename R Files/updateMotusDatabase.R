@@ -58,4 +58,12 @@ metadata(sql.motus, proj.num)
 ## This adds metadata for the ENTIRE Motus network, i.e. including all tags
 ## registered to ANY project. This is necessary to get metadata about any
 ## tags that we may detect from other projects (although no tags from other
+<<<<<<< HEAD
 ## projects have been detected as of 2025-06-10). 
+=======
+## projects have been detected as of 2025-06-10). 
+
+# ==== Clean up global environment ====
+# Remove unecessary variables for clarity
+rm(proj.num, sql.motus)
+>>>>>>> 55e79fbae7c3b844d0072527d8c19f532cd79c2f
