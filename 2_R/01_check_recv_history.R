@@ -37,10 +37,12 @@ proj.num <- 294
 
 # 3 - Download all data per Project ----
 
-sql.motus <- tagme(projRecv = proj.num, 
-                   new = FALSE, # TRUE overwrites existing (large data takes a while)
-                   update = TRUE, 
-                   dir = here("1_data", "receivers", "motus.sql"))
+# sql.motus <- tagme(projRecv = proj.num, 
+#                    new = FALSE, # TRUE overwrites existing (large data takes a while)
+#                    update = TRUE, 
+#                    dir = here("1_data", "receivers", "motus.sql"))
+
+sql.motus <- DBI::dbConnect(RSQLite::SQLite(), here::here("1_data", "alltags", "project-294.motus"))
 
 # 4 - Download data per Receivers ----
 
@@ -50,7 +52,7 @@ recv <- tbl(sql.motus, "recvDeps") %>%
   as.data.frame()
 
 # Download and add meta-data to recv (a lot!)
-metadata(sql.motus, proj.num)
+# metadata(sql.motus, proj.num)
 
 # Correct receivers time
 recv <- recv %>% 
