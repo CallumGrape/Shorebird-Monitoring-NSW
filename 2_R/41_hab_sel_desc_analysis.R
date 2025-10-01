@@ -46,7 +46,7 @@ recv <- readRDS(
 # 3 - Arranging the data ----
 
 # Data summary (To be edited still...)
-tagSummary1 <- data_all %>%
+tag_summary1 <- data_all %>%
   group_by(Band.ID, recvDeployName) %>% 
   summarize(nDet = n(),
             nRecv = n_distinct(recvDeployName),
@@ -103,6 +103,7 @@ species_colors <- c(
   "Red-necked Avocet"      = "#e6ab02"   
 )
 
+# Arrange the dataset
 tag_summary2 %>%
   ggplot(aes(x = tideCategory, y = nTags, fill = speciesEN)) +
   geom_col(position = "stack") +   
