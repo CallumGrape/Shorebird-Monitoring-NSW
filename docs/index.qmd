@@ -1818,7 +1818,7 @@ plots_list <- lapply(names(data_split), function(species) {
 
 ::: panel-tabset
 
-```{r 5 plotting results2BIS , echo = FALSE, eval = TRUE}
+```{r 5 plotting results2BIS , echo = FALSE, eval = TRUE, results = 'asis'}
 # One plot per species for better understanding
 plots_list <- data %>%
   split(.$speciesEN) %>%                             # split data by speciesEN
@@ -1844,6 +1844,7 @@ for (species_name in names(plots_list)) {
 }
 ```
 :::
+
 
 <button
   class="backBtn"
