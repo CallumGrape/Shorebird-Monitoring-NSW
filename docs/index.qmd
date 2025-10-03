@@ -1821,10 +1821,10 @@ plots_list <- lapply(names(data_split), function(species) {
 ```{r 5 plotting results2BIS , echo = FALSE, eval = TRUE, results = 'asis'}
 # One plot per species for better understanding
 plots_list <- data %>%
-  split(.$speciesEN) %>%                             # split data by speciesEN
+  split(.$speciesEN) %>%
   map(~ ggplot(.x, aes(x = tideCat, y = sig_indiv_tideCat, fill = speciesEN)) +
         geom_boxplot() +
-        scale_fill_manual(values = species_colors, guide = "none") +  # remove fill legend
+        scale_fill_manual(values = species_colors, guide = "none") +
         facet_wrap(~ recvDeployName) +
         theme_bw() +
         labs(
@@ -1833,16 +1833,14 @@ plots_list <- data %>%
           y = "Signal Strength variance (RSSI)",
           fill = "Species"
         ))
-```
-
-```{r 5 plotting results3 , echo = FALSE, eval = TRUE, results = 'asis'}
 
 for (species_name in names(plots_list)) {
   cat("\n\n## ", species_name, "\n\n")
   print(plots_list[[species_name]])
-  flush.console()  
+  flush.console()
 }
 ```
+
 :::
 
 
