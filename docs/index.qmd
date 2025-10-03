@@ -384,6 +384,14 @@ The following aims to describe the analysis ran with VHF Motus data set that tri
 
 </p>
 
+5.  **Shorebirds behaviour**
+
+<p style="font-size: 0.9em; color: gray;">
+
+*Using the variance of signal strength across bird detections at our Motus array scale, we can use it as a proxy to access animal behaviour with low variance in signal strength as low activity (i.e. roosting) and high variance of signal strength as high activity (i.e. foraging)*
+
+</p>
+
 ::: blockquote-blue
 Navigate the four different tabs below to get deeper into the [method]{.smallcaps} used.
 :::
@@ -1653,6 +1661,197 @@ Reminder: Using the term *habitat selection* report in fact to Motus receiver ar
   Back to Contents
 </button>
 
+
+## 5. Shorebirds behaviour
+
+### [Contents]{#contents5 style="color: grey; font-size: smaller;"}
+
+-   [Packages](#packages5)
+-   [Load the data](#load-the-data5)
+-   [Adding crucial variables](#adding5)
+-   [Plotting results](#plotting5)
+
+---
+
+### Packages {#packages5}
+
+```{r 5 packages, message = FALSE, warning = FALSE, eval = TRUE}
+
+library(dplyr)
+library(here)
+library(forcats) 
+library(lubridate)
+library(purrr) 
+library(lubridate)
+library(ggplot2)
+library(stringr)
+
+```
+
+### Load the data {#load-the-data5}
+
+Either load your own data generated across the previous chapters (.rds format), or download the data up to the-last-document-update date provided here below (contact maxime.marini\@uon.edu.au for password access):
+
+Receiver information: <a href="#" onclick="return checkPassword('recv')">recv-info.rds</a><br>
+Bird data: <a href="#" onclick="return checkPassword('bird')">data.rds</a>
+
+```{=html}
+<script>
+  function checkPassword(type) {
+    var correctPasswords = {
+      recv: "provence13",
+      bird: "provence13"
+    };
+    var urlLinks = {
+      recv: "https://uoneduau-my.sharepoint.com/:u:/g/personal/c3541851_uon_edu_au/EemdZD3VJUdHvkVoKbqUhsABCJekUx7zYJ-_5snIw0BI4A?e=RRnDGy",
+      bird: "https://uoneduau-my.sharepoint.com/:u:/g/personal/c3541851_uon_edu_au/EU1v7RPMqwZGi-fapl0G620BYQVUbAQcr1tHyDqgsEPBKg?e=pfZgDd"
+    };
+    var userPassword = prompt("Please enter the password to access the link:");
+    if (userPassword === correctPasswords[type]) {
+      window.open(urlLinks[type], '_blank');
+    } else {
+      alert("Incorrect password. Access denied.");
+    }
+    return false; // prevent default link behavior
+  }
+</script>
+```
+
+To properly load the data into your environment, make sure to set the working directory and the path as yours.
+
+```{r 5 load data 1, eval = FALSE}
+# Set WD
+setwd(dirname(rstudioapi::getSourceEditorContext()$path)) 
+# Birds
+data_all <- readRDS(here::here("data", "recv.info.rds"))
+# Receivers info
+recv <- readRDS(here::here("data", "data.rds")) 
+```
+
+```{r 5 load data 2, echo = FALSE, eval = TRUE}
+
+# Birds
+data_all <- readRDS(
+  tail(sort(list.files(
+  here::here("1_data", "alltags", "motus.rds"),
+  pattern = "-data\\.rds$", full.names = TRUE
+  )), 1)) # pick up the most recent .rds file
+
+# Receivers info
+recv <- readRDS(
+  tail(sort(list.files(
+    here::here("1_data", "alltags", "motus.rds"),
+    pattern = "-recv-info\\.rds$", full.names = TRUE
+  )), 1)) 
+
+# Selecting upon our needs
+data <- data_all %>%
+  select(Band.ID, recvDeployName, recv, speciesEN, sig, sigsd, sigPositive, tideCategory, timeAus)
+
+```
+
+### Adding crucial variables {#adding5}
+
+```{r 5 compute variables, echo = TRUE, eval = TRUE}
+
+# Mean signal strengh per individual, site and time categories (HD, HN, LD, LN)
+data <- data %>%
+  group_by(Band.ID, tideCategory, recvDeployName) %>%
+  mutate(sig_indiv_tideCat = mean(sigPositive)) %>%
+  ungroup()  %>%
+  mutate(speciesINIT = str_split(speciesEN, " ") %>%            
+           map_chr(~ str_c(str_sub(.x, 1, 1), collapse = "")) %>%    
+           toupper(),
+         tideCat = str_split(tideCategory, "_") %>%          
+           map_chr(~ str_c(str_sub(.x, 1, 1), collapse = "")) %>%    
+           toupper())
+
+```
+
+Here, we take the raw values of signal strength `sig` to calculate the mean for each individual and per tide category `tideCategory`. So we can group the means per species and per site to observ how the signal strength varies. To that aim, we need to create a new variable: the average signal strength per individuals `sig_indiv_tideCat`.
+
+### Plotting results {#plotting5}
+
+Below is displayed the variance of the signal strength among species and Motus stations.Hypotesising that foraging activity (high variance values) would more occur in Low tide context, or/and at night.
+
+```{r 5 plotting results , echo = FALSE, eval = TRUE}
+
+# Color codes
+species_colors <- c(
+  "Bar-tailed Godwit"      = "#1b9e77",  
+  "Far Eastern Curlew"     = "#d95f02",  
+  "Masked Lapwing"         = "#7570b3", 
+  "Pacific Golden-Plover"  = "#e7298a", 
+  "Pied Stilt"             = "#66a61e", 
+  "Red-necked Avocet"      = "#e6ab02"   
+)
+
+speciesINIT_colors <- c(
+  "BG"  = "#1b9e77", 
+  "FEC" = "#d95f02",  
+  "ML"  = "#7570b3",  
+  "PG"  = "#e7298a",  
+  "PS"  = "#66a61e", 
+  "RA"  = "#e6ab02"   
+)
+
+```
+
+```{r 5 plotting results2 , echo = TRUE, eval = FALSE}
+# One plot per species for better understanding
+data_split <- split(data, data$speciesEN) 
+plots_list <- lapply(names(data_split), function(species) {
+  df_sub <- data_split[[species]]
+  ggplot(df_sub, aes(x = tideCat, y = sig_indiv_tideCat, fill = speciesEN)) +
+    geom_boxplot() +
+    scale_fill_manual(values = species_colors, guide = "none") +
+    facet_wrap(~ recvDeployName) +
+    theme_bw() +
+    labs(
+      title = paste0("Signal Strength variance for ", species, " over MOTUS stations"),
+      x = "Tide Category",
+      y = "Signal Strength variance (RSSI)",
+      fill = "Species"
+    )
+})
+```
+
+::: panel-tabset
+
+```{r 5 plotting results2BIS , echo = FALSE, eval = TRUE}
+# One plot per species for better understanding
+plots_list <- data %>%
+  split(.$speciesEN) %>%                             # split data by speciesEN
+  map(~ ggplot(.x, aes(x = tideCat, y = sig_indiv_tideCat, fill = speciesEN)) +
+        geom_boxplot() +
+        scale_fill_manual(values = species_colors, guide = "none") +  # remove fill legend
+        facet_wrap(~ recvDeployName) +
+        theme_bw() +
+        labs(
+          title = paste0("Signal Strength variance for ", unique(.x$speciesEN), " over MOTUS stations"),
+          x = "Tide Category",
+          y = "Signal Strength variance (RSSI)",
+          fill = "Species"
+        ))
+```
+
+```{r 5 plotting results3 , echo = FALSE, eval = TRUE, results = 'asis'}
+
+for (species_name in names(plots_list)) {
+  cat("\n\n## ", species_name, "\n\n")
+  print(plots_list[[species_name]])
+  flush.console()  
+}
+```
+:::
+
+<button
+  class="backBtn"
+  data-target="contents5" 
+  onclick="document.getElementById(this.getAttribute('data-target')).scrollIntoView({behavior: 'smooth'});"
+  style="position: fixed; bottom: 20px; right: 20px; z-index: 9999; padding: 10px 15px; background-color: #007bff; border: none; border-radius: 5px; color: white; cursor: pointer; box-shadow: 0 2px 4px rgba(0,0,0,0.3); display: none;">
+  Back to Contents
+</button>
 
 ::::::
 
