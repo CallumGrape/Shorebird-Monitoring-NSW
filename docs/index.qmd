@@ -1839,7 +1839,7 @@ plots_list <- lapply(names(data_split), function(species) {
 
 ::: panel-tabset
 
-```{r 5 plotting results2BIS , echo = FALSE, eval = TRUE, results = 'asis'}
+```{r 5 plotting results2BIS, echo = FALSE, eval = TRUE, results = 'asis'}
 # One plot per species for better understanding
 plots_list <- data %>%
   split(.$speciesEN) %>%
@@ -1854,11 +1854,14 @@ plots_list <- data %>%
           y = "Signal Strength variance (RSSI)",
           fill = "Species"
         ))
+```
+
+```{r 5 Plotting results2BIS, echo = FALSE, eval = TRUE, results = 'asis'}
 
 # Use knitr::asis_output to ensure output is captured
 for (species_name in names(plots_list)) {
-  cat("\n\n## ", species_name, "\n\n")
-  knitr::asis_output(print(plots_list[[species_name]]))
+  cat("\n\n### ", species_name, "\n\n")
+  print(plots_list[[species_name]])
 }
 ```
 
