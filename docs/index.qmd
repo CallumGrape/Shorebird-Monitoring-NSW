@@ -25,7 +25,7 @@ library(here)
 
 \
 
-# [Materiakkkl]{.smallcaps}
+# [Material]{.smallcaps}
 
 Multiple variables might influence the movement of migratory shorebirds within there foraging ground (ie. Hunter & Port Stephen estuaries), selecting different areas at different times whether to roost or forage. Those variables might vary across species and individuals, therefore their selected habitat. Within such an interdependent system, we try to suggest an approach that takes into account the tidal and circadian cycles as the main drivers to the habitat selection.
 
@@ -610,7 +610,7 @@ plots_list <- data %>%
 
 # Save each plot as a JPEG file
 for (species_name in names(plots_list)) {
-  filename <- paste0("figures/", gsub(" ", "_", species_name), ".jpeg")
+  filename <- paste0(gsub(" ", "_", species_name), ".jpeg")
   jpeg(filename, width = 800, height = 600)
   print(plots_list[[species_name]])
   dev.off()
@@ -620,22 +620,22 @@ for (species_name in names(plots_list)) {
 ::: panel-tabset
 
 ### Bar-tailed Godwit
-<img src="figures/Bar-tailed_Godwit.jpeg" style="max-width:100%;">
+<img src="Bar-tailed_Godwit.jpeg" style="max-width:100%;">
 
 ### Far Eastern Curlew
-<img src="figures/Far_Eastern_Curwlew.jpeg" style="max-width:100%;">
+<img src="Far_Eastern_Curwlew.jpeg" style="max-width:100%;">
 
 ### Masked Lapwing
-<img src="figures/Masked_Lapwing.jpeg" style="max-width:100%;">
+<img src="Masked_Lapwing.jpeg" style="max-width:100%;">
 
 ### Pacific Golden-Plover
-<img src="figures/Pacific_Golden-Plover.jpeg" style="max-width:100%;">
+<img src="Pacific_Golden-Plover.jpeg" style="max-width:100%;">
 
 ### Pied Stilt
-<img src="figures/Pied_Stilt.jpeg" style="max-width:100%;">
+<img src="Pied_Stilt.jpeg" style="max-width:100%;">
 
 ### Red-necked Avocet
-<img src="figures/Red-necked_Avocet.jpeg" style="max-width:100%;">
+<img src="Red-necked_Avocet.jpeg" style="max-width:100%;">
 
 :::
 
