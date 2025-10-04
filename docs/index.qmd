@@ -1855,10 +1855,10 @@ plots_list <- data %>%
           fill = "Species"
         ))
 
+# Use knitr::asis_output to ensure output is captured
 for (species_name in names(plots_list)) {
   cat("\n\n## ", species_name, "\n\n")
-  print(plots_list[[species_name]])
-  flush.console()
+  knitr::asis_output(print(plots_list[[species_name]]))
 }
 ```
 
