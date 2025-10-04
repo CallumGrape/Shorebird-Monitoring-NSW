@@ -9,8 +9,6 @@ format:
 project:
   type: website
   output-dir: docs
-  resources:
-    - figures
 ---
 
 ```{r setup, include=FALSE}
