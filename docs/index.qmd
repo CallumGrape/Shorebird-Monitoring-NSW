@@ -6,13 +6,18 @@ css: styles.css
 format:
   html:
     code-line-numbers: true
-resources:
-  - figures/*
-  - index_files/*
 project:
   type: website
   output-dir: docs
+  resources:
+    - figures
 ---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE)
+library(here)
+```
+
 
 <p style="font-size: 0.7em; color: gray;"> Created on July 28, 2025 </p>
 
@@ -605,7 +610,7 @@ plots_list <- data %>%
 
 # Save each plot as a JPEG file
 for (species_name in names(plots_list)) {
-  filename <- paste0("index_files/", gsub(" ", "_", species_name), ".jpeg")
+  filename <- paste0("figures/", gsub(" ", "_", species_name), ".jpeg")
   jpeg(filename, width = 800, height = 600)
   print(plots_list[[species_name]])
   dev.off()
@@ -613,23 +618,36 @@ for (species_name in names(plots_list)) {
 ```
 
 ::: panel-tabset
-## Bar-tailed Godwit
-![Bar-tailed Godwit](index_files/Bar-tailed_Godwit.jpeg)
+```{r godwit-image, echo=FALSE}
+godwit_path <- here::here("figures", "Bar-tailed_Godwit.jpeg")
+```
+![Bar-tailed Godwit](`r godwit_path`)
 
-## Far Eastern Curlew
-![Far Eastern Curlew](index_files/Far_Eastern_Curlew.jpeg)
+```{r curlew-image, echo=FALSE}
+curlew_path <- here::here("figures", "Far_Eastern_Curlew.jpeg")
+```
+![Far Eastern Curlew](`r curlew_path`)
 
-## Masked Lapwing
-![Masked Lapwing](index_files/Masked_Lapwing.jpeg)
+```{r lapwing-image, echo=FALSE}
+lapwing_path <- here::here("figures", "Masked_Lapwing.jpeg")
+```
+![Masked Lapwing](r lapwing_path)
 
-## Pacific Golden-Plover
-![Pacific Golden-Plover](index_files/Pacific_Golden-Plover.jpeg)
+```{r plover-image, echo=FALSE}
+plover_path <- here::here("figures", "Pacific_Golden-Plover.jpeg")
+```
+![Pacific Golden-Plover](r plover_path)
 
-## Pied Stilt
-![Pied Stilt](index_files/Pied_Stilt.jpeg)
+```{r stilt-image, echo=FALSE}
+stilt_path <- here::here("figures", "Pied_Stilt.jpeg")
+```
+![Pied Stilt](r stilt_path)
 
-## Red-necked Avocet
-![Red-necked Avocet](index_files/Red-necked_Avocet.jpeg)
+```{r avocet-image, echo=FALSE}
+avocet_path <- here::here("figures", "Red-necked_Avocet.jpeg")
+```
+![Red-necked Avocet](r avocet_path)
+
 :::
 
 <button
