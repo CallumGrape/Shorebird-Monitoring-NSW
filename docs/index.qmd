@@ -13,6 +13,44 @@ project:
   output-dir: docs
 ---
 
+<p style="font-size: 0.7em; color: gray;"> Created on July 28, 2025 </p>
+
+## [*Maxime Marini, Callum Gapes, Andrea S. Griffin*]{style="font-size: 0.8em;"}
+
+\
+
+# [Material]{.smallcaps}
+
+Multiple variables might influence the movement of migratory shorebirds within there foraging ground (ie. Hunter & Port Stephen estuaries), selecting different areas at different times whether to roost or forage. Those variables might vary across species and individuals, therefore their selected habitat. Within such an interdependent system, we try to suggest an approach that takes into account the tidal and circadian cycles as the main drivers to the habitat selection.
+
+1.  **MOTUS telemetry technology**
+
+<p style="font-size: 0.9em; color: gray;">
+
+*Overview about the MOTUS array and its combination with Lotek VHF devices used within the study. How does this work?*
+
+</p>
+
+2.  **The local MOTUS array**
+
+<p style="font-size: 0.9em; color: gray;">
+
+*See how, where and where our array is set-up.*
+
+</p>
+
+3.  **The deployed tags**
+
+<p style="font-size: 0.9em; color: gray;">
+
+*Keep track on what tags are deployed over our migratory shorebirds.*
+
+</p>
+
+::: blockquote-blue
+Navigate the three different tabs below to get deeper into the [material]{.smallcaps} used.
+:::
+
 <button
   class="backBtn"
   data-target="contents4" 
