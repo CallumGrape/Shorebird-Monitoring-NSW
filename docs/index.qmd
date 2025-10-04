@@ -8,6 +8,7 @@ format:
     code-line-numbers: true
 resources:
   - figures/*
+  - index_files/*
 project:
   type: website
   output-dir: docs
@@ -1838,7 +1839,6 @@ plots_list <- lapply(names(data_split), function(species) {
 ```
 
 
-::: panel-tabset
 ```{r 5 plotting results2BIS, echo = FALSE, eval = TRUE, results = 'asis'}
 # One plot per species for better understanding
 plots_list <- data %>%
@@ -1864,20 +1864,19 @@ for (species_name in names(plots_list)) {
 }
 ```
 
+::: panel-tabset
 ```{r 5 display-plots, echo = FALSE, eval = TRUE, results = 'asis'}
 # List all saved plot files
 plot_files <- list.files('index_files', pattern = '\\.jpeg$', full.names = TRUE)
-
 
 # Display each plot in a tab
 for (file in plot_files) {
   species_name <- tools::file_path_sans_ext(basename(file)) %>%
     gsub("_", " ", .)
   cat("\n\n### ", species_name, "\n\n")
-  cat("![", species_name, "](", file, ")\n\n")
+  cat("![", species_name, "](", basename(file), ")\n\n")
 }
 ```
-
 :::
 
 
