@@ -78,9 +78,20 @@ To be continued ...
 
 ```{r 03 data overview DOUBLE FOR GENERATING PLOT text for moni object, message = FALSE, warning = FALSE, eval = TRUE, echo = FALSE}
 library(dplyr)
-write.csv(readxl::read_excel("C:/Users/c3541851/The University of Newcastle/StudentGroupPhD - Louise Williams and Mattea Taylor - General/SHOREBIRD NUMBER TRACKING.xlsx"), 
-          file.path(here::here("1_data", "spreadsheets"), paste0(Sys.Date(), "-teams.sheet", ".csv")), 
-          row.names = FALSE)
+tryCatch({
+  write.csv(
+    readxl::read_excel("C:/Users/c3541851/The University of Newcastle/StudentGroupPhD - Louise Williams and Mattea Taylor - General/SHOREBIRD NUMBER TRACKING.xlsx"),
+    file.path(here::here("1_data", "spreadsheets"), paste0(Sys.Date(), "-teams.sheet", ".csv")),
+    row.names = FALSE
+  )
+}, error = function(e) {
+  write.csv(
+    readxl::read_excel("C:/Users/marin/The University of Newcastle/StudentGroupPhD - Louise Williams and Mattea Taylor - General/SHOREBIRD NUMBER TRACKING.xlsx"),
+    file.path(here::here("1_data", "spreadsheets"), paste0(Sys.Date(), "-teams.sheet", ".csv")),
+    row.names = FALSE
+  )
+})
+
 spreadsheet <- read.csv(here::here("1_data", "spreadsheets", paste0(Sys.Date(), "-teams.sheet.csv"))) %>%
   filter(Radio.tag. == "Y") %>%     
   rename(DateAUS.Trap = "Date", motusTagID = "Motus.tag.ID") %>% 
@@ -132,9 +143,19 @@ Since 2021, we trapped `r moni$value[moni$variable == "nb_tagged"]` birds, and `
 
 ```{r 03 data overview DOUBLE FOR GENERATING PLOT, message = FALSE, warning = FALSE, eval = TRUE, echo = FALSE}
 library(dplyr)
-write.csv(readxl::read_excel("C:/Users/c3541851/The University of Newcastle/StudentGroupPhD - Louise Williams and Mattea Taylor - General/SHOREBIRD NUMBER TRACKING.xlsx"), 
-          file.path(here::here("1_data", "spreadsheets"), paste0(Sys.Date(), "-teams_sheet", ".csv")), 
-          row.names = FALSE)
+tryCatch({
+  write.csv(
+    readxl::read_excel("C:/Users/c3541851/The University of Newcastle/StudentGroupPhD - Louise Williams and Mattea Taylor - General/SHOREBIRD NUMBER TRACKING.xlsx"),
+    file.path(here::here("1_data", "spreadsheets"), paste0(Sys.Date(), "-teams.sheet", ".csv")),
+    row.names = FALSE
+  )
+}, error = function(e) {
+  write.csv(
+    readxl::read_excel("C:/Users/marin/The University of Newcastle/StudentGroupPhD - Louise Williams and Mattea Taylor - General/SHOREBIRD NUMBER TRACKING.xlsx"),
+    file.path(here::here("1_data", "spreadsheets"), paste0(Sys.Date(), "-teams.sheet", ".csv")),
+    row.names = FALSE
+  )
+})
 spreadsheet <- read.csv(here::here("1_data", "spreadsheets", paste0(Sys.Date(), "-teams.sheet.csv"))) %>%
   filter(Radio.tag. == "Y") %>%     
   rename(DateAUS.Trap = "Date", motusTagID = "Motus.tag.ID") %>% 
