@@ -617,36 +617,25 @@ for (species_name in names(plots_list)) {
 }
 ```
 
-::: panel-tabset
-```{r godwit-image, echo=FALSE}
-godwit_path <- here::here("figures", "Bar-tailed_Godwit.jpeg")
-```
-![Bar-tailed Godwit](`r godwit_path`)
+::: {.panel-tabset}
 
-```{r curlew-image, echo=FALSE}
-curlew_path <- here::here("figures", "Far_Eastern_Curlew.jpeg")
-```
-![Far Eastern Curlew](`r curlew_path`)
+### Bar-tailed Godwit
+<img src="figures/Bar-tailed_Godwit.jpeg" style="max-width:100%;">
 
-```{r lapwing-image, echo=FALSE}
-lapwing_path <- here::here("figures", "Masked_Lapwing.jpeg")
-```
-![Masked Lapwing](r lapwing_path)
+### Far Eastern Curlew
+<img src="figures/Far_Eastern_Curwlew.jpeg" style="max-width:100%;">
 
-```{r plover-image, echo=FALSE}
-plover_path <- here::here("figures", "Pacific_Golden-Plover.jpeg")
-```
-![Pacific Golden-Plover](r plover_path)
+### Masked Lapwing
+<img src="figures/Masked_Lapwing.jpeg" style="max-width:100%;">
 
-```{r stilt-image, echo=FALSE}
-stilt_path <- here::here("figures", "Pied_Stilt.jpeg")
-```
-![Pied Stilt](r stilt_path)
+### Pacific Golden-Plover
+<img src="figures/Pacific_Golden-Plover.jpeg" style="max-width:100%;">
 
-```{r avocet-image, echo=FALSE}
-avocet_path <- here::here("figures", "Red-necked_Avocet.jpeg")
-```
-![Red-necked Avocet](r avocet_path)
+### Pied Stilt
+<img src="figures/Pied_Stilt.jpeg" style="max-width:100%;">
+
+### Red-necked Avocet
+<img src="figures/Red-necked_Avocet.jpeg" style="max-width:100%;">
 
 :::
 
