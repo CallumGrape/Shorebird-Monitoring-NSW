@@ -25,7 +25,7 @@ library(here)
 
 \
 
-# [Material]{.smallcaps}
+# [Materiakkkl]{.smallcaps}
 
 Multiple variables might influence the movement of migratory shorebirds within there foraging ground (ie. Hunter & Port Stephen estuaries), selecting different areas at different times whether to roost or forage. Those variables might vary across species and individuals, therefore their selected habitat. Within such an interdependent system, we try to suggest an approach that takes into account the tidal and circadian cycles as the main drivers to the habitat selection.
 
@@ -617,7 +617,7 @@ for (species_name in names(plots_list)) {
 }
 ```
 
-::: {.panel-tabset}
+::: panel-tabset
 
 ### Bar-tailed Godwit
 <img src="figures/Bar-tailed_Godwit.jpeg" style="max-width:100%;">
