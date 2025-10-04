@@ -1858,9 +1858,11 @@ plots_list <- data %>%
           fill = "Species"
         ))
 
+names(plots_list) <- c("BTG", "FEC", "ML", "PGP", "PS", "RNA")
+
 # Save each plot as a JPEG file
 for (species_name in names(plots_list)) {
-  filename <- paste0(gsub(" ", "_", species_name), ".jpg")
+  filename <- paste0(species_name, ".jpg")
   jpeg(filename, width = 800, height = 600)
   print(plots_list[[species_name]])
   dev.off()
@@ -1870,22 +1872,22 @@ for (species_name in names(plots_list)) {
 ::: panel-tabset
 
 ### Bar-tailed Godwit
-<img src="Bar-tailed_Godwit.jpg" style="max-width:100%;">
+<img src="BTG.jpg" style="max-width:100%;">
 
 ### Far Eastern Curlew
-<img src="Far_Eastern_Curwlew.jpg" style="max-width:100%;">
+<img src="FEC.jpg" style="max-width:100%;">
 
 ### Masked Lapwing
-<img src="Masked_Lapwing.jpg" style="max-width:100%;">
+<img src="ML.jpg" style="max-width:100%;">
 
 ### Pacific Golden-Plover
-<img src="Pacific_Golden-Plover.jpg" style="max-width:100%;">
+<img src="PGP.jpg" style="max-width:100%;">
 
 ### Pied Stilt
-<img src="Pied_Stilt.jpg" style="max-width:100%;">
+<img src="PS.jpg" style="max-width:100%;">
 
 ### Red-necked Avocet
-<img src="Red-necked_Avocet.jpg" style="max-width:100%;">
+<img src="RNA.jpg" style="max-width:100%;">
 
 :::
 
