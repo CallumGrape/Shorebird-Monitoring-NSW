@@ -1822,27 +1822,8 @@ speciesINIT_colors <- c(
 
 ```
 
-```{r 5 plotting results2 , echo = TRUE, eval = FALSE}
-# One plot per species for better understanding
-data_split <- split(data, data$speciesEN) 
-plots_list <- lapply(names(data_split), function(species) {
-  df_sub <- data_split[[species]]
-  ggplot(df_sub, aes(x = tideCat, y = sig_indiv_tideCat, fill = speciesEN)) +
-    geom_boxplot() +
-    scale_fill_manual(values = species_colors, guide = "none") +
-    facet_wrap(~ recvDeployName) +
-    theme_bw() +
-    labs(
-      title = paste0("Signal Strength variance for ", species, " over MOTUS stations"),
-      x = "Tide Category",
-      y = "Signal Strength variance (RSSI)",
-      fill = "Species"
-    )
-})
-```
 
-
-```{r 5 plotting results2BIS, echo = FALSE, eval = TRUE, results = 'asis'}
+```{r 5 plotting results2BIS, echo = TRUE, eval = TRUE, results = 'asis'}
 # One plot per species for better understanding
 plots_list <- data %>%
   split(.$speciesEN) %>%
@@ -1862,7 +1843,7 @@ names(plots_list) <- c("BTG", "FEC", "ML", "PGP", "PS", "RNA")
 
 # Save each plot as a JPEG file
 for (species_name in names(plots_list)) {
-  filename <- paste0(species_name, ".jpg")
+  filename <- here::here("docs", "figures", paste0(species_name, ".jpg"))
   jpeg(filename, width = 800, height = 600)
   print(plots_list[[species_name]])
   dev.off()
@@ -1872,22 +1853,22 @@ for (species_name in names(plots_list)) {
 ::: panel-tabset
 
 ### Bar-tailed Godwit
-<img src="BTG.jpg" style="max-width:100%;">
+<img src="figures/BTG.jpg" style="max-width:100%;">
 
 ### Far Eastern Curlew
-<img src="FEC.jpg" style="max-width:100%;">
+<img src="figures/FEC.jpg" style="max-width:100%;">
 
 ### Masked Lapwing
-<img src="ML.jpg" style="max-width:100%;">
+<img src="figures/ML.jpg" style="max-width:100%;">
 
 ### Pacific Golden-Plover
-<img src="PGP.jpg" style="max-width:100%;">
+<img src="figures/PGP.jpg" style="max-width:100%;">
 
 ### Pied Stilt
-<img src="PS.jpg" style="max-width:100%;">
+<img src="figures/PS.jpg" style="max-width:100%;">
 
 ### Red-necked Avocet
-<img src="RNA.jpg" style="max-width:100%;">
+<img src="figures/RNA.jpg" style="max-width:100%;">
 
 :::
 

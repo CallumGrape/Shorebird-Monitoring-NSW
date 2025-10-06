@@ -48,13 +48,17 @@
 Backup/
 Papers/
 Plots/
-Docs/
 GIS Map/
 Maps/
 Presentations/
 Tables/
 Data/ 
 Photos/
+
+Docs/
+# but the folder figures
+!docs/figures/   
+!docs/figures/**
 
 R Files/Shiny Apps/Detection-Plot-App/Images
 R Files/Shiny Apps/Species-Detection-Plot-App/Images
