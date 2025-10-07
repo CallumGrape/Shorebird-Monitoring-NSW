@@ -110,7 +110,7 @@ df.alltags <- df.alltags %>%
      
 # False positive
 df.alltags <- df.alltags %>% 
-  filter(motusFilter == 1, # 0 is invalid data
+  filter(motusFilter == 1, # 0 is invalid data # MASKED LAPWING 43298 is only INVALID data !!! + 1 never detected: 43290
          runLen >= 3) # value to be further thought
 
 # Ambiguous (if != 0 then refer to https://motuswts.github.io/motus/articles/05-data-cleaning.html)

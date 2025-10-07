@@ -6,6 +6,74 @@
 ## Created:  2025 August 
 
 
+
+
+
+
+
+
+
+##################################################################################################
+
+# - Look for MASKED LAPWING ----
+
+
+# Global
+setwd(dirname(rstudioapi::getSourceEditorContext()$path)) 
+
+# Load local data
+sql.motus <- dbConnect(SQLite(), here::here("1_data", "alltags", "project-294.motus"))
+
+df.alltags <- tbl(sql.motus, "alltags") %>%
+  dplyr::collect() %>%
+  as.data.frame() %>%
+  mutate(time = as_datetime(ts),
+         timeAus = as_datetime(ts, tz = "Australia/Sydney"),
+         dateAus = as_date(timeAus),
+         year = year(time), 
+         doy = yday(time)) 
+
+table(df.alltags$motusTagID, df.alltags$speciesEN)
+
+masklap <- df.alltags %>% filter(speciesEN == "Masked Lapwing")
+table(masklap$motusTagID)
+
+df.alltagsMASK <- masklap %>% 
+  select(tagDepComments, speciesEN, dateAus, motusTagID)
+
+
+table(masklap$motusFilter, masklap$motusTagID) ### and I filter at = 1 in 11_script SEE BELOW
+# False positive
+df.alltags <- df.alltags %>% 
+  filter(motusFilter == 1, # 0 is invalid data # MASKED LAPWING 43298 is only INVALID data !!!
+         runLen >= 3) # value to be further thought
+
+
+
+redneck <- data_all %>% filter(speciesEN == "Red-necked Avocet") %>%
+  group_by(Band.ID) %>%
+  mutate(DateAUS.Trap = as.Date(DateAUS.Trap),
+         monit_d = max(dateAus) - DateAUS.Trap) # YES THE 3 RED NECKED AVO HAVE BEEN MONITORED EXACTLY 28 DAYS
+table(redneck$Band.ID, redneck$monit_d)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 ##################################################################################################
 
 # - Filtering tag data ----
