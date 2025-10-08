@@ -235,3 +235,10 @@ DT::datatable(
   caption = 'Table 1: Shorebirds monitoring with local MOTUS automated telemetry array.') %>%
   DT::formatStyle('species_eng',
                   fontWeight = 'bold')
+
+
+
+# table_grob <- gridExtra::tableGrob(table_1_pub)
+# jpeg(filename = "tabl1.jpeg", width = 1000, height = 200)
+# grid::grid.draw(table_grob)
+# dev.off()
