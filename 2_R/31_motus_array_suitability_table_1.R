@@ -222,9 +222,12 @@ table_1_pub <- table_1 %>%
   filter(!is.na(speciesSci)) %>%
   select(speciesEN, speciesSci, nb_tagged, nb_undetect, nb_retagged, first_d, last_d, monit_d, detect_d, sites_d, sites_tot) %>%
   rename(species_eng = "speciesEN",
-         species_sci = "speciesSci")
+         species_sci = "speciesSci")%>%
+  arrange(first_d)
 
 # Final
+
+# Markdown format
 DT::datatable(
   table_1_pub,
   options = list(
@@ -237,8 +240,43 @@ DT::datatable(
                   fontWeight = 'bold')
 
 
-
 # table_grob <- gridExtra::tableGrob(table_1_pub)
 # jpeg(filename = "tabl1.jpeg", width = 1000, height = 200)
 # grid::grid.draw(table_grob)
 # dev.off()
+
+# Publication format
+library(gt)
+
+table_1_pub %>%
+  gt() %>%
+  
+  tab_header(title = "Table 1: Monitoring shorebird populations with a local MOTUS automated telemetry array") %>%
+  
+  fmt_date(columns = c(last_d), date_style = 1) %>%
+  
+  opt_table_font(font = "Times New Roman") %>% 
+  
+  # Rename columns 
+  cols_label(
+    species_eng = "Species (En.)",
+    species_sci = "Species (Sci.)",
+    nb_tagged = "Tagged",
+    nb_undetect = "Undetected",
+    nb_retagged = "Re-tagged",
+    first_d = "First day",
+    last_d = "Last day",
+    monit_d = "Period (day)",
+    detect_d = "Detections (day)",
+    sites_d = "Sites a  day",
+    sites_tot = "Total sites") %>%
+  
+  # Font
+  tab_style(style = cell_text(weight = "bold"),
+            locations = cells_column_labels()) %>%
+
+  tab_style(style = cell_text(style = "italic"),
+            locations = cells_body(columns = c(species_sci))) %>%
+  
+  tab_options(table.font.size = pct(90),
+    heading.title.font.size = px(16))
