@@ -204,7 +204,7 @@ spreadsheet <- read.csv(here::here("1_data", "spreadsheets", paste0(Sys.Date(), 
 
 ```
 
-```{r 03 TABLE 1bis , message = FALSE, warning = FALSE, eval = TRUE, echo = TRUE}
+```{r 03 TABLE 1bis , message = FALSE, warning = FALSE, eval = TRUE, echo = FALSE}
 
 # Nb of individual equipped
 nb_tagged <- spreadsheet %>% 
@@ -332,7 +332,7 @@ sites_tot <- data_all %>%
   select(speciesEN, mean_sites_tot, sites_tot_se)
 ```
 
-```{r 03 TABLE 1tris, message = FALSE, warning = FALSE, eval = TRUE, echo = FALSE}
+```{r 03 TABLE 1tris, message = FALSE, warning = FALSE, eval = FALSE, echo = FALSE}
 
 # 1 - Gather variables ----
 
@@ -464,27 +464,11 @@ eutha <-  spreadsheet %>%
   left_join(detect_dates, by = "Band.ID") %>%
   select(Band.ID, motusTagID, Species, DateAUS.Trap, first_detect, last_detect, everything())
 
-DT::datatable(
-  moni,
-  options = list(
-    scrollX = TRUE,
-    pageLength = 10,
-    fixedColumns = list(leftColumns = 2)
-  ),
-  extensions = c('FixedColumns'),
-  caption = 'Table 2: Overview on detection quality accross tagged individuals'
-) %>%
-  DT::formatStyle(
-    'variable',
-    fontWeight = 'bold'
-  ) %>%
-  DT::formatStyle(
-    c('value'),
-    fontWeight = 'bold',
-    color = '#808080'  
-  )
-
 ```
+
+<figure>
+  <img src="figures/table1.png" alt="Table 1: Shorebirds species MOTUS monitored within and across the Hunter estuary"/>
+</figure>
 
 -   `nb_tagged`: total of birds trapped, banded (`Band.ID`) and tagged with a MOTUS device (`motusTagID`)
 -   `nb_euthanised`: total of birds that has been euthanised
