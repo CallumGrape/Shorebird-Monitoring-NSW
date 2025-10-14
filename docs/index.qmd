@@ -466,9 +466,13 @@ eutha <-  spreadsheet %>%
 
 ```
 
-<figure>
-  <img src="figures/table1.png" alt="Table 1: Shorebirds species MOTUS monitored within and across the Hunter estuary"/>
-</figure>
+<div style="display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 60vh;">
+  <figure>
+    <img src="figures/table1.png"
+         alt="Table 1: Shorebirds species MOTUS monitored within and across the Hunter estuary"
+         style="display: block; margin: 0 auto; width: 90vw; max-width: 950px; height: auto;">
+  </figure>
+</div>
 
 -   `nb_tagged`: total of birds trapped, banded (`Band.ID`) and tagged with a MOTUS device (`motusTagID`)
 -   `nb_euthanised`: total of birds that has been euthanised
