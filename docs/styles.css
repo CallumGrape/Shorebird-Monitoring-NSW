@@ -1,5 +1,12 @@
 
 
+body {
+  max-width: 950px;
+  width: 90vw;
+  margin-left: auto;
+  margin-right: auto;
+}
+
 
 .blockquote-blue {
   background-color: #d0e4f7;  /* light blue background */

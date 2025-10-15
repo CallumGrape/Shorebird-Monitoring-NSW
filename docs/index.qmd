@@ -6,6 +6,7 @@ css: styles.css
 format:
   html:
     code-line-numbers: true
+    page-layout: custom
 project:
   type: website
   output-dir: docs
@@ -474,6 +475,28 @@ eutha <-  spreadsheet %>%
   </figure>
 </div>
 
+```{r 03 MONI trap details, message = FALSE, warning = FALSE, eval = FALSE, echo = FALSE}
+DT::datatable(
+  MONI,
+  options = list(
+    scrollX = TRUE,
+    pageLength = 10,
+    fixedColumns = list(leftColumns = 2)
+  ),
+  extensions = c('FixedColumns'),
+  caption = 'Table 2: Complete details on shorebird captures'
+) %>%
+  DT::formatStyle(
+    c('Band.ID', 'motusTagID'),
+    fontWeight = 'bold'
+  ) %>%
+  DT::formatStyle(
+    c('DateAUS.Trap', 'Location'),
+    fontWeight = 'bold',
+    color = '#808080'  
+  )
+
+
 -   `nb_tagged`: total of birds trapped, banded (`Band.ID`) and tagged with a MOTUS device (`motusTagID`)
 -   `nb_euthanised`: total of birds that has been euthanised
 -   `nb_retagged`: total of birds that were re-trapped and needed to be re-tagged with a new MOTUS device, but did not require re-banding (as bands are permanent, whereas MOTUS devices can detach or fall off). This means that a single individual may have carried multiple MOTUS devices over time but only ever received one band
@@ -481,6 +504,8 @@ eutha <-  spreadsheet %>%
 -   `detect_0`: total of individual that have NEVER been recorded across our MOTUS array (0 detection)
 -   `detect_inf_150`: total of individual recorded LESS than 150 times across our MOTUS array
 -   `detect_sup_150`: total of individual recorded MORE than 150 times across our MOTUS array
+
+```
 
 ### Trapping: details {#details}
 
@@ -560,7 +585,7 @@ DT::datatable(
 
 ### Euthanasied birds {#euthanasied}
 
-Unfortunalely, it happens that we need to euthanasy birds, under the ACCE of University of Newcastle.
+Unfortunately, it happens that we need to euthanasy birds, under the ACCE of University of Newcastle.
 
 ```{r 03 euthe, message = FALSE, warning = FALSE, eval = TRUE, echo = FALSE}
 DT::datatable(
