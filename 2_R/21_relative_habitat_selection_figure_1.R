@@ -137,6 +137,7 @@ tide_data_plot <- bind_rows(results_list) %>%
 
 # 7 - Plot figure ----
 
+
 tide_categories <- c("Diurnal_Low", "Nocturnal_Low", "Diurnal_High", "Nocturnal_High")
 
 plots <- purrr::map(tide_categories, function(tc) {
@@ -155,13 +156,20 @@ plots <- purrr::map(tide_categories, function(tc) {
   plot_df <- bind_rows(bird_box, tide_box) %>%
     mutate(duration_h_num = as.numeric(duration_h) / 3600)
   
+  #Keep track on nb of indiv/species/categories
+  counts <- plot_df %>%
+    group_by(speciesEN) %>%
+    summarize(n = n_distinct(Band.ID) - 1) %>% # minus 1 to remove the "Band.ID = tide"
+    mutate(label = paste0(speciesEN, " (n = ", n, ")"))
+  label_vec <- setNames(counts$label, counts$speciesEN)
+  
   p <- ggplot(plot_df, aes(x = recvDeployName, y = duration_h_num, alpha = dataset)) +
     geom_boxplot(aes(fill = if_else(recvDeployName == "Available time", "#aed7f3", "#1b9ee0")),
                  color = "black",
                  position = position_dodge(width = 0.7),
                  outlier.shape = NA) +
     scale_alpha_manual(values = c("data_bird_plot" = 1, "tide_data_plot" = 0.7)) +
-    facet_wrap(~ speciesEN, scales = "free_y") +
+    facet_wrap(~ speciesEN, scales = "free_y", labeller = labeller(speciesEN = label_vec)) +
     labs(x = paste("Receiver Location (", tc, ")", sep = ""), y = "Duration (hours)", alpha = "Dataset") +
     theme_minimal(base_size = 12) +
     theme(

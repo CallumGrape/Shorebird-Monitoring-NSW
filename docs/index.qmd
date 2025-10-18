@@ -1758,7 +1758,8 @@ library(ggplot2)
 Either load your own data generated across the previous chapters (.rds format), or download the data up to the-last-document-update date provided here below (contact maxime.marini\@uon.edu.au for password access):
 
 Receiver information: <a href="#" onclick="return checkPassword('recv')">recv-info.rds</a><br>
-Bird data: <a href="#" onclick="return checkPassword('bird')">data.rds</a>
+Bird data: <a href="#" onclick="return checkPassword('bird')">data.rds</a>  
+Tide data: <a href="TideDataNewcastle.csv" download>TideDataNewcastle.csv</a>
 
 ```{=html}
 <script>
@@ -1769,15 +1770,22 @@ Bird data: <a href="#" onclick="return checkPassword('bird')">data.rds</a>
     };
     var urlLinks = {
       recv: "https://uoneduau-my.sharepoint.com/:u:/g/personal/c3541851_uon_edu_au/EemdZD3VJUdHvkVoKbqUhsABCJekUx7zYJ-_5snIw0BI4A?e=RRnDGy",
-      bird: "https://uoneduau-my.sharepoint.com/:u:/g/personal/c3541851_uon_edu_au/EU1v7RPMqwZGi-fapl0G620BYQVUbAQcr1tHyDqgsEPBKg?e=pfZgDd"
+      bird: "https://uoneduau-my.sharepoint.com/:u:/g/personal/c3541851_uon_edu_au/EU1v7RPMqwZGi-fapl0G620BYQVUbAQcr1tHyDqgsEPBKg?e=pfZgDd",
+      tide: "https://uoneduau-my.sharepoint.com/:x:/g/personal/c3541851_uon_edu_au/EUgbWsuze1lPigfriI2Wn5QBf8bm15dwHl_vpRzsCh7yGw?e=TREcgs"
     };
+
+    if (type === "tide") {
+      window.open(urlLinks[type], "_blank");
+      return false;
+    }
+
     var userPassword = prompt("Please enter the password to access the link:");
     if (userPassword === correctPasswords[type]) {
-      window.open(urlLinks[type], '_blank');
+      window.open(urlLinks[type], "_blank");
     } else {
       alert("Incorrect password. Access denied.");
     }
-    return false; // prevent default link behavior
+    return false;
   }
 </script>
 ```
@@ -1861,6 +1869,15 @@ data <- data_all %>%
   # Comment
     tagDepComments
     )
+
+species_colors <- c(
+  "Bar-tailed Godwit"      = "#1b9e77",  
+  "Far Eastern Curlew"     = "#d95f02",  
+  "Masked Lapwing"         = "#7570b3", 
+  "Pacific Golden-Plover"  = "#e7298a", 
+  "Pied Stilt"             = "#66a61e", 
+  "Red-necked Avocet"      = "#e6ab02"   
+)
 ```
 
 ### Descriptive analysis {#descriptive-analysis4}
@@ -1927,7 +1944,7 @@ plots <- tag_summary2 %>%
 
 #### Available vs Used {#available-used}
 
-```{r 4 Load data available vs Used, message = FALSE, warning = FALSE, echo = TRUE, eval = TRUE, results = 'asis'}
+```{r 4 Load data available vs Used, message = FALSE, warning = FALSE, echo = FALSE, eval = TRUE, results = 'asis'}
 
 # Birds
 data_all <- readRDS(
@@ -1938,6 +1955,17 @@ data_all <- readRDS(
 
 # Tide
 tide_data <- readr::read_csv(here::here("1_data", "tides", "TideDataNewcastle.csv"))
+
+
+```
+
+```{r 4 Load data available vs Used fake, message = FALSE, warning = FALSE, echo = TRUE, eval = FALSE, results = 'asis'}
+
+# Birds
+data_all <- readRDS(here::here("data.rds"))
+
+# Tide
+tide_data <- readr::read_csv(here::here("TideDataNewcastle.csv"))
 
 
 ```
@@ -2066,13 +2094,20 @@ plots <- purrr::map(tide_categories, function(tc) {
   plot_df <- bind_rows(bird_box, tide_box) %>%
     mutate(duration_h_num = as.numeric(duration_h) / 3600)
   
+  #Keep track on nb of indiv/species/categories
+  counts <- plot_df %>%
+    group_by(speciesEN) %>%
+    summarize(n = n_distinct(Band.ID) - 1) %>% # minus 1 to remove the "Band.ID = tide"
+    mutate(label = paste0(speciesEN, " (n = ", n, ")"))
+  label_vec <- setNames(counts$label, counts$speciesEN)
+  
   p <- ggplot(plot_df, aes(x = recvDeployName, y = duration_h_num, alpha = dataset)) +
     geom_boxplot(aes(fill = if_else(recvDeployName == "Available time", "#aed7f3", "#1b9ee0")),
                  color = "black",
                  position = position_dodge(width = 0.7),
                  outlier.shape = NA) +
     scale_alpha_manual(values = c("data_bird_plot" = 1, "tide_data_plot" = 0.7)) +
-    facet_wrap(~ speciesEN, scales = "free_y") +
+    facet_wrap(~ speciesEN, scales = "free_y", labeller = labeller(speciesEN = label_vec)) +
     labs(x = paste("Receiver Location (", tc, ")", sep = ""), y = "Duration (hours)", alpha = "Dataset") +
     theme_minimal(base_size = 12) +
     theme(
@@ -2085,37 +2120,40 @@ plots <- purrr::map(tide_categories, function(tc) {
 
 ```
 
-FIGURE 1 : Movement and spatial ecology varies across species and within local MOTUS array in NSW
 
 ::: panel-tabset
 
-## Diurnal_Low
+## Diurnal Low  Tide
 
-```{r 4 1, message = FALSE,  warning = FALSE, echo = TRUE, eval = TRUE, results = 'asis'}
+```{r 4 1, message = FALSE,  warning = FALSE, echo = FALSE, eval = TRUE, results = 'asis'}
 plots[[1]]
 ```
 
-## Nocturnal_Low
+## Nocturnal Low Tide
 
-```{r 4 2, message = FALSE, warning = FALSE, echo = TRUE, eval = TRUE, results = 'asis'}
+```{r 4 2, message = FALSE,  warning = FALSE, echo = FALSE, eval = TRUE, results = 'asis'}
 
 plots[[2]]
 ```
 
-## Diurnal_High
+## Diurnal High Tide
 
-```{r 4 3, message = FALSE,  warning = FALSE, echo = TRUE, eval = TRUE, results = 'asis'}
+```{r 4 3, message = FALSE,  warning = FALSE, echo = FALSE, eval = TRUE, results = 'asis'}
 
 plots[[3]]
 ```
 
-## Nocturnal_High
+## Nocturnal High Tide
 
-```{r 4 4, message = FALSE, warning = FALSE, echo = TRUE, eval = TRUE, results = 'asis'}
+```{r 4 4, message = FALSE,  warning = FALSE, echo = FALSE, eval = TRUE, results = 'asis'}
 
 plots[[4]]
 ```
 :::
+
+FIGURE 1 : Shorebird movement and spatial ecology vary across species and within the local MOTUS array in NSW. Each tab displays one category from the pairs "high/low" and "nocturnal/diurnal," showing *used time* for each species at different MOTUS stations (red boxes). The blue box on the left represents the total *available time* for the corresponding tide category across individuals.
+Note that *available time* is similar across stations as it is based on the general Newcastle tide table, since station-specific tide data is unavailable.
+
 
 <button
   class="backBtn"
