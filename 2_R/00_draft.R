@@ -9,6 +9,98 @@
 
 
 
+### PLOT AVAILABLE VS USED DATA PER STATION
+
+
+# 
+# tide_categories <- c("Diurnal_Low", "Nocturnal_Low", "Diurnal_High", "Nocturnal_High")
+# 
+# plots <- purrr::map(tide_categories, function(tc) {
+#   used <- used_bird_recv_time %>% filter(tideCategory == tc)
+#   available <- available_bird_recv_time %>% filter(tideCategory == tc)
+#   
+#   bird_box <- bird_data_filtered %>%
+#     mutate(dataset = "data_bird_plot") %>%
+#     select(speciesEN, recvDeployName, duration_h, dataset)
+#   
+#   tide_box <- tide_data_filtered %>%
+#     mutate(dataset = "tide_data_plot") %>%
+#     select(speciesEN, recvDeployName, duration_h, dataset)
+#   
+#   plot_df <- bind_rows(bird_box, tide_box) %>%
+#     mutate(duration_h_num = as.numeric(duration_h) / 3600)
+#   
+#   # Prepare labels and colors for species including "Tidal Data"
+#   counts <- plot_df %>%
+#     group_by(speciesEN) %>%
+#     summarise(n = n_distinct(recvDeployName)) %>%
+#     mutate(label = paste0(speciesEN, " (n = ", n, ")"))
+#   label_vec <- setNames(counts$label, counts$speciesEN)
+#   
+#   # Update colors vector to include tidal data as blue
+#   colors <- c(species_colors, "Tidal Data" = "#1b9ee0")
+#   
+#   p <- ggplot(plot_df, aes(x = recvDeployName, y = duration_h_num, fill = speciesEN)) +
+#     geom_boxplot(position = position_dodge2(preserve = "single")) +
+#     facet_wrap(~ speciesEN, scales = "free_y", labeller = labeller(speciesEN = label_vec)) +
+#     scale_fill_manual(values = colors) +
+#     labs(
+#       x = paste("Receiver Location (", tc, ")", sep = ""), 
+#       y = "Duration (hours)", 
+#       fill = "Species / Dataset"
+#     ) +
+#     theme_minimal(base_size = 12) +
+#     theme(
+#       strip.text = element_text(face = "bold", size = 10),
+#       axis.text.x = element_text(angle = 45, hjust = 1),
+#       legend.position = "top"
+#     )
+#   
+#   return(p)
+# })
+# 
+# plots
+# 
+
+
+
+# 
+# 
+# 
+# 
+# # Slice for each bird the corresponding available tide time (from trap to last detect)
+# results_list <- list()
+# 
+# for(i in 1:nrow(period_sp)) {
+#   bird_id <- period_sp$Band.ID[i]
+#   speciesEN <- period_sp$speciesEN[i]
+#   start_date <- as.POSIXct(period_sp$DateAUS.Trap[i])
+#   end_date <- as.POSIXct(period_sp$last_dateAus[i]) + hours(23) + minutes(59) + seconds(59)
+#   
+#   # Filter tide_data for each species' period
+#   filtered_tide <- total_recv_tide_data %>%
+#     filter(timeAus >= start_date & timeAus <= end_date) 
+#   
+#   # Group by tideCategory and sum duration_h
+#   summary_tide <- filtered_tide %>%
+#     group_by(tideCategory) %>%
+#     summarise(total_duration_sec = sum(duration_h * 3600, na.rm = TRUE) ) %>%
+#     # Convert total duration seconds into hh:mm format rounded to minutes
+#     mutate(duration_h = round_hms(as_hms(total_duration_sec), secs = 60),
+#            bird_id = bird_id,
+#            tideCategory = tideCategory,
+#            speciesEN = speciesEN,
+#            tideDiel = if_else(grepl("Diurnal", tideCategory), "Diurnal", "Nocturnal"),
+#            tideHighLow = if_else(grepl("High", tideCategory), "High", "Low")) %>%
+#     ungroup() %>%
+#     select(speciesEN, bird_id, tideCategory, tideDiel, tideHighLow, duration_h)
+#   
+#   results_list[[i]] <- summary_tide
+# }
+# 
+# # Combine results
+# total_bird_tide_data <- bind_rows(results_list) %>%
+#   rename(Band.ID = bird_id)
 
 
 
