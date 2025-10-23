@@ -92,12 +92,6 @@ tide_data <- tide_data %>%
          timeAus = tideDateTimeAus) %>%
   select(timeAus, tideCategory, tideHighLow, tideDiel, duration_h, sunriseNewc, sunsetNewc)
 
-# Provide the burst interval value depending Lotek-nano tag model (scd)
-data_bird <- data_all %>%
-  mutate(burst_inter = ifelse(tagModel == "NTQB2-6-2", dseconds(7.1), dseconds(13.1))) %>%
-  select(timeAus, tideCategory, tideHighLow, tideDiel, sunriseNewc, sunsetNewc, 
-         speciesEN, tagModel, recvDeployName, recv,speciesSci, Band.ID, burst_inter)
-
 
 # 5 - Split the available time of tide for each station ----
 
@@ -231,7 +225,7 @@ total_recv_tide_data <- tide_data_df %>%
   unnest(hour_seq) %>%
   rename(hour_dt = hour_seq) %>%
   
-  left_join(total_recv_tide_data, by = c("recvDeployName", "hour_dt")) %>%
+  left_join(tide_data_df, by = c("recvDeployName", "hour_dt")) %>%
   arrange(recvDeployName, hour_dt) %>%
   group_by(recvDeployName) %>%
   mutate(across(everything(), ~ zoo::na.locf(.x, na.rm = FALSE), .names = "{.col}"))
@@ -297,6 +291,13 @@ available_bird_recv_time <- bind_rows(bird_data_list) %>%
          tideHighLow = if_else(grepl("High", tideCategory), "High", "Low")) 
 
 # USED TIME (amount of time each bird spent during each category of tide and at each station)
+
+# Provide the burst interval value depending Lotek-nano tag model (scd)
+data_bird <- data_all %>%
+  mutate(burst_inter = ifelse(tagModel == "NTQB2-6-2", dseconds(7.1), dseconds(13.1))) %>%
+  select(timeAus, tideCategory, tideHighLow, tideDiel, sunriseNewc, sunsetNewc, 
+         speciesEN, tagModel, recvDeployName, recv,speciesSci, Band.ID, burst_inter)
+
 used_bird_recv_time <- data_bird %>%
   group_by(Band.ID, speciesEN, recvDeployName, tideCategory)  %>%
   summarise(duration_sec = sum(burst_inter)) %>%
