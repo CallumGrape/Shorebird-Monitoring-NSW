@@ -323,7 +323,7 @@ species_colors <- c(
 # Track size sample
 counts <- used_bird_recv_time %>%
       group_by(speciesEN) %>%
-      summarise(n = n_distinct(recvDeployName)) %>%
+      summarise(n = n_distinct(Band.ID)) %>%
       mutate(label = paste0(speciesEN, " (n = ", n, ")"))
 label_vec <- setNames(counts$label, counts$speciesEN)
   
@@ -349,7 +349,7 @@ plot_by_tide <- function(tide_cat) {
                labeller = labeller(speciesEN = label_vec)) +
 
     theme_minimal(base_size = 12) +
-    theme(strip.text = element_text(face = "bold", size = 10),
+    theme(strip.text = element_text(face = "bold", size = 8),
           axis.text.x = element_text(angle = 45, hjust = 1),
           legend.position = "none")  +
     
@@ -387,7 +387,7 @@ plot_used <- function(tide_cat) {
                labeller = labeller(speciesEN = label_vec)) +
     
     theme_minimal(base_size = 12) +
-    theme(strip.text = element_text(face = "bold", size = 10),
+    theme(strip.text = element_text(face = "bold", size = 8),
           axis.text.x = element_text(angle = 45, hjust = 1),
           legend.position = "none")  +
     
@@ -407,4 +407,71 @@ tide_categories <- combined_data %>%
 # Generate a list of plots for all tide categories
 plots_list_used <- purrr::map(tide_categories, plot_used)
 plots_list_used
+
+
+# 8 - Plot figure 1 ----
+
+# Combine dataset
+figure_plot <- left_join(available_bird_recv_time %>% 
+                           select(!type) %>%
+                           group_by(recvDeployName, Band.ID, speciesEN, tideCategory) %>%
+                           rename(available_t = "duration_h"),
+                         used_bird_recv_time %>%
+                           select(!type) %>%
+                           rename(used_t = "duration_h")) %>%
+  mutate(rate_use = used_t*100/available_t) %>%
+  mutate(rate_use = ifelse(rate_use > 100, 100, rate_use)) %>%
+  mutate(speciesType = case_when(speciesEN %in% c("Bar-tailed Godwit", "Far Eastern Curlew" , "Pacific Golden-Plover")~ "migratory",
+                                 speciesEN %in% c("Masked Lapwing" , "Pied Stilt" , "Red-necked Avocet") ~ "resident") %>% 
+           as_factor()) %>%
+  filter(!speciesEN %in% c("Far Eastern Curlew", "Masked Lapwing"))
+
+
+# Plot
+# Tide and species groupings
+tide_levels <- c("Low", "High")
+species_types <- c("resident", "migratory")
+
+# Function to generate a plot for a given combination
+make_plot <- function(tide_levels, species_types) {
+  ggplot(figure_plot %>%
+           filter(tideHighLow == tide_levels, speciesType == species_types),
+         aes(x = recvDeployName, y = rate_use, fill = tideDiel)) +
+    geom_boxplot() +
+    facet_wrap(~ speciesEN,
+               labeller = labeller(speciesEN = label_vec)) +    
+    labs(
+      x = "Receiver Deployment",
+      y = "Rate of Use (%)",
+      fill = "Tide Diel",
+      title = paste(
+        ifelse(species_types == "migratory", "Migratory species", "Resident species"),
+        "during", tide_levels, "tide"
+      )
+    ) +
+    theme_minimal() +
+    scale_fill_manual(values = c("Diurnal" = "white", "Nocturnal" = "darkgrey")) +
+    theme(axis.text.x = element_text(angle = 45, hjust = 1))
+}
+
+
+# Generate and store all plots in a list
+plots_used_rate <- cross2(tide_levels, species_types) %>%
+  purrr::map(~ make_plot(.x[[1]], .x[[2]]))
+plots_used_rate
+
+
+# # Save all plots as PNG files in your working directory
+# file_names <- map_chr(params, ~ paste0(.x[[1]], "_", .x[[2]], ".png"))
+# walk2(
+#   plots_used_rate,
+#   file_names,
+#   ~ ggsave(
+#     filename = .y,
+#     plot = .x,
+#     width = 8,
+#     height = 6,
+#     dpi = 300
+#   )
+# )
 

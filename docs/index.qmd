@@ -1995,6 +1995,7 @@ Table X?: Number of individuals detected at least once by a station part of the 
 -   [Process the data](#process4avsu)
 -   [Results: Available vs Used](#results_avsu)
 -   [Results: Used](#results_u)  
+-   [Results: Time Used Rate](#time_used_rate)  
 
 
 #### Packages {#package4avsu}
@@ -2109,7 +2110,7 @@ recv <- readRDS(here::here("data", "data.rds"))
 
 To compare the time available in each category (high tide day, high tide night, low tide day, and low tide night) against the time shorebird species spend at each MOTUS station in our local array, we need to determine the available time for each species group at each MOTUS station. And we need to calculate the used for each bird at each MOTUS stations too.
 
-*The below procedure breaks down how we accessed:* 
+*The below procedure breaks down how we accessed:*   
 **- Tide variable (the four categories) **  
 **- The time *available* **  
 **- The time *used* **  
@@ -2120,7 +2121,7 @@ To compare the time available in each category (high tide day, high tide night, 
          alt="Schema 1: Definition of available and used periods across bird individuals and MOTUS stations"
          style="display: block; margin: auto; width: 90vw; max-width: 950px; height: auto;">
     <figcaption style="text-align: center; margin-top: 0.5em;">
-      Schema 1: Definition of available and used period across bird individuals and MOTUS stations
+      Schema 1: Definition of available and used periods across bird individuals and MOTUS stations
     </figcaption>
   </figure>
 </div>
@@ -2440,10 +2441,45 @@ used_bird_recv_time <- data_bird %>%
 
 ```
   
-  
-Now the *used* and *available* determined, we can plot the results. 
+Now the *used* and *available* determined, we can start plotting the results.  
 
-```{r 4 Available vs Used PLOT, message = FALSE, warning = FALSE, echo = TRUE, eval = TRUE, results = 'asis'}
+##### Rate of time *used* vs. *available*
+  
+  
+As you will see within the two further plottings, putting available against used might be hard to read since the difference is big, plus, there are different available per species and station.  
+So, a way to improve comprehension is to use percentage conversion and provide a *Rate of used time* in comparison to the *available*. Calculated as the following:  
+
+\[
+\frac{\text{Time used} \times 100}{\text{Time available}} \quad \text{across stations and species}
+\]  
+
+  
+Also, for more talkative results we filtered out Masked Lapwing and Far Estearn Curlew from the analysis.  
+  
+Before to start plotting we provide the below code which generate this helpful value.  
+  
+  
+```{r 4 Time Used Rate, message = FALSE, warning = FALSE, echo = TRUE, eval = TRUE, results = 'asis'}
+
+figure_plot <- left_join(available_bird_recv_time %>% 
+                           group_by(recvDeployName, Band.ID, speciesEN, tideCategory) %>%
+                           rename(available_t = "duration_h"),
+                         used_bird_recv_time %>%
+                           rename(used_t = "duration_h")) %>%
+  mutate(rate_use = used_t*100/available_t) %>%
+  mutate(rate_use = ifelse(rate_use > 100, 100, rate_use)) %>%
+  mutate(speciesType = case_when(speciesEN %in% c("Bar-tailed Godwit", "Far Eastern Curlew" , "Pacific Golden-Plover")~ "migratory",
+                                 speciesEN %in% c("Masked Lapwing" , "Pied Stilt" , "Red-necked Avocet") ~ "resident") %>% 
+           as_factor()) %>%
+  filter(!speciesEN %in% c("Far Eastern Curlew", "Masked Lapwing"))
+
+```
+
+
+Below are helpful data provided for plot design.   
+  
+  
+```{r 4 design PLOT, message = FALSE, warning = FALSE, echo = TRUE, eval = TRUE, results = 'asis'}
 
 # Color per sp
 species_colors <- c(
@@ -2459,11 +2495,15 @@ species_colors <- c(
 # Track size sample
 counts <- used_bird_recv_time %>%
       group_by(speciesEN) %>%
-      summarise(n = n_distinct(recvDeployName)) %>%
+      summarise(n = n_distinct(Band.ID)) %>%
       mutate(label = paste0(speciesEN, " (n = ", n, ")"))
 label_vec <- setNames(counts$label, counts$speciesEN)
+```
 
-  
+#### Results: Available vs Used {#results_avsu}
+
+```{r 4 Available vs Used PLOT, message = FALSE, warning = FALSE, echo = TRUE, eval = TRUE, results = 'asis'}
+
 # Combine dataset
 used_bird_recv_time$type <- "used"
 available_bird_recv_time$type <- "available"
@@ -2512,7 +2552,6 @@ plots_list <- purrr::map(tide_categories, plot_by_tide)
 ```
 
 
-#### Results: Available vs Used {#results_avsu}
 
 ::: panel-tabset
 
@@ -2621,7 +2660,84 @@ plots_list_used[[3]]
 
 plots_list_used[[4]]
 ```
-:::
+:::  
+
+
+#### Results: Time Used Rate {#time_used_rate}  
+  
+```{r 4 Used rate PLOT, message = FALSE, warning = FALSE, echo = TRUE, eval = TRUE, results = 'asis'}
+
+# Tide and species groupings
+tide_levels <- c("Low", "High")
+species_types <- c("resident", "migratory")
+
+# Function to generate a plot for a given combination
+make_plot <- function(tide_levels, species_types) {
+  ggplot(figure_plot %>%
+           filter(tideHighLow == tide_levels, speciesType == species_types),
+         aes(x = recvDeployName, y = rate_use, fill = tideDiel)) +
+    geom_boxplot() +
+    facet_wrap(~ speciesEN,
+               labeller = labeller(speciesEN = label_vec)) +    
+    labs(
+      x = "Receiver Deployment",
+      y = "Rate of Use (%)",
+      fill = "Tide Diel",
+      title = paste(
+        ifelse(species_types == "migratory", "Migratory species", "Resident species"),
+        "during", tide_levels, "tide"
+      )
+    ) +
+    theme_minimal() +
+    scale_fill_manual(values = c("Diurnal" = "white", "Nocturnal" = "darkgrey")) +
+    theme(axis.text.x = element_text(angle = 45, hjust = 1))
+}
+
+
+# Generate and store all plots in a list
+plots_used_rate <- cross2(tide_levels, species_types) %>%
+  purrr::map(~ make_plot(.x[[1]], .x[[2]]))
+
+```
+
+**MIGRATORY BIRDS**  
+
+::: panel-tabset
+
+##### High Tide
+
+```{r 4 Used rate 1, message = FALSE,  warning = FALSE, echo = FALSE, eval = TRUE, results = 'asis'}
+plots_used_rate[[4]]
+```
+
+##### Low Tide
+
+```{r 4 Used rate 2, message = FALSE,  warning = FALSE, echo = FALSE, eval = TRUE, results = 'asis'}
+
+plots_used_rate[[3]]
+```
+:::  
+
+
+**RESIDENT BIRDS**  
+
+::: panel-tabset
+
+##### High Tide
+
+```{r 4 Used rate 3, message = FALSE,  warning = FALSE, echo = FALSE, eval = TRUE, results = 'asis'}
+plots_used_rate[[2]]
+```
+
+##### Low Tide
+
+```{r 4 Used rate 4, message = FALSE,  warning = FALSE, echo = FALSE, eval = TRUE, results = 'asis'}
+
+plots_used_rate[[1]]
+```
+:::  
+
+
 
 <button
   class="backBtn"
