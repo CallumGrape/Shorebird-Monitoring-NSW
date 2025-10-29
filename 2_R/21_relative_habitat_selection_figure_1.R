@@ -424,7 +424,8 @@ figure_plot <- left_join(available_bird_recv_time %>%
   mutate(speciesType = case_when(speciesEN %in% c("Bar-tailed Godwit", "Far Eastern Curlew" , "Pacific Golden-Plover")~ "migratory",
                                  speciesEN %in% c("Masked Lapwing" , "Pied Stilt" , "Red-necked Avocet") ~ "resident") %>% 
            as_factor()) %>%
-  filter(!speciesEN %in% c("Far Eastern Curlew", "Masked Lapwing"))
+  filter(!speciesEN %in% c("Far Eastern Curlew", "Masked Lapwing"),
+         rate_use != 100) 
 
 
 # Plot
@@ -436,7 +437,9 @@ species_types <- c("resident", "migratory")
 make_plot <- function(tide_levels, species_types) {
   ggplot(figure_plot %>%
            filter(tideHighLow == tide_levels, speciesType == species_types),
-         aes(x = recvDeployName, y = rate_use, fill = tideDiel)) +
+         aes(x = factor(recvDeployName, levels = sort(unique(recvDeployName))),
+             y = rate_use,
+             fill = tideDiel)) +
     geom_boxplot() +
     facet_wrap(~ speciesEN,
                labeller = labeller(speciesEN = label_vec)) +    
@@ -449,6 +452,7 @@ make_plot <- function(tide_levels, species_types) {
         "during", tide_levels, "tide"
       )
     ) +
+    scale_y_continuous(limits = c(0, 100)) +
     theme_minimal() +
     scale_fill_manual(values = c("Diurnal" = "white", "Nocturnal" = "darkgrey")) +
     theme(axis.text.x = element_text(angle = 45, hjust = 1))

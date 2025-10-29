@@ -240,14 +240,16 @@ first_d <- spreadsheet %>%
   group_by(speciesEN) %>% # per species
   mutate(first_d = min(DateAUS.Trap)) %>%
   select(speciesEN, first_d) %>%
-  unique()
+  unique() %>%
+  mutate(first_d = format(as.Date(first_d), format = "%d-%m-%Y"))
 
 # Last day recorded (detection)
 last_d <- data_all %>% 
   group_by(speciesEN) %>% # per species
   mutate(last_d = max(dateAus)) %>%
   select(speciesEN, last_d) %>%
-  unique()
+  unique()%>%
+  mutate(last_d = format(last_d, format = "%d-%m-%Y"))
 
 # Nb of days monitored, total period of detection (mean + SE)
 monit_d <- data_all %>%
@@ -260,13 +262,13 @@ monit_d <- data_all %>%
   
   group_by(speciesEN) %>% # per species
   summarise(n_indiv = n(),
-            mean_monit_d = round(mean(monit_d), 0),
+            mean_monit_d = round(mean(monit_d), 1),
             se = sd(monit_d)/sqrt(n_indiv),
             se_lower = mean_monit_d - 1.96*se,
             se_upper = mean_monit_d + 1.96*se,
             mean_monit_d_se = ifelse(is.na(se), 
-                                     NA,
-                                     paste0("[", ifelse(se_lower < 0, 0, round(se_lower, 0)), "-", round(se_upper, 0), "]"))) %>%
+                                     paste0(" \u00B1 0") , 
+                                     paste0(" \u00B1 ", round(se, 1)))) %>%
   ungroup() %>%
   select(speciesEN, mean_monit_d, mean_monit_d_se)
 
@@ -280,13 +282,13 @@ detect_d <- data_all %>%
   
   group_by(speciesEN) %>% # per species
   summarise(n_indiv = n(),
-            mean_detect_d = round(mean(detect_d), 0),
+            mean_detect_d = round(mean(detect_d), 1),
             se = sd(detect_d)/sqrt(n_indiv),
             se_lower = mean_detect_d - 1.96*se,
             se_upper = mean_detect_d + 1.96*se,
             mean_detect_d_se = ifelse(is.na(se), 
-                                      NA, 
-                                      paste0("[", ifelse(se_lower < 0, 0, round(se_lower, 0)), "-", round(se_upper, 0), "]"))) %>%
+                                      paste0(" \u00B1 0") , 
+                                      paste0(" \u00B1 ", round(se, 1)))) %>%
   ungroup() %>%
   select(speciesEN, mean_detect_d, mean_detect_d_se)
 
@@ -296,19 +298,19 @@ sites_d <- data_all %>%
   group_by(Band.ID, dateAus) %>% # per individual and day
   summarise(nb_sites = n_distinct(recvDeployName), .groups = "drop") %>%  
   group_by(Band.ID) %>%  
-  summarise(nb_sites_d = round(mean(nb_sites), 0)) %>%
+  summarise(nb_sites_d = round(mean(nb_sites), 1)) %>%
   ungroup()  %>% 
   left_join(data_all %>% select(Band.ID, speciesEN) %>% distinct(), by = "Band.ID") %>%
   
   group_by(speciesEN) %>% # per species
   summarise(n_indiv = n(),
-            mean_sites_d = round(mean(nb_sites_d), 0),
+            mean_sites_d = round(mean(nb_sites_d), 1),
             se = sd(nb_sites_d)/sqrt(n_indiv),
             se_lower = mean_sites_d - 1.96*se,
             se_upper = mean_sites_d + 1.96*se,
             sites_d_se = ifelse(is.na(se), 
-                                NA, 
-                                paste0("[", ifelse(se_lower < 0, 0, round(se_lower, 1)), "-", round(se_upper, 1), "]"))) %>%
+                                paste0(" \u00B1 0") , 
+                                paste0(" \u00B1 ", round(se, 1)))) %>%
   ungroup() %>%
   select(speciesEN, mean_sites_d, sites_d_se)
 
@@ -322,13 +324,13 @@ sites_tot <- data_all %>%
   
   group_by(speciesEN) %>% # per species
   summarise(n_indiv = n(),
-            mean_sites_tot = round(mean(sites_tot), 0),
+            mean_sites_tot = round(mean(sites_tot), 1),
             se = sd(sites_tot)/sqrt(n_indiv),
             se_lower = mean_sites_tot - 1.96*se,
             se_upper = mean_sites_tot + 1.96*se,
             sites_tot_se = ifelse(is.na(se), 
-                                  NA, 
-                                  paste0("[", ifelse(se_lower < 0, 0, round(se_lower, 1)), "-", round(se_upper, 1), "]"))) %>%
+                                  paste0(" \u00B1 0") , 
+                                  paste0(" \u00B1 ", round(se, 1)))) %>%
   ungroup() %>%
   select(speciesEN, mean_sites_tot, sites_tot_se)
 ```
@@ -470,11 +472,7 @@ eutha <-  spreadsheet %>%
 <div style="display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 60vh;">
   <figure>
     <img src="figures/table1.png"
-         alt="Table 1: Shorebirds species MOTUS monitored within and across the Hunter estuary"
          style="display: block; margin: auto; width: 90vw; max-width: 950px; height: auto;">
-    <figcaption style="text-align: center; margin-top: 0.5em;">
-    Table 1: Shorebirds species MOTUS monitored within and across the Hunter estuary
-    </figcaption>
   </figure>
 </div>
 
@@ -2454,9 +2452,9 @@ So, a way to improve comprehension is to use percentage conversion and provide a
 \]  
 
   
-Also, for more talkative results we filtered out Masked Lapwing and Far Estearn Curlew from the analysis.  
+For more talkative results we filtered out Masked Lapwing and Far Eastern Curlew from the analysis, since they have too few data. And we removed two cases where the  *Rate of used time* was over the *available* (7176824 Bar-tailed Godwit in Curlew point at Nocturnal High Tide, and 6318617 Pacific Golden-Plover at Curlew Point during diurnal high tide). This occurs because multiplying each bird detection by its pulse interval duration overestimates the actual time used. For example, if a bird is detected twice with a 13-second pulse interval—once at second 1 and again at second 14—this results in 2 detections over 14 seconds. However, simply multiplying the detections by the pulse interval (2 × 13 seconds) incorrectly estimates the total time used as 26 seconds. This limitation is currently ignored and not taken into account into the analysis regarding the general low ratio time used/time available. We only filtered out these two cases.
   
-Before to start plotting we provide the below code which generate this helpful value.  
+Let's now generate this helpful *Rate of used time* value, then plot the results.  
   
   
 ```{r 4 Time Used Rate, message = FALSE, warning = FALSE, echo = TRUE, eval = TRUE, results = 'asis'}
@@ -2471,7 +2469,8 @@ figure_plot <- left_join(available_bird_recv_time %>%
   mutate(speciesType = case_when(speciesEN %in% c("Bar-tailed Godwit", "Far Eastern Curlew" , "Pacific Golden-Plover")~ "migratory",
                                  speciesEN %in% c("Masked Lapwing" , "Pied Stilt" , "Red-necked Avocet") ~ "resident") %>% 
            as_factor()) %>%
-  filter(!speciesEN %in% c("Far Eastern Curlew", "Masked Lapwing"))
+  filter(!speciesEN %in% c("Far Eastern Curlew", "Masked Lapwing"),
+         rate_use != 100) 
 
 ```
 
@@ -2675,7 +2674,9 @@ species_types <- c("resident", "migratory")
 make_plot <- function(tide_levels, species_types) {
   ggplot(figure_plot %>%
            filter(tideHighLow == tide_levels, speciesType == species_types),
-         aes(x = recvDeployName, y = rate_use, fill = tideDiel)) +
+         aes(x = factor(recvDeployName, levels = sort(unique(recvDeployName))),
+             y = rate_use,
+             fill = tideDiel)) +
     geom_boxplot() +
     facet_wrap(~ speciesEN,
                labeller = labeller(speciesEN = label_vec)) +    
@@ -2688,6 +2689,7 @@ make_plot <- function(tide_levels, species_types) {
         "during", tide_levels, "tide"
       )
     ) +
+    scale_y_continuous(limits = c(0, 100)) +
     theme_minimal() +
     scale_fill_manual(values = c("Diurnal" = "white", "Nocturnal" = "darkgrey")) +
     theme(axis.text.x = element_text(angle = 45, hjust = 1))

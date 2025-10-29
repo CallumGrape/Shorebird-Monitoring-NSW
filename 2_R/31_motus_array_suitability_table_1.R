@@ -102,14 +102,16 @@ first_d <- spreadsheet %>%
   group_by(speciesEN) %>% # per species
   mutate(first_d = min(DateAUS.Trap)) %>%
   select(speciesEN, first_d) %>%
-  unique()
+  unique() %>%
+  mutate(first_d = format(as.Date(first_d), format = "%d-%m-%Y"))
 
 # Last day recorded (detection)
 last_d <- data_all %>% 
   group_by(speciesEN) %>% # per species
   mutate(last_d = max(dateAus)) %>%
   select(speciesEN, last_d) %>%
-  unique()
+  unique()%>%
+  mutate(last_d = format(last_d, format = "%d-%m-%Y"))
 
 # Nb of days monitored, total period of detection (mean + SE)
 monit_d <- data_all %>%
@@ -122,13 +124,13 @@ monit_d <- data_all %>%
   
   group_by(speciesEN) %>% # per species
   summarise(n_indiv = n(),
-            mean_monit_d = round(mean(monit_d), 0),
+            mean_monit_d = round(mean(monit_d), 1),
             se = sd(monit_d)/sqrt(n_indiv),
             se_lower = mean_monit_d - 1.96*se,
             se_upper = mean_monit_d + 1.96*se,
             mean_monit_d_se = ifelse(is.na(se), 
-                                     NA,
-                                     paste0("[", ifelse(se_lower < 0, 0, round(se_lower, 0)), "-", round(se_upper, 0), "]"))) %>%
+                                     paste0(" \u00B1 0") , 
+                                     paste0(" \u00B1 ", round(se, 1)))) %>%
   ungroup() %>%
   select(speciesEN, mean_monit_d, mean_monit_d_se)
 
@@ -142,13 +144,13 @@ detect_d <- data_all %>%
   
   group_by(speciesEN) %>% # per species
   summarise(n_indiv = n(),
-            mean_detect_d = round(mean(detect_d), 0),
+            mean_detect_d = round(mean(detect_d), 1),
             se = sd(detect_d)/sqrt(n_indiv),
             se_lower = mean_detect_d - 1.96*se,
             se_upper = mean_detect_d + 1.96*se,
             mean_detect_d_se = ifelse(is.na(se), 
-                                      NA, 
-                                      paste0("[", ifelse(se_lower < 0, 0, round(se_lower, 0)), "-", round(se_upper, 0), "]"))) %>%
+                                      paste0(" \u00B1 0") , 
+                                      paste0(" \u00B1 ", round(se, 1)))) %>%
   ungroup() %>%
   select(speciesEN, mean_detect_d, mean_detect_d_se)
 
@@ -158,19 +160,19 @@ sites_d <- data_all %>%
   group_by(Band.ID, dateAus) %>% # per individual and day
   summarise(nb_sites = n_distinct(recvDeployName), .groups = "drop") %>%  
   group_by(Band.ID) %>%  
-  summarise(nb_sites_d = round(mean(nb_sites), 0)) %>%
+  summarise(nb_sites_d = round(mean(nb_sites), 1)) %>%
   ungroup()  %>% 
   left_join(data_all %>% select(Band.ID, speciesEN) %>% distinct(), by = "Band.ID") %>%
   
   group_by(speciesEN) %>% # per species
   summarise(n_indiv = n(),
-            mean_sites_d = round(mean(nb_sites_d), 0),
+            mean_sites_d = round(mean(nb_sites_d), 1),
             se = sd(nb_sites_d)/sqrt(n_indiv),
             se_lower = mean_sites_d - 1.96*se,
             se_upper = mean_sites_d + 1.96*se,
             sites_d_se = ifelse(is.na(se), 
-                                NA, 
-                                paste0("[", ifelse(se_lower < 0, 0, round(se_lower, 1)), "-", round(se_upper, 1), "]"))) %>%
+                                paste0(" \u00B1 0") , 
+                                paste0(" \u00B1 ", round(se, 1)))) %>%
   ungroup() %>%
   select(speciesEN, mean_sites_d, sites_d_se)
 
@@ -184,13 +186,13 @@ sites_tot <- data_all %>%
   
   group_by(speciesEN) %>% # per species
   summarise(n_indiv = n(),
-            mean_sites_tot = round(mean(sites_tot), 0),
+            mean_sites_tot = round(mean(sites_tot), 1),
             se = sd(sites_tot)/sqrt(n_indiv),
             se_lower = mean_sites_tot - 1.96*se,
             se_upper = mean_sites_tot + 1.96*se,
             sites_tot_se = ifelse(is.na(se), 
-                                  NA, 
-                                  paste0("[", ifelse(se_lower < 0, 0, round(se_lower, 1)), "-", round(se_upper, 1), "]"))) %>%
+                                  paste0(" \u00B1 0") , 
+                                  paste0(" \u00B1 ", round(se, 1)))) %>%
   ungroup() %>%
   select(speciesEN, mean_sites_tot, sites_tot_se)
 
@@ -220,9 +222,21 @@ table_1_pub <- table_1 %>%
          sites_tot = ifelse(is.na(sites_tot_se), mean_sites_tot, paste0(mean_sites_tot, "  ", sites_tot_se))) %>%
   left_join(data_all %>% distinct(speciesEN, speciesSci), by = "speciesEN") %>%
   filter(!is.na(speciesSci)) %>%
-  select(speciesEN, speciesSci, nb_tagged, nb_undetect, nb_retagged, first_d, last_d, monit_d, detect_d, sites_d, sites_tot) %>%
+  
+  select(speciesEN, 
+         speciesSci, 
+         nb_tagged, 
+         nb_undetect, 
+         #nb_retagged, 
+         first_d, 
+         last_d, 
+         monit_d, 
+         detect_d, 
+         sites_d, 
+         sites_tot) %>%
+  
   rename(species_eng = "speciesEN",
-         species_sci = "speciesSci")%>%
+         species_sci = "speciesSci") %>%
   arrange(first_d)
 
 # Final
@@ -235,7 +249,7 @@ DT::datatable(
     pageLength = 10,
     fixedColumns = list(leftColumns = 2)),
   extensions = c('FixedColumns'),
-  caption = 'Table 1: Shorebirds monitoring with local MOTUS automated telemetry array.') %>%
+  caption = 'Table 1. Overview on the shorebird species VHF tracked and monitored over the local automated MOTUS array located in the Hunter estuary.') %>%
   DT::formatStyle('species_eng',
                   fontWeight = 'bold')
 
@@ -247,36 +261,41 @@ DT::datatable(
 
 # Publication format
 library(gt)
+library(gtExtras)
 
 table_1_pub %>%
   gt() %>%
   
-  tab_header(title = "Table 1: Monitoring shorebird populations with a local MOTUS automated telemetry array") %>%
+  tab_header(
+    title = md("**Table 1.** Overview of the shorebird species VHF tracked and monitored over the local automated MOTUS array located in the Hunter estuary.")) %>%
+  opt_align_table_header(align = "left") %>%
   
-  fmt_date(columns = c(last_d), date_style = 1) %>%
+  tab_footnote(
+    footnote = md("**Legend.** Grouped by species, this table summarises the number of shorebird individuals tagged and tracked using MOTUS-VHF technology in the Hunter estuary near Newcastle (NSW, Australia). Birds have been surveyed from the day they have been tagged (First day) to their last detection (Last day), which gives the Total of days. However, detections occurred only on certain days (Detected days). We also looked at the number of sites each species might visit per day (Nb of sites/days) and the Total number of sites the species visited during its whole survey. Dates are in dd-mm-yyyy format. Mean and standard error values are provided(x̄ \u00B1 SE, with SE = SD/\u221An)"))  %>%
+
+  opt_table_font(font = "Times New Roman") %>%
   
-  opt_table_font(font = "Times New Roman") %>% 
-  
-  # Rename columns 
   cols_label(
     species_eng = "Species (En.)",
     species_sci = "Species (Sci.)",
     nb_tagged = "Tagged",
     nb_undetect = "Undetected",
-    nb_retagged = "Re-tagged",
+    #nb_retagged = "Re-tagged",
     first_d = "First day",
     last_d = "Last day",
-    monit_d = "Period (day)",
-    detect_d = "Detections (day)",
-    sites_d = "Sites a  day",
-    sites_tot = "Total sites") %>%
+    monit_d = "Total of days",
+    detect_d = "Detected days",
+    sites_d = "Nb of sites/days",
+    sites_tot = "Total of sites" ) %>%
   
-  # Font
-  tab_style(style = cell_text(weight = "bold"),
-            locations = cells_column_labels()) %>%
-
-  tab_style(style = cell_text(style = "italic"),
-            locations = cells_body(columns = c(species_sci))) %>%
+  tab_style(
+    style = cell_text(weight = "bold"),
+    locations = cells_column_labels() ) %>%
   
-  tab_options(table.font.size = pct(90),
-    heading.title.font.size = px(16))
+  tab_style(
+    style = cell_text(style = "italic"),
+    locations = cells_body(columns = c(species_sci))) %>%
+  
+  tab_options(
+    table.font.size = pct(90),
+    heading.title.font.size = px(16)) 
