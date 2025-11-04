@@ -37,11 +37,11 @@ proj.num <- 294
 # 3 - Download all data and metadata per Project ----
 
 # Load data from online network (either 1st time or update)
-# sql.motus <- tagme(projRecv = proj.num, 
-#                    new = FALSE, # TRUE overwrites existing (large data takes a while)
-#                    update = TRUE, 
-#                    dir = here("1_data", "motus.sql"))
-# metadata(sql.motus, proj.num)
+sql.motus <- tagme(projRecv = 294,
+                   new = FALSE, # TRUE overwrites existing (large data takes a while)
+                   update = TRUE,
+                   dir = "../1_data/alltags/")
+metadata(sql.motus, proj.num)
 
 # Load local data
 sql.motus <- dbConnect(SQLite(), here::here("1_data", "alltags", "project-294.motus"))
@@ -194,7 +194,7 @@ df.recvDeps <- df.recvDeps %>%
 # 10 - Import the Sharepoint spreadsheet to import Band ID
 
 # Call and extract last up to date Spreadsheet record (sync your one drive with the TEAMS channel first)
-write.csv(readxl::read_excel("C:/Users/marin/The University of Newcastle/StudentGroupPhD - Louise Williams and Mattea Taylor - General/SHOREBIRD NUMBER TRACKING.xlsx"), # change the path depending your device
+write.csv(readxl::read_excel("C:/Users/c3541851/The University of Newcastle/StudentGroupPhD - Louise Williams and Mattea Taylor - General/SHOREBIRD NUMBER TRACKING.xlsx"), # change the path depending your device
           file.path(here::here("1_data", "spreadsheets"), paste0(Sys.Date(), "-teams_sheet", ".csv")), 
           row.names = FALSE)
 
@@ -212,7 +212,7 @@ spreadsheet <- read.csv(here::here("1_data", "spreadsheets", paste0(Sys.Date(), 
 #   )), 1))
 
 # Join unique Band IDs for inconsistent motusTag (same bird re-tagged, etc)
-data_all <- left_join(data_all, 
+data_all <- left_join(df.alltags, #or data_all
                       spreadsheet %>% 
                         filter(is.na(Euthanised.)) %>%
                         select(motusTagID, DateAUS.Trap, Band.ID, Bander),
@@ -280,7 +280,7 @@ eutha <-  spreadsheet %>%
 
 # 11 - Save
 
-saveRDS(df.alltags, here::here("1_data", "alltags", "motus.rds", paste0(Sys.Date(), "-data", ".rds" )))
+saveRDS(data_all, here::here("1_data", "alltags", "motus.rds", paste0(Sys.Date(), "-data", ".rds" ))) #or df.alltags
 saveRDS(df.recvDeps, here::here("1_data", "alltags", "motus.rds", paste0(Sys.Date(), "-recv-info", ".rds" )))
 
 

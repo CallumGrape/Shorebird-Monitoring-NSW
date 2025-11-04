@@ -452,7 +452,7 @@ make_plot <- function(tide_levels, species_types) {
         "during", tide_levels, "tide"
       )
     ) +
-    scale_y_continuous(limits = c(0, 100)) +
+    coord_cartesian(ylim = c(0, 50)) +
     theme_minimal() +
     scale_fill_manual(values = c("Diurnal" = "white", "Nocturnal" = "darkgrey")) +
     theme(axis.text.x = element_text(angle = 45, hjust = 1))
@@ -465,17 +465,18 @@ plots_used_rate <- cross2(tide_levels, species_types) %>%
 plots_used_rate
 
 
-# # Save all plots as PNG files in your working directory
-# file_names <- map_chr(params, ~ paste0(.x[[1]], "_", .x[[2]], ".png"))
-# walk2(
-#   plots_used_rate,
-#   file_names,
-#   ~ ggsave(
-#     filename = .y,
-#     plot = .x,
-#     width = 8,
-#     height = 6,
-#     dpi = 300
-#   )
-# )
+# Save all plots as PNG files in your working directory
+params <- cross2(tide_levels, species_types)
+file_names <- map_chr(params, ~ paste0(.x[[1]], "_", .x[[2]], "50perc.png"))
+walk2(
+  plots_used_rate,
+  file_names,
+  ~ ggsave(
+    filename = .y,
+    plot = .x,
+    width = 8,
+    height = 6,
+    dpi = 300
+  )
+)
 

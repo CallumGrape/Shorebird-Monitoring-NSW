@@ -19,6 +19,7 @@ library(forcats)
 library(lubridate)
 library(bioRad) 
 library(purrr) 
+library(ggplot2)
 
 
 # 2 - Settings ----
@@ -34,10 +35,9 @@ proj.num <- 294
 # 3 - Download all data and metadata per Project ----
 
 # Load data from online network (either 1st time or update)
-# sql.motus <- tagme(projRecv = proj.num, 
-#                    new = FALSE, # TRUE overwrites existing (large data takes a while)
-#                    update = TRUE, 
-#                    dir = here("1_data", "motus.sql"))
+# sql.motus <- tagme(projRecv = 294,
+#                    new = TRUE, # TRUE overwrites existing (large data takes a while)
+#                    dir = "../1_data/alltags/")
 # metadata(sql.motus, proj.num)
 
 # Load local data

@@ -799,6 +799,106 @@ Then the False Positive signals are put away (ie. noise coming from external dev
 Motus Filter threshold values is set at 1, based on documentation and our data (see below).
 Run Lengh threshold value is set at 3 and defines the number of bursts recorded from one tag and received at once, too low amount of burst are suspected for not being True Positif so not reliable.  
 
+```{r 2 filter the noise plot things, message = FALSE, warning = FALSE, eval = TRUE, echo = FALSE}
+# Load local data
+sql.motus <- dbConnect(SQLite(), here::here("1_data", "alltags", "project-294.motus"))
+
+# Load tide (Callum work 01_import_tide_data.R)
+tidalCurve <- readRDS(here::here("1_data", "tides", "tidalCurve.rds"))
+tideData <- readRDS(here::here("1_data", "tides", "tideData.rds"))
+tidalCurveFunc <- splinefun(tideData$tideDateTimeAus, tideData$tideHeight, method = "natural")
+get.tideIndex <- function(time){ return(which.min(abs(tideData$tideDateTimeAus-time)))}
+
+# 4 - Extract data ----
+
+# All tags MOTUS recorded for the project
+df.alltags <- tbl(sql.motus, "alltags") %>%
+  dplyr::collect() %>%
+  as.data.frame() %>%
+  mutate(time = as_datetime(ts),
+         timeAus = as_datetime(ts, tz = "Australia/Sydney"),
+         dateAus = as_date(timeAus),
+         year = year(time), 
+         doy = yday(time)) 
+
+# 5 - Cleaning tag data ----
+
+# Cleaning and correcting tags metadata
+df.alltags <- df.alltags %>% 
+  filter(
+    # test tags
+    motusTagID != c("43291"),
+    # pending, unconfirmed or undeployed tags
+    !motusTagID %in% c("43288", "43291", "43297", "43299",
+                       "43307", "43424", "43425", "60470", 
+                       "60579", "81123", "81136", "81137"),
+    # used for test/validation before tagging bird (remove time before the tagging)
+    !(motusTagID == "81134" & time < dmy("23-11-2024")),
+    !(motusTagID == "60575" & time < dmy("25-10-2023")) ) %>% 
+  # NA species
+  mutate(speciesEN = case_when(
+    is.na(speciesEN) & motusTagID %in% c("60470", "81121") ~ "Red-necked Avocet",
+    is.na(speciesEN) & motusTagID %in% c("81118") ~ "Red-necked Avocet",
+    TRUE ~ speciesEN))
+
+# Cleaning and correcting receiver metadata
+df.alltags <- df.alltags %>% 
+  filter(
+    # NA
+    !is.na(recvDeployLat),
+    # site not any longer used
+    recvDeployName != c("Throsby Creek Test Site", "Corrie Island"),
+    # test sensor gnome
+    recv != c("SG-C621RPI3E17F",       
+              "SG-62A5RPI36710") ) %>% 
+  mutate(recvDeployName = ifelse(is.na(recvDeployName) & recv == "SG-D5BBRPI3E2F7", "Windeyers", recvDeployName))
+
+
+# 5 - Checking 'MOTUS filtering' tag data ----
+
+plot1 <- ggplot(df.alltags %>%
+         filter(motusFilter == 1),
+       aes(x = recvDeployName)) +
+  geom_bar(fill = "steelblue") +
+  theme_minimal() +
+  labs(x = "Motus Station", y = "Nb of MOTUS filter = 1 (good)")
+
+plot0 <- ggplot(df.alltags %>%
+         filter(motusFilter == 0),
+       aes(x = recvDeployName)) +
+  geom_bar(fill = "orange") +
+  theme_minimal() +
+  labs(x = "Motus Station", y = "Nb of MOTUS filter = 0 (filtered out)")
+
+plot10 <- ggpubr::ggarrange(plot1, 
+          plot0, 
+          ncol = 1, nrow = 2, 
+          common.legend = FALSE)
+
+ggpubr::ggexport(plot10,
+                 filename = here("figures", "motus_filter_count.jpg"),
+                 width = 800, height = 1000)
+
+perc <- ggplot(df.alltags %>% 
+                 filter(motusFilter %in% c(0, 1)),
+       aes(x = recvDeployName, fill = factor(motusFilter))) +
+  geom_bar(position = "fill") + 
+  scale_fill_manual(values = c("0" = "orange",
+                               "1" = "steelblue"),
+                    labels = c("0 (filtered out)", 
+                               "1 (good)"),
+                    name = "motusFilter") +
+  theme_minimal() +
+  labs(x = "Motus Station",
+       y = "Proportion") +
+  scale_y_continuous(labels = scales::percent) +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+
+ggpubr::ggexport(perc,
+                 filename = here("figures", "motus_filter_perc.jpg"),
+                 width = 800, height = 1000)
+```
+
 <div style="display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 60vh;">
   <figure>
     <img src="figures/motus_filter_count.jpg"
@@ -1430,12 +1530,13 @@ data_all_plot <- left_join(data_all %>%
                            "recvDeployName")
 
 species_colors <- c(
-  "Bar-tailed Godwit"      = "#1b9e77",  
-  "Far Eastern Curlew"     = "#d95f02",  
-  "Masked Lapwing"         = "#7570b3", 
-  "Pacific Golden-Plover"  = "#e7298a", 
-  "Pied Stilt"             = "#66a61e", 
-  "Red-necked Avocet"      = "#e6ab02"   
+  "Bar-tailed Godwit"      = "#1B9E77", 
+  "Far Eastern Curlew"     = "#D95F02",  
+  "Masked Lapwing"         = "#7570B3", 
+  "Pacific Golden-Plover"  = "#E7298A", 
+  "Pied Stilt"             = "#66A61E", 
+  "Curlew Sandpiper"       = "#E6AB02",
+  "Red-necked Avocet"      = "#A9851D"   
 )
 
 motus_survey_d <- motus_survey_d +
@@ -1909,12 +2010,13 @@ data <- data_all %>%
     )
 
 species_colors <- c(
-  "Bar-tailed Godwit"      = "#1b9e77",  
-  "Far Eastern Curlew"     = "#d95f02",  
-  "Masked Lapwing"         = "#7570b3", 
-  "Pacific Golden-Plover"  = "#e7298a", 
-  "Pied Stilt"             = "#66a61e", 
-  "Red-necked Avocet"      = "#e6ab02"   
+  "Bar-tailed Godwit"      = "#1B9E77", 
+  "Far Eastern Curlew"     = "#D95F02",  
+  "Masked Lapwing"         = "#7570B3", 
+  "Pacific Golden-Plover"  = "#E7298A", 
+  "Pied Stilt"             = "#66A61E", 
+  "Curlew Sandpiper"       = "#E6AB02",
+  "Red-necked Avocet"      = "#A9851D"   
 )
 ```
 
@@ -2482,12 +2584,13 @@ Below are helpful data provided for plot design.
 
 # Color per sp
 species_colors <- c(
-  "Bar-tailed Godwit"      = "#1b9e77",
-  "Far Eastern Curlew"     = "#d95f02",
-  "Masked Lapwing"         = "#7570b3",
-  "Pacific Golden-Plover"  = "#e7298a",
-  "Pied Stilt"             = "#66a61e",
-  "Red-necked Avocet"      = "#e6ab02",
+  "Bar-tailed Godwit"      = "#1B9E77", 
+  "Far Eastern Curlew"     = "#D95F02",  
+  "Masked Lapwing"         = "#7570B3", 
+  "Pacific Golden-Plover"  = "#E7298A", 
+  "Pied Stilt"             = "#66A61E", 
+  "Curlew Sandpiper"       = "#E6AB02",
+  "Red-necked Avocet"      = "#A9851D",
   "available"              = "grey"
 )
 
@@ -2866,21 +2969,23 @@ Below is displayed the variance of the signal strength among species and Motus s
 
 # Color codes
 species_colors <- c(
-  "Bar-tailed Godwit"      = "#1b9e77",  
-  "Far Eastern Curlew"     = "#d95f02",  
-  "Masked Lapwing"         = "#7570b3", 
-  "Pacific Golden-Plover"  = "#e7298a", 
-  "Pied Stilt"             = "#66a61e", 
-  "Red-necked Avocet"      = "#e6ab02"   
+  "Bar-tailed Godwit"      = "#1B9E77", 
+  "Far Eastern Curlew"     = "#D95F02",  
+  "Masked Lapwing"         = "#7570B3", 
+  "Pacific Golden-Plover"  = "#E7298A", 
+  "Pied Stilt"             = "#66A61E", 
+  "Curlew Sandpiper"       = "#E6AB02",
+  "Red-necked Avocet"      = "#A9851D"   
 )
 
 speciesINIT_colors <- c(
-  "BG"  = "#1b9e77", 
-  "FEC" = "#d95f02",  
-  "ML"  = "#7570b3",  
-  "PG"  = "#e7298a",  
-  "PS"  = "#66a61e", 
-  "RA"  = "#e6ab02"   
+  "BG"  = "#1B9E77",  
+  "FEC" = "#D95F02", 
+  "ML"  = "#7570B3", 
+  "PG"  = "#E7298A", 
+  "PS"  = "#66A61E", 
+  "CS"  = "#E6AB02",  
+  "RA"  = "#A9851D"  
 )
 
 ```

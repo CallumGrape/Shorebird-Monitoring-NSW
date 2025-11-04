@@ -85,6 +85,17 @@ nb_undetect <- data_all %>%
             by = "speciesEN") %>%
   mutate(nb_undetect = ifelse(is.na(nb_undetect), 0, nb_undetect))
 
+# Nb of individual never detected
+nb_detect <- data_all %>%
+  distinct(speciesEN) %>% # to force including all values of species                        
+  left_join(spreadsheet %>%
+              filter(is.na(Euthanised.),
+                     Band.ID %in% unique(data_all$Band.ID)) %>%
+              group_by(speciesEN) %>%
+              summarise(nb_detect = n(), .groups = "drop"),
+            by = "speciesEN") %>%
+  mutate(nb_detect = ifelse(is.na(nb_detect), 0, nb_detect))
+
 # Nb of individual re-tagged
 nb_retagged <- data_all %>%
   distinct(speciesEN) %>% # to force including all values of species                        
@@ -200,7 +211,8 @@ sites_tot <- data_all %>%
 # 5 - Gather variables ----
 
 table_1 <- list(nb_tagged,     # nb of individual tagged
-                nb_undetect,   # nb of individual undetected
+                nb_detect,     # nb of individual detected
+                # nb_undetect,   # nb of individual undetected
                 nb_retagged,   # nb of individual re-tagged
                 first_d,       # first day of the first individual tagged
                 last_d,        # last day of the last individual detected
@@ -226,7 +238,8 @@ table_1_pub <- table_1 %>%
   select(speciesEN, 
          speciesSci, 
          nb_tagged, 
-         nb_undetect, 
+         nb_detect,
+         #nb_undetect, 
          #nb_retagged, 
          first_d, 
          last_d, 
@@ -279,7 +292,8 @@ table_1_pub %>%
     species_eng = "Species (En.)",
     species_sci = "Species (Sci.)",
     nb_tagged = "Tagged",
-    nb_undetect = "Undetected",
+    nb_detect = "Detected",
+    #nb_undetect = "Undetected",
     #nb_retagged = "Re-tagged",
     first_d = "First day",
     last_d = "Last day",
