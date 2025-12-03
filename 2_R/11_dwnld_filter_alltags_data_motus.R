@@ -85,7 +85,8 @@ df.alltags <- df.alltags %>%
     # pending, unconfirmed or undeployed tags
     !motusTagID %in% c("43288", "43291", "43297", "43299",
                        "43307", "43424", "43425", "60470", 
-                       "60579", "81123", "81136", "81137"),
+                       "60579", "81123", "81136", "81137",
+                       "98916"),
     # used for test/validation before tagging bird (remove time before the tagging)
     !(motusTagID == "81134" & time < dmy("23-11-2024")),
     !(motusTagID == "60575" & time < dmy("25-10-2023")) ) %>% 
@@ -199,7 +200,7 @@ write.csv(readxl::read_excel("C:/Users/c3541851/The University of Newcastle/Stud
           row.names = FALSE)
 
 # Load df with date at the beginning
-spreadsheet <- read.csv(here::here("1_data", "spreadsheets", paste0(Sys.Date(), "-teams.sheet.csv"))) %>%
+spreadsheet <- read.csv(here::here("1_data", "spreadsheets", paste0(Sys.Date(), "-teams_sheet.csv"))) %>%
   filter(Radio.tag. == "Y") %>%     # Keep only the tagged ones
   rename(DateAUS.Trap = "Date", motusTagID = "Motus.tag.ID") %>% 
   mutate(motusTagID = as.factor(motusTagID))

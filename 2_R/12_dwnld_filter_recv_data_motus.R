@@ -42,6 +42,18 @@ sql.motus <- tagme(projRecv = proj.num,
                    update = TRUE, 
                    dir = here("1_data", "receivers", "motus.sql"))
 
+# # Download data/receivers
+# for(row in 1:nrow(df.serno)) {
+#   sql_motus <- tagme(df.serno[row, "serno"],
+#                      new = FALSE, # TRUE overwrites existing (large data takes a while)
+#                      update = TRUE, 
+#                      dir = here("1_data", "receivers", "motus.sql"))
+#   metadata(sql_motus)
+# }
+
+# Load local data
+sql.motus <- dbConnect(SQLite(), here::here("1_data", "alltags", "project-294.motus"))
+
 # 4 - Download data per Receivers ----
 
 # Transform sql to tble
@@ -60,14 +72,6 @@ df.serno <- tbl(sql.motus, "recvDeps") %>%
   collect() %>% 
   as.data.frame()
 
-# Download data/receivers
-for(row in 1:nrow(df.serno)) {
-  sql_motus <- tagme(df.serno[row, "serno"],
-                     new = FALSE, # TRUE overwrites existing (large data takes a while)
-                     update = TRUE, 
-                     dir = here("1_data", "receivers", "motus.sql"))
-  metadata(sql_motus)
-}
 
 # 5 - Process data ----
 

@@ -40,6 +40,12 @@ proj.num <- 294
 #                    dir = "../1_data/alltags/")
 # metadata(sql.motus, proj.num)
 
+sql.motus <- tagme(projRecv = proj.num,
+                   new = FALSE, # TRUE overwrites existing (large data takes a while) FALSE used to update existing file
+                   update = TRUE,
+                   dir = "../1_data/alltags/")
+
+
 # Load local data
 sql.motus <- dbConnect(SQLite(), here::here("1_data", "alltags", "project-294.motus"))
 

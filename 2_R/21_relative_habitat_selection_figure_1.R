@@ -480,3 +480,50 @@ walk2(
   )
 )
 
+
+
+# Bar plot that balances the data we got across tideCategory for each species
+balance_table <- figure_plot %>%
+  group_by(Band.ID, speciesEN, tideCategory) %>%
+  summarise(total_used_t = sum(used_t, na.rm = TRUE),
+            total_available_t = sum(available_t, na.rm = TRUE),
+            total_rate_use = total_used_t*100/total_available_t) %>%
+  ungroup()
+custom_colors <- c(
+  "Nocturnal_Low" = "darkgrey",
+  "Nocturnal_High" = "darkgrey",
+  "Diurnal_Low" = "white",
+  "Diurnal_High" = "white"
+)
+
+ggplot(balance_table, aes(x = tideCategory, y = total_rate_use, fill = tideCategory)) + # or total_used_t
+  geom_boxplot(outlier.shape = NA) +
+  facet_wrap(~speciesEN) +
+  coord_cartesian(ylim = c(0, 40)) + #200 if total_used_t
+  scale_fill_manual(values = custom_colors, guide = "none") +  
+  labs(title = "Rate of Use - Acquired data for tagged population depending Tide and Time",
+       x = "Tide Category",
+       y = "Rate of Use (%)") +
+  # labs(title = "Total used - Acquired data for tagged population depending Tide and Time",
+  #      x = "Tide Category",
+  #      y = "Total used (h)") +
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+
+
+# All species and tide categories 
+ggplot(balance_table, aes(x = tideCategory, y = total_rate_use, fill = tideCategory)) + # or total_used_t
+  geom_boxplot(outlier.shape = NA) +
+  facet_wrap(~tideCategory, scales = "free_x", nrow = 1) +
+  coord_cartesian(ylim = c(0, 40)) + #200 if total_used_t
+  labs(title = "Rate of Use - Acquired data for tagged population depending Tide and Time",
+       x = "Tide Category",
+       y = "Rate of Use (%)") +
+  # labs(title = "Total used - Acquired data for tagged population depending Tide and Time",
+  #      x = "Tide Category",
+  #      y = "Total used (h)") +
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1),
+        legend.position = "none") +
+  scale_fill_manual(values = custom_colors, guide = "none") 
+  
