@@ -229,11 +229,14 @@ table_1 <- list(nb_tagged,     # nb of individual tagged
 # Last modifications
 table_1_pub <- table_1 %>%
   mutate(monit_d   = ifelse(is.na(mean_monit_d_se), mean_monit_d,paste0(mean_monit_d, "  ", mean_monit_d_se)),
+         nb_detect = ifelse(is.na(nb_detect), 0, nb_detect),
+         nb_retagged  = ifelse(is.na(nb_retagged ), 0, nb_retagged),
          detect_d  = ifelse(is.na(mean_detect_d_se), mean_detect_d,paste0(mean_detect_d, "  ", mean_detect_d_se)),
          sites_d   = ifelse(is.na(sites_d_se), mean_sites_d,paste0(mean_sites_d, "  ", sites_d_se)),
          sites_tot = ifelse(is.na(sites_tot_se), mean_sites_tot, paste0(mean_sites_tot, "  ", sites_tot_se))) %>%
   left_join(data_all %>% distinct(speciesEN, speciesSci), by = "speciesEN") %>%
-  filter(!is.na(speciesSci)) %>%
+  # filter(!is.na(speciesSci)) %>%
+  mutate(speciesSci = ifelse(speciesEN == "Whimbrel", "Numenius phaeopus", speciesSci)) %>%
   
   select(speciesEN, 
          speciesSci, 
